@@ -457,8 +457,23 @@
 </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE", authDomain: "gladiator-portfolio.firebaseapp.com", projectId: "gladiator-portfolio", storageBucket: "gladiator-portfolio.firebasestorage.app", messagingSenderId: "61051937804", appId: "1:61051937804:web:535cbbcb5417c4bde67a29" };
-    let auth, db, provider; try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); provider = new firebase.auth.GoogleAuthProvider(); } catch(e) { console.log("Guest Mode"); }
+    // Import the functions you need from the SDKs you need
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
+      authDomain: "crazycactus-6cad9.firebaseapp.com",
+      projectId: "crazycactus-6cad9",
+      storageBucket: "crazycactus-6cad9.firebasestorage.app",
+      messagingSenderId: "1075800361912",
+      appId: "1:1075800361912:web:e7285e3e74bce49b03dd4d"
+    };
+
+    let auth, db, provider;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        provider = new firebase.auth.GoogleAuthProvider();
+    } catch(e) { console.log("Guest Mode"); }
 
     const { createApp } = Vue; let searchController = null;
 
