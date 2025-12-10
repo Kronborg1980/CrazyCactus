@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Cactus | Binder Love</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { 
+            --cactus-neon: #39ff14; 
+            --cactus-dim: rgba(57, 255, 20, 0.1);
+            --cactus-glow: rgba(57, 255, 20, 0.6);
+            --bg-deep: #020f05;
+            --glass-surface: rgba(10, 30, 15, 0.75);
+            --glass-border: rgba(57, 255, 20, 0.2);
+            --glass-highlight: rgba(255, 255, 255, 0.1);
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep); 
+            /* Hexagonal Grid Background */
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(57, 255, 20, 0.15) 0%, transparent 50%),
+                linear-gradient(to bottom, transparent, var(--bg-deep)),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill-opacity='0.03' fill='%2339ff14' fill-rule='evenodd'/%3E%3C/svg%3E");
+            color: #e0e6ed; 
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        @media (min-width: 768px) {
+            body { height: 100vh; overflow: hidden; }
+        }
+
+        .font-brand { font-family: 'Orbitron', sans-serif; }
+        [v-cloak] { display: none; }
+
+        /* --- NEW CRAZY CACTUS GLASS THEME --- */
+        .bio-glass { 
+            background: var(--glass-surface); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 0 15px rgba(0,0,0,0.5),
+                inset 0 0 20px rgba(0,0,0,0.5); 
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- ANIMATED LED BORDER --- */
+        .led-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 24px; 
+            padding: 2px; /* Thickness of LED */
+            background: linear-gradient(90deg, transparent, var(--cactus-neon), transparent);
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            background-size: 200% 100%;
+            animation: led-run 3s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes led-run {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* NEON TEXT */
+        .text-neon {
+            color: #fff;
+            text-shadow: 0 0 5px var(--cactus-neon), 0 0 15px var(--cactus-glow);
+        }
+        .text-green-neon {
+            color: var(--cactus-neon);
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.8);
+        }
+
+        /* NAVIGATION BUTTONS */
+        .nav-pill { 
+            transition: all 0.3s ease; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            letter-spacing: 1px; 
+            border: 1px solid transparent;
+            position: relative;
+            background: rgba(0,0,0,0.3);
+        }
+        .nav-pill:hover { 
+            background: rgba(57, 255, 20, 0.1); 
+            color: white; 
+            border-color: var(--cactus-neon);
+            box-shadow: 0 0 15px var(--cactus-dim);
+        }
+        .nav-pill.active { 
+            background: var(--cactus-neon); 
+            color: black;
+            border-color: var(--cactus-neon);
+            box-shadow: 0 0 25px var(--cactus-glow);
+            font-weight: 800;
+        }
+
+        /* --- ROI CALCULATOR TABLE --- */
+        .roi-grid {
+            display: grid;
+            grid-template-columns: 30px 40px 1fr 0.8fr 40px; 
+            gap: 10px;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(57, 255, 20, 0.1);
+            transition: all 0.2s;
+        }
+        @media (min-width: 768px) {
+            .roi-grid {
+                grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
+                gap: 16px;
+                padding: 12px 24px;
+            }
+        }
+        .roi-grid:hover { 
+            background: rgba(57, 255, 20, 0.05); 
+            box-shadow: inset 2px 0 0 var(--cactus-neon);
+        }
+        
+        .roi-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px; font-weight: 700; color: var(--cactus-neon); 
+            text-transform: uppercase; letter-spacing: 1px;
+            background: rgba(0,0,0,0.6); 
+            border-bottom: 1px solid var(--cactus-neon);
+            user-select: none; 
+            padding: 16px 24px;
+        }
+
+        .roi-header .desktop-only, .roi-grid .desktop-only { display: none; }
+        @media (min-width: 768px) {
+            .roi-header .desktop-only, .roi-grid .desktop-only { display: block; }
+            .roi-header .desktop-only.justify-end { display: flex; }
+        }
+        .roi-grid .mobile-value { text-align: right; }
+        .roi-grid .mobile-action { text-align: center; }
+        @media (min-width: 768px) {
+            .roi-grid .mobile-value, .roi-grid .mobile-action { display: none; }
+        }
+
+        .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .sortable:hover { color: white; text-shadow: 0 0 8px var(--cactus-neon); }
+        .sortable.active { color: white; border-bottom: 1px solid var(--cactus-neon); }
+
+        /* --- INPUTS & CONTROLS --- */
+        .table-input {
+            background: transparent; border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
+            transition: 0.3s; padding-bottom: 4px;
+        }
+        .table-input:focus { border-bottom-color: var(--cactus-neon); color: var(--cactus-neon); }
+
+        select option { background-color: #020f05; color: #fff; padding: 10px; }
+        .table-select {
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(57, 255, 20, 0.3);
+            color: #ddd; border-radius: 6px; padding: 4px 8px; font-size: 10px; width: 100%;
+            outline: none; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-weight: bold;
+        }
+        .table-select:focus { border-color: var(--cactus-neon); box-shadow: 0 0 10px var(--cactus-dim); }
+
+        .custom-checkbox {
+            appearance: none; background-color: rgba(0,0,0,0.5); margin: 0;
+            font: inherit; color: var(--cactus-neon); width: 16px; height: 16px;
+            border: 1px solid #444; border-radius: 4px; display: grid; place-content: center; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .custom-checkbox:checked { border-color: var(--cactus-neon); background: var(--cactus-dim); box-shadow: 0 0 5px var(--cactus-neon); }
+        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--cactus-neon); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox:checked::before { transform: scale(1); }
+
+        .glass-input { 
+            background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(57, 255, 20, 0.2); 
+            color: white; padding: 14px; width: 100%; border-radius: 12px; font-size: 12px; transition: 0.3s; 
+        }
+        .glass-input:focus { 
+            border-color: var(--cactus-neon); outline: none; 
+            box-shadow: 0 0 20px var(--cactus-dim); 
+            background: rgba(0,0,0,0.8);
+        }
+        
+        .pagination-btn {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3); color: #888; font-size: 10px; font-weight: bold; uppercase;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .pagination-btn:hover:not(:disabled) { 
+            border-color: var(--cactus-neon); color: black; 
+            background: var(--cactus-neon); 
+            box-shadow: 0 0 15px var(--cactus-glow);
+        }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(57, 255, 20, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cactus-neon); }
+
+        /* LOGO ANIMATION */
+        .logo-container { position: relative; display: flex; align-items: center; justify-content: center; }
+        .logo-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 2px dashed var(--cactus-neon);
+            animation: spin 10s linear infinite;
+            opacity: 0.8;
+        }
+        .logo-ring-rev {
+            position: absolute; width: 110%; height: 110%; border-radius: 50%;
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            animation: spin-rev 15s linear infinite;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+        /* CARD HOVER EFFECT */
+        .card-item { perspective: 1000px; }
+        .card-inner { transition: transform 0.5s; transform-style: preserve-3d; }
+        .card-item:hover .card-inner { transform: translateY(-5px); }
+        .card-glow {
+            position: absolute; inset: -2px; border-radius: 18px; 
+            background: linear-gradient(45deg, var(--cactus-neon), transparent, var(--cactus-neon));
+            z-index: -1; opacity: 0; transition: opacity 0.3s; filter: blur(5px);
+        }
+        .card-item:hover .card-glow { opacity: 0.6; }
+
+    </style>
+</head>
+<body class="p-2 md:p-6">
+
+<div id="app" v-cloak class="w-full max-w-[1920px] mx-auto relative gap-6 md:h-full md:flex">
+
+    <button v-if="!showSearch && !detailCard" @click="showMobileNav = !showMobileNav" class="md:hidden fixed top-4 right-4 z-40 bg-[#39ff14] text-black w-12 h-12 rounded-full shadow-[0_0_20px_#39ff14] transition active:scale-95 flex items-center justify-center border-2 border-white">
+        <i class="fa-solid" :class="showMobileNav ? 'fa-xmark' : 'fa-bars'"></i>
+    </button>
+
+    <aside class="w-80 bio-glass flex-col shrink-0 z-30 transition-all duration-300 md:flex led-border"
+           :class="{ 
+               'fixed inset-0 w-full h-full bg-black/95 backdrop-blur-xl z-50': showMobileNav, 
+               'hidden': !showMobileNav && !isDesktop, 
+               'flex': isDesktop, 
+               'w-80': isDesktop 
+           }">
+        
+        <div :class="{'w-80 h-full mx-auto flex flex-col': showMobileNav}">
+
+            <div class="p-8 flex flex-col items-center shrink-0 relative">
+                
+                <div class="logo-container w-24 h-24 mb-6 relative">
+                    <div class="logo-ring"></div>
+                    <div class="logo-ring-rev"></div>
+                    <img src="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg" class="w-20 h-20 rounded-full object-cover border-2 border-[#39ff14] shadow-[0_0_30px_#39ff14] relative z-10 bg-black">
+                </div>
+                
+                <h1 class="text-3xl font-brand font-black text-white tracking-widest text-center" style="text-shadow: 0 0 10px #39ff14;">CRAZY<br><span class="text-[#39ff14]">CACTUS</span></h1>
+                <div class="text-[10px] text-gray-400 font-brand uppercase tracking-[0.4em] mt-2 border-t border-[#39ff14] pt-2 w-full text-center">Binder Love</div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-4 px-6 space-y-4">
+                
+                <div class="space-y-2">
+                    <button @click="currentView='collection'; currentBinder=null; showMobileNav=false" class="nav-pill w-full text-left px-5 py-4 text-xs flex items-center gap-4" :class="{active: currentView==='collection'}">
+                        <i class="fa-solid fa-layer-group w-4 text-center text-lg"></i> <span class="uppercase tracking-widest font-bold">Dashboard</span>
+                    </button>
+                    
+                    <button @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="nav-pill w-full text-left px-5 py-4 text-xs flex items-center gap-4" :class="{active: currentView==='calculator' && currentBinder===null}">
+                        <i class="fa-solid fa-calculator w-4 text-center text-lg"></i> <span class="uppercase tracking-widest font-bold">ROI Calculator</span>
+                    </button>
+                    
+                    <button @click="currentView='binders'; currentBinder=null; showMobileNav=false" class="nav-pill w-full text-left px-5 py-4 text-xs flex items-center gap-4" :class="{active: currentView==='binders'}">
+                        <i class="fa-solid fa-folder-open w-4 text-center text-lg"></i> <span class="uppercase tracking-widest font-bold">Collections</span>
+                    </button>
+                </div>
+
+                <div class="pt-6 border-t border-white/10">
+                    <div class="text-[9px] text-[#39ff14] font-bold uppercase tracking-[0.2em] mb-4 pl-2 opacity-80">
+                        <i class="fa-solid fa-database mr-2"></i>My Binders
+                    </div>
+
+                    <div v-for="binder in binders" :key="binder.id" class="mb-2">
+                        <div class="nav-pill w-full text-left px-4 py-3 text-xs flex items-center justify-between group cursor-pointer" 
+                             :class="{active: currentView === 'calculator' && currentBinder?.id === binder.id}">
+                            
+                            <div @click="selectBinder(binder); currentView='calculator'; showMobileNav=false" class="flex-1 flex items-center gap-3 truncate">
+                                <i class="fa-regular fa-folder w-4 text-center text-[#39ff14]"></i> 
+                                <span class="truncate font-bold text-gray-300 group-hover:text-black">{{ binder.name }}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i @click.stop="renameBinder(binder)" class="fa-solid fa-pen text-[9px] text-gray-500 hover:text-white p-1 transition"></i>
+                                <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[9px] text-gray-500 hover:text-red-500 p-1 transition"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="createBinder" class="w-full py-2 border border-dashed border-[#39ff14]/30 hover:border-[#39ff14] text-[#39ff14]/50 hover:text-[#39ff14] text-[9px] uppercase tracking-widest rounded-lg transition mt-2">+ New Binder</button>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-white/5 bg-black/40 shrink-0">
+                <div v-if="user" class="flex items-center gap-3 mb-4">
+                    <img :src="user.photoURL" class="w-10 h-10 rounded-full border border-[#39ff14] p-0.5">
+                    <div class="overflow-hidden">
+                        <div class="text-xs font-bold text-white truncate">{{ user.displayName }}</div>
+                        <div class="text-[8px] text-[#39ff14] font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 bg-[#39ff14] rounded-full animate-pulse"></span> Online</div>
+                    </div>
+                </div>
+                <button v-if="!user" @click="loginWithGoogle" class="w-full bg-[#39ff14] hover:bg-white text-black font-black py-3 rounded-xl text-xs uppercase tracking-[0.2em] transition flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(57,255,20,0.4)]">
+                    <i class="fa-brands fa-google"></i> Login
+                </button>
+                <button v-else @click="logout" class="w-full text-[10px] text-red-500/70 hover:text-red-400 font-bold uppercase tracking-widest text-center py-2 transition">Terminating Link...</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative overflow-hidden rounded-[24px] gap-6" :class="{'h-full': isDesktop, 'mt-20': !isDesktop}">
+        
+        <header class="bio-glass px-8 py-5 flex justify-between items-center z-10 shrink-0 led-border">
+            <div>
+                <h2 class="text-xl md:text-3xl font-brand font-black text-white tracking-widest uppercase text-neon" style="text-shadow: 0 0 10px #39ff14;">{{ headerTitle }}</h2>
+                <div class="text-xs text-[#39ff14] font-bold tracking-[0.3em] uppercase flex items-center gap-2 mt-1">
+                    System Value: <span class="text-white text-lg font-mono">${{ formatNumber(totalValue) }}</span>
+                </div>
+            </div>
+            <button @click="openSearch" class="group relative overflow-hidden bg-black text-[#39ff14] border border-[#39ff14] text-xs font-bold px-8 py-3 rounded-xl transition hover:shadow-[0_0_30px_#39ff14]">
+                <div class="absolute inset-0 w-full h-full bg-[#39ff14] opacity-0 group-hover:opacity-10 transition"></div>
+                <span class="relative z-10 flex items-center gap-2 uppercase tracking-widest"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Inject Data</span></span>
+            </button>
+        </header>
+
+        <div v-if="currentView === 'collection'" class="flex-1 bio-glass overflow-y-auto p-4 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-black/30 p-6 rounded-2xl border border-[#39ff14]/20 relative overflow-hidden group hover:border-[#39ff14] transition duration-500">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#39ff14] rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition"></div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Net Worth</div>
+                    <div class="text-3xl md:text-4xl font-brand font-bold text-green-neon">${{ formatNumber(totalValue) }}</div>
+                </div>
+                <div class="bg-black/30 p-6 rounded-2xl border border-[#39ff14]/20 relative overflow-hidden group hover:border-[#39ff14] transition duration-500">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Collected Cards</div>
+                    <div class="text-3xl font-bold text-white mb-1 font-mono">{{ cards.length }} <span class="text-sm text-gray-500">units</span></div>
+                </div>
+                <div class="bg-black/30 p-6 rounded-2xl border border-[#39ff14]/20 relative overflow-hidden group hover:border-[#39ff14] transition duration-500">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Sets Completed</div>
+                    <div class="text-3xl font-bold text-white mb-1 font-mono">{{ Object.keys(cardsBySet).reduce((sum, setName) => sum + cardsBySet[setName].uniqueCount, 0) }}</div>
+                </div>
+            </div>
+
+            <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-24 opacity-40">
+                <i class="fa-solid fa-microchip text-7xl mb-6 text-[#39ff14] animate-pulse"></i>
+                <p class="uppercase tracking-[0.5em] font-bold text-sm text-[#39ff14]">Database Empty</p>
+            </div>
+            
+            <div v-else class="space-y-12">
+                <div v-for="(setGroup, setName) in cardsBySet" :key="setName">
+                    <div class="flex items-end gap-4 mb-6 border-b border-[#39ff14]/20 pb-2">
+                        <h3 class="text-[#39ff14] font-bold text-2xl font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
+                        <span class="text-[10px] text-black font-bold bg-[#39ff14] px-2 py-0.5 rounded mb-1">
+                             {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 md:gap-8">
+                        <div v-for="card in setGroup.cards" :key="card.uid" class="card-item relative group">
+                            <div class="card-glow"></div>
+                            <div class="bg-[#05100a] p-2 rounded-2xl border border-[#39ff14]/20 relative cursor-pointer overflow-hidden card-inner" @click="openCardDetail(card)">
+                                <div class="aspect-[0.7] rounded-xl bg-black overflow-hidden mb-2 relative">
+                                    <img :src="card.image" loading="lazy" class="w-full h-full object-cover">
+                                </div>
+                                <div class="px-1">
+                                    <div class="text-left text-[10px] font-brand font-bold text-white truncate text-[#39ff14]">{{ card.name }}</div>
+                                    <div class="flex justify-between items-center mt-1">
+                                        <div class="text-[10px] text-white font-mono font-bold">${{ formatNumber(card.market) }}</div>
+                                        <div class="text-[8px] bg-[#39ff14]/20 text-[#39ff14] px-1.5 rounded font-bold border border-[#39ff14]/50">x{{ setGroup.cardCounts[card.id] }}</div>
+                                    </div>
+                                </div>
+                                <button @click.stop="deleteCard(card.uid)" class="absolute top-2 right-2 bg-black/80 text-red-500 rounded p-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-white">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div v-else-if="currentView === 'binders'" class="flex-1 bio-glass overflow-y-auto p-4 md:p-8">
+             <div class="flex justify-between items-center mb-8">
+                 <h2 class="text-2xl font-brand font-bold text-white text-neon">Collections</h2>
+                 <button @click="createBinder" class="bg-[#39ff14] hover:bg-white text-black text-xs font-black px-6 py-3 rounded-lg shadow-[0_0_20px_#39ff14] transition uppercase tracking-widest">Init New Binder</button>
+             </div>
+             
+             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                 <div @click="currentView='calculator'; currentBinder=null" class="group cursor-pointer">
+                     <div class="aspect-[3/4] bg-[#05100a] rounded-2xl border border-[#39ff14]/30 p-6 flex flex-col justify-center items-center relative overflow-hidden transition duration-300 group-hover:border-[#39ff14] group-hover:shadow-[0_0_30px_rgba(57,255,20,0.2)]">
+                         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] opacity-10"></div>
+                         <i class="fa-solid fa-server text-5xl text-[#39ff14] mb-4 group-hover:scale-110 transition drop-shadow-[0_0_15px_#39ff14]"></i>
+                         <div class="font-brand font-bold text-xl text-white uppercase tracking-wider z-10">Master</div>
+                         <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">Full Database</div>
+                     </div>
+                 </div>
+
+                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); currentView='calculator'" class="group cursor-pointer">
+                     <div class="aspect-[3/4] bg-[#05100a] rounded-2xl border border-white/10 p-6 flex flex-col justify-between relative transition duration-300 group-hover:border-[#39ff14] group-hover:bg-[#39ff14]/5">
+                         <div class="flex justify-end">
+                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                 <button @click.stop="renameBinder(b)" class="text-gray-400 hover:text-[#39ff14]"><i class="fa-solid fa-pen"></i></button>
+                                 <button @click.stop="deleteBinder(b.id)" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                             </div>
+                         </div>
+                         <i class="fa-solid fa-folder-closed text-6xl text-gray-700 group-hover:text-[#39ff14] transition-colors duration-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-100"></i>
+                         <div class="z-10 mt-auto">
+                             <div class="font-brand font-bold text-white text-lg truncate uppercase tracking-wide group-hover:text-[#39ff14] transition">{{ b.name }}</div>
+                             <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{{ getBinderCount(b.id) }} Units</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <div v-else-if="currentView === 'calculator'" class="flex-1 flex flex-col overflow-hidden bio-glass">
+            <div class="roi-grid roi-header shrink-0">
+                <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
+                <div class="text-center">VISUAL</div>
+                <div class="sortable" :class="{'col-span-3': !isDesktop}" @click="setSort('name')" :class="{active: sortBy==='name'}">DATA <i class="fa-solid" :class="getSortIcon('name')"></i></div>
+                <div class="desktop-only">BINDER</div>
+                <div class="text-right sortable justify-end desktop-only" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">COST <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
+                <div class="text-right desktop-only">FEE</div>
+                <div class="text-center desktop-only">TARGET</div>
+                <div class="text-right sortable justify-end desktop-only" @click="setSort('market')" :class="{active: sortBy==='market'}">EST. VAL <i class="fa-solid" :class="getSortIcon('market')"></i></div>
+                <div class="text-center desktop-only">STATUS</div>
+                <div class="text-right sortable justify-end desktop-only" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
+                <div class="text-right mobile-value">VAL</div>
+                <div class="text-center mobile-action">NET</div>
+                <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 hover:bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded transition uppercase tracking-wider shadow-lg">PURGE {{ selectedIds.length }}</button></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-0">
+                <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
+                    <p class="uppercase tracking-[0.3em] font-bold text-sm font-brand text-[#39ff14]">No Data Found</p>
+                </div>
+                <div v-else>
+                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid" :class="{'bg-[#39ff14]/10': selectedIds.includes(c.uid)}">
+                        <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
+                        <div class="flex justify-center">
+                            <div class="w-10 h-14 bg-black rounded border border-[#39ff14]/30 overflow-hidden cursor-pointer hover:border-[#39ff14] hover:shadow-[0_0_10px_#39ff14] transition" @click="openCardDetail(c)">
+                                <img :src="c.image" loading="lazy" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-white text-sm truncate cursor-pointer font-brand hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}</div>
+                            <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">{{ c.set }}</div>
+                            <div class="md:hidden mt-1 text-[9px] text-[#39ff14] font-mono">
+                                PSA {{ c.targetGrade }} | COST: ${{ formatNumber(c.rawCost) }}
+                            </div>
+                        </div>
+                        
+                        <div class="desktop-only"><select v-model="c.binderId" @change="updateCardBinder(c)" class="table-select"><option :value="null">MASTER</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+                        <div class="text-right desktop-only"><input v-model.number="c.rawCost" @change="saveData()" type="number" class="table-input font-mono"></div>
+                        <div class="text-right desktop-only"><input v-model.number="c.fee" @change="saveData()" type="number" class="table-input font-mono"></div>
+                        <div class="flex justify-center desktop-only"><select v-model="c.targetGrade" @change="saveData()" class="table-select text-center" style="width: 80px; color: #39ff14;"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
+                        <div class="text-right font-mono text-white text-xs font-bold desktop-only">${{ formatNumber(getEstValue(c)) }}</div>
+                        <div class="text-center desktop-only">
+                            <span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-black bg-[#39ff14] px-3 py-1 rounded shadow-[0_0_10px_#39ff14] uppercase tracking-wider">Submit</span>
+                            <span v-else class="text-[9px] font-bold text-gray-400 border border-gray-600 px-3 py-1 rounded uppercase tracking-wider">Hold</span>
+                        </div>
+                        <div class="text-right font-mono font-bold text-xs desktop-only" :class="getProfit(c) >= 0 ? 'text-[#39ff14] text-shadow-sm' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                        
+                        <div class="mobile-value font-mono text-white text-xs font-bold">${{ formatNumber(getEstValue(c)) }}</div>
+                        <div class="mobile-action font-mono font-bold text-xs" :class="getProfit(c) >= 0 ? 'text-[#39ff14]' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                        
+                        <div class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-[#39ff14]/20 flex justify-between items-center bg-black/40 shrink-0">
+                <span class="text-[10px] text-[#39ff14] uppercase font-bold tracking-wider font-brand">Total Units: {{ sortedCards.length }}</span>
+                <div class="flex gap-3 items-center">
+                    <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="text-[10px] font-bold text-white px-2">Page {{ currentPage }} / {{ totalPages || 1 }}</span>
+                    <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4 md:p-6">
+        <div class="bg-[#020f05] w-full max-w-xl md:max-w-5xl rounded-3xl shadow-[0_0_100px_rgba(57,255,20,0.2)] overflow-hidden flex flex-col h-[95vh] md:h-[85vh] border border-[#39ff14]/30 relative">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#39ff14] to-transparent animate-pulse"></div>
+            
+            <div class="px-8 py-6 border-b border-[#39ff14]/20 flex justify-between items-center bg-[#05100a] shrink-0">
+                <h2 class="text-2xl font-brand font-black text-white tracking-[0.2em] uppercase text-green-neon">Card Injector</h2>
+                <div v-if="!setsLoading && allSets.length === 0" class="ml-4 flex items-center gap-2">
+                    <span class="text-xs text-red-500 font-bold uppercase blink">OFFLINE</span>
+                    <button @click="loadSetsAPI(true)" class="text-[10px] bg-[#39ff14]/20 hover:bg-[#39ff14] hover:text-black px-2 py-1 rounded text-[#39ff14] border border-[#39ff14] transition">Re-Sync</button>
+                </div>
+                <button @click="showSearch=false" class="text-gray-500 hover:text-[#39ff14] transition transform hover:rotate-90 duration-300"><i class="fa-solid fa-xmark text-3xl"></i></button>
+            </div>
+            
+            <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 text-[#39ff14]">
+                <div class="w-16 h-16 border-4 border-[#39ff14] border-t-transparent rounded-full animate-spin mb-6 shadow-[0_0_20px_#39ff14]"></div>
+                <p class="text-xs font-brand font-bold uppercase tracking-[0.5em] animate-pulse">Establishing Connection...</p>
+            </div>
+
+            <template v-else>
+                <div class="px-8 py-6 bg-[#08150a] grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[#39ff14]/10 shrink-0">
+                    <div>
+                        <label class="text-[10px] text-[#39ff14] font-bold uppercase mb-2 block tracking-widest">1. Timeline</label>
+                        <select v-model="selectedEra" class="glass-input text-[#39ff14] font-bold"><option value="">SELECT ERA</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-[#39ff14] font-bold uppercase mb-2 block tracking-widest">2. Expansion</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                    </div>
+                    
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] text-[#39ff14] font-bold uppercase mb-2 block tracking-widest">3. Identity</label>
+                        <input v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="e.g. Maractus" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] text-[#39ff14] font-bold uppercase mb-2 block tracking-widest">4. Filter</label>
+                        <select v-model="searchSort" class="glass-input border-[#39ff14] text-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.2)]">
+                            <option value="price-desc">Value: High</option>
+                            <option value="price-asc">Value: Low</option>
+                            <option value="number">Index #</option>
+                            <option value="name">Alpha</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="px-8 py-4 bg-[#05100a] flex justify-between items-center border-b border-[#39ff14]/10 shrink-0">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Destination: <span class="text-white text-green-neon">{{ targetBinder === 'master' ? 'Master Database' : getBinderName(targetBinder) }}</span></div>
+                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#39ff14] hover:bg-white text-black text-xs font-black px-10 py-3 rounded-xl shadow-[0_0_20px_rgba(57,255,20,0.4)] transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2 uppercase tracking-[0.2em]">
+                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'SCANNING' : 'EXECUTE' }}
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#020503] relative">
+                    <div v-if="paginatedSearchResults.length > 0" class="flex justify-center items-center gap-4 mb-6 sticky top-0 z-20 bg-[#020503]/90 backdrop-blur py-2">
+                        <button @click="prevPage" :disabled="searchPage === 1" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <form @submit.prevent="jumpToPage" class="flex items-center gap-2">
+                            <input v-model.number="searchPage" type="number" min="1" :max="totalSearchPages" class="w-12 text-center bg-[#39ff14]/10 border border-[#39ff14]/50 text-white rounded py-1 text-xs font-bold focus:outline-none focus:border-[#39ff14]" @blur="jumpToPage">
+                            <span class="text-[10px] font-bold text-[#39ff14]">/ {{ totalSearchPages }}</span>
+                        </form>
+                        <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="pagination-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+
+                    <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
+                        <div class="text-[#39ff14] text-6xl mb-4 animate-pulse"><i class="fa-solid fa-satellite-dish"></i></div>
+                        <p class="uppercase font-bold tracking-[0.5em] text-xs text-[#39ff14] animate-pulse">Acquiring Target...</p>
+                    </div>
+
+                    <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
+                        <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-[#39ff14]"></i>
+                        <p class="uppercase font-bold tracking-widest text-xs text-white">Awaiting Input</p>
+                    </div>
+                    
+                    <div v-else>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 mb-6">
+                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#05100a] p-2 rounded-xl cursor-pointer border border-[#39ff14]/20 group relative transition duration-300 hover:shadow-[0_0_20px_#39ff14] hover:border-[#39ff14]">
+                                <img :src="card.images.small" loading="lazy" class="w-full rounded mb-3 shadow-lg transition duration-500 group-hover:scale-105">
+                                <div class="text-center text-xs font-bold text-white font-brand truncate">{{ card.name }}</div>
+                                <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#39ff14] text-[9px] font-bold px-2 py-1 rounded border border-[#39ff14] shadow-lg font-mono">${{ formatNumber(getCardPrice(card)) }}</div>
+                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    </Transition>
+
+    <Transition name="fade">
+        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex items-center justify-center p-4 md:p-6">
+            <div class="bg-[#020f05] w-full max-w-6xl h-[95vh] md:h-[85vh] rounded-3xl border border-[#39ff14]/30 shadow-[0_0_80px_rgba(57,255,20,0.15)] flex flex-col md:flex-row overflow-hidden relative">
+                
+                <div class="w-full h-1/3 md:h-auto md:w-1/3 bg-[#05100a] p-6 md:p-10 flex items-center justify-center border-b md:border-b-0 md:border-r border-[#39ff14]/20 relative shrink-0">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(57,255,20,0.1),transparent_70%)]"></div>
+                    <div class="absolute top-8 left-8 text-[#39ff14] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition z-20 flex items-center gap-2" @click="detailCard=null">
+                        <i class="fa-solid fa-arrow-left"></i> Return
+                    </div>
+                    <div class="relative z-10 perspective-1000">
+                        <img :src="detailCard.image.replace('small','large')" class="max-w-[70%] md:max-w-xs rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-[#39ff14]/20 hover:scale-105 transition duration-500">
+                    </div>
+                </div>
+
+                <div class="w-full md:w-2/3 flex flex-col bg-[#020503] overflow-y-auto">
+                    <div class="p-6 md:p-10 border-b border-[#39ff14]/20 flex justify-between items-start bg-[#05100a] shrink-0">
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-brand font-black text-white mb-2 tracking-wide text-neon">{{ detailCard.name }}</h2>
+                            <div class="flex items-center gap-4 text-xs text-[#39ff14] font-bold uppercase tracking-widest font-mono">
+                                <span class="bg-[#39ff14]/10 px-3 py-1 rounded border border-[#39ff14]/30">{{ detailCard.set }}</span>
+                                <span>#{{ detailCard.number }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Current Market</div>
+                            <div class="text-3xl md:text-5xl font-mono font-bold text-[#39ff14] text-shadow-sm">${{ formatNumber(detailCard.market) }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 p-6 md:p-10 relative overflow-y-auto">
+                        <div class="bg-[#39ff14]/5 rounded-xl p-6 border border-[#39ff14]/10 mb-6">
+                            <h3 class="text-[#39ff14] font-brand font-bold text-lg mb-4 uppercase tracking-wider">Growth Projection</h3>
+                             <div class="w-full h-40 border-l border-b border-[#39ff14]/30 relative">
+                                <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
+                                    <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#39ff14" stroke-width="0.5" class="drop-shadow-[0_0_5px_#39ff14]" />
+                                    <path d="M0,40 Q20,10 40,30 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.1" />
+                                    <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#39ff14;stop-opacity:1" /><stop offset="100%" style="stop-color:#39ff14;stop-opacity:0" /></linearGradient></defs>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 md:p-10 bg-[#050505] border-t border-[#39ff14]/20 flex justify-between items-center shrink-0">
+                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 transition border border-red-500/30 px-4 py-2 rounded hover:bg-red-500">
+                            <i class="fa-solid fa-trash"></i> Eject Asset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Transition>
+
+</div>
+
+<script>
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
+        authDomain: "gladiator-portfolio.firebaseapp.com",
+        projectId: "gladiator-portfolio",
+        storageBucket: "gladiator-portfolio.firebasestorage.app",
+        messagingSenderId: "61051937804",
+        appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
+    };
+
+    let auth, db, provider;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        provider = new firebase.auth.GoogleAuthProvider();
+    } catch(e) { console.log("Guest Mode Active"); }
+
+    const { createApp } = Vue;
+    let searchController = null;
+
+    createApp({
+        data() {
+            return {
+                user: null, currentView: 'collection', currentBinder: null, 
+                localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
+                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
+                cacheKey: 'crazy_cactus_v1',
+                
+                totalSetData: {}, 
+                
+                // PAGINATION & SEARCH
+                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
+                searchPage: 1, searchPerPage: 18, 
+                addedIds: [], selectedIds: [], 
+                searchSort: 'price-desc', 
+                totalSearchPagesCount: 1, 
+                searchCache: {}, 
+
+                showMobileNav: false,
+                isDesktop: true,
+                searchTimeout: null
+            }
+        },
+        watch: {
+            selectedEra(newEra, oldEra) {
+                if (newEra !== oldEra) {
+                    this.selectedSet = ""; 
+                    this.searchResults = [];
+                    this.searchPage = 1;
+                    this.query = "";
+                    this.searchCache = {}; 
+                }
+            },
+            selectedSet(newSet, oldSet) {
+                if (newSet !== oldSet) {
+                    this.searchResults = []; 
+                    this.searchPage = 1;
+                    this.query = "";
+                    this.searchCache = {}; 
+                }
+            },
+            searchSort() {
+                this.fetchCards(1); 
+            }
+        },
+        mounted() {
+            this.loadLocalData();
+            this.loadSetsAPI(); 
+            
+            window.addEventListener('resize', this.checkIsDesktop);
+            this.checkIsDesktop();
+            
+            if(auth) {
+                auth.onAuthStateChanged(u => {
+                    if(u) { this.user = u; this.initCloudData(); } 
+                    else { this.user = null; }
+                });
+            }
+        },
+        unmounted() {
+            window.removeEventListener('resize', this.checkIsDesktop);
+        },
+        computed: {
+            isDesktop() { return window.innerWidth >= 768; },
+            binders() { return this.user ? this.cloudBinders : this.localBinders; },
+            cards() { return this.user ? this.cloudCards : this.localCards; },
+            headerTitle() {
+                if(this.currentView === 'collection') return 'Mission Control';
+                if(this.currentView === 'binders') return 'Archive';
+                return this.currentBinder ? this.currentBinder.name : 'Financial Grid';
+            },
+            displayCards() { 
+                let list = this.cards; 
+                if (this.currentBinder) {
+                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
+                }
+                return list;
+            },
+            isAllSelected() {
+                return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
+            },
+            sortedCards() {
+                let list = [...this.displayCards];
+                return list.sort((a, b) => {
+                    let valA, valB;
+                    if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
+                    else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
+                    else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
+                    else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
+                    else { valA = a.id; valB = b.id; }
+                    
+                    if(valA < valB) return this.sortDesc ? 1 : -1;
+                    if(valA > valB) return this.sortDesc ? -1 : 1;
+                    return 0;
+                });
+            },
+            totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
+            paginatedCards() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                return this.sortedCards.slice(start, start + this.itemsPerPage);
+            },
+            cardsBySet() {
+                const grouped = {};
+                this.cards.forEach(c => {
+                    if(!grouped[c.set]) {
+                        grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
+                    }
+                    grouped[c.set].cards.push(c);
+                    grouped[c.set].uniqueCardIds.add(c.id); 
+                    grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
+                });
+                for (const setName in grouped) {
+                    grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
+                    grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
+                    const uniqueCards = [];
+                    const seenIds = new Set();
+                    grouped[setName].cards.forEach(card => {
+                        if (!seenIds.has(card.id)) {
+                            uniqueCards.push(card);
+                            seenIds.add(card.id);
+                        }
+                    });
+                    grouped[setName].cards = uniqueCards;
+                }
+                return grouped;
+            },
+            
+            paginatedSearchResults() { return this.searchResults; },
+            totalSearchPages() { return this.totalSearchPagesCount; },
+            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
+            totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+        },
+        methods: {
+            checkIsDesktop() {
+                this.isDesktop = window.innerWidth >= 768;
+                if (this.isDesktop) this.showMobileNav = false;
+            },
+            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
+            logout() { if(auth) auth.signOut(); },
+
+            getSortIcon(key) {
+                if(this.sortBy !== key) return 'fa-sort text-gray-600';
+                return this.sortDesc ? 'fa-caret-down text-[#39ff14]' : 'fa-caret-up text-[#39ff14]';
+            },
+            getBinderName(id) {
+                if(id===null) return 'Master';
+                const b = this.binders.find(x => x.id === id);
+                return b ? b.name : 'Unknown';
+            },
+            getSetTotal(setName) {
+                const set = this.totalSetData[setName];
+                if (!set) return '?';
+                return (set.total && set.total > 0) ? set.total : set.printedTotal;
+            },
+            
+            toggleSelectAll() {
+                if (this.isAllSelected) this.selectedIds = [];
+                else this.selectedIds = this.displayCards.map(c => c.uid);
+            },
+            deleteSelected() {
+                if(!confirm(`Purge ${this.selectedIds.length} cards from database?`)) return;
+                this.selectedIds.forEach(uid => {
+                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                    else this.localCards = this.localCards.filter(c => c.uid !== uid);
+                });
+                this.selectedIds = [];
+                this.saveData();
+            },
+
+            setSort(key) {
+                if(this.sortBy === key) this.sortDesc = !this.sortDesc; 
+                else { this.sortBy = key; this.sortDesc = true; }
+                this.currentPage = 1; 
+            },
+            nextPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage < this.totalPages) this.currentPage++; 
+                } else if (this.showSearch) {
+                    if(this.searchPage < this.totalSearchPagesCount) this.fetchCards(this.searchPage + 1);
+                }
+            },
+            prevPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage > 1) this.currentPage--; 
+                } else if (this.showSearch) {
+                    if(this.searchPage > 1) this.fetchCards(this.searchPage - 1);
+                }
+            },
+            jumpToPage() {
+                if(this.searchPage >= 1 && this.searchPage <= this.totalSearchPagesCount) {
+                    this.fetchCards(this.searchPage);
+                } else {
+                    this.searchPage = 1;
+                    this.fetchCards(1);
+                }
+            },
+
+            loadLocalData() {
+                const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
+                const c = localStorage.getItem('glad_cards'); if(c) this.localCards = JSON.parse(c);
+            },
+            saveData() {
+                if(!this.user) {
+                    localStorage.setItem('glad_binders', JSON.stringify(this.localBinders));
+                    localStorage.setItem('glad_cards', JSON.stringify(this.localCards));
+                }
+            },
+            initCloudData() {
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
+            },
+
+            createBinder() {
+                const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
+                if(!name) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
+                else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
+            },
+            renameBinder(binder) {
+                const newName = prompt("Rename collection:", binder.name);
+                if (!newName || newName === binder.name) return;
+
+                if (this.user) {
+                    db.collection('users').doc(this.user.uid).collection('binders').doc(binder.id).update({ name: newName });
+                } else {
+                    const b = this.localBinders.find(x => x.id === binder.id);
+                    if (b) {
+                        b.name = newName;
+                        this.saveData();
+                    }
+                }
+            },
+            deleteBinder(id) {
+                if(!confirm("Delete this collection? Cards will remain in Master Database.")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
+                else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
+            },
+            addCard(c) {
+                const market = this.getCardPrice(c);
+                const cardData = {
+                    id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
+                    image: c.images.small, number: c.number, 
+                    market: market, 
+                    rawCost: market, fee: 15, targetGrade: 10,
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
+                };
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
+                
+                this.addedIds.push(c.id);
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
+            },
+            deleteCard(uid) {
+                if(!confirm("Eject this card permanently?")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
+                this.detailCard = null; 
+            },
+            updateCardBinder(card) {
+                const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
+                else this.saveData();
+            },
+
+            getEstValue(c) {
+                const raw = c.market || 0;
+                if(c.targetGrade == 10) return raw * 3.2;
+                if(c.targetGrade == 9) return raw * 1.1;
+                return raw * 0.85;
+            },
+            getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
+
+            selectBinder(b) { 
+                this.currentBinder = b; 
+                this.currentPage = 1; 
+                this.showMobileNav = false; 
+            }, 
+            getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
+            openSearch() { 
+                this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
+                if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
+                else this.targetBinder = 'master';
+            },
+            openCardDetail(c) { this.detailCard = c; },
+            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            
+            getCardPrice(c) { 
+                const prices = c.tcgplayer?.prices;
+                if (!prices) return 0;
+                const marketPrices = Object.values(prices).map(priceDetail => priceDetail?.market).filter(price => price > 0); 
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
+                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
+            },
+
+            debouncedSearch() {
+                if(this.searchTimeout) clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.fetchCards(1);
+                }, 600); 
+            },
+
+            async loadSetsAPI(forceRefresh = false) {
+                this.setsLoading = true;
+                const cacheKeySets = 'gladiator_all_sets_v3';
+                const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
+
+                if (!forceRefresh) {
+                    const c = localStorage.getItem(cacheKeySets);
+                    if(c) { 
+                        try {
+                            const data = JSON.parse(c);
+                            if(data.sets && data.sets.length > 0) {
+                                this.allSets = data.sets; 
+                                this.eras = data.eras;
+                                this.totalSetData = data.totalSetData; 
+                                this.setsLoading = false;
+                                return;
+                            }
+                        } catch (e) { console.error("Cache corrupted"); }
+                    }
+                }
+                
+                try {
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', {
+                        headers: { 'X-Api-Key': apiKey }
+                    });
+                    
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+                    const data = await res.json();
+                    const setSizeMap = {};
+                    data.data.forEach(s => {
+                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal };
+                    });
+
+                    this.allSets = data.data; 
+                    this.eras = [...new Set(data.data.map(s => s.series))];
+                    this.totalSetData = setSizeMap; 
+                    
+                    localStorage.setItem(cacheKeySets, JSON.stringify({
+                        sets: this.allSets, 
+                        eras: this.eras, 
+                        totalSetData: this.totalSetData
+                    }));
+                    
+                } catch(error) {
+                    console.error("Set Sync Failed:", error);
+                    alert("Database Sync Failed. Check console.");
+                } finally {
+                    this.setsLoading = false;
+                }
+            },
+            
+            async fetchCards(page = 1) {
+                if(!this.selectedSet) return;
+                
+                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                const cacheKey = `search_${this.selectedSet}_${nameQuery}_${this.searchSort}_${page}`;
+                
+                if (this.searchCache[cacheKey]) {
+                    this.searchResults = this.searchCache[cacheKey].data;
+                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
+                    this.searchPage = page;
+                    this.isSearching = false;
+                    return; 
+                }
+
+                if (searchController) searchController.abort();
+                searchController = new AbortController();
+                const signal = searchController.signal;
+
+                this.isSearching = true; 
+                this.searchPage = page; 
+
+                const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
+                let q = `set.id:${this.selectedSet}`; 
+                if(nameQuery) q += ` name:"${nameQuery}*"`; 
+                
+                let orderBy = 'number';
+                if (this.searchSort === 'name') orderBy = 'name';
+                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
+                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
+
+                try {
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`;
+                    
+                    const res = await fetch(url, {
+                        headers: { 'X-Api-Key': apiKey },
+                        signal: signal
+                    });
+                    
+                    if (!res.ok) throw new Error(`Search Error: ${res.status}`);
+                    
+                    const data = await res.json();
+                    
+                    this.searchCache[cacheKey] = {
+                        data: data.data || [],
+                        total: Math.ceil((data.totalCount || 0) / 18)
+                    };
+
+                    this.searchResults = this.searchCache[cacheKey].data;
+                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
+
+                } catch(e) { 
+                    if (e.name === 'AbortError') return;
+                    console.error("Search Failed:", e);
+                    this.searchResults = []; 
+                    alert("Connection unstable. Please try again.");
+                } finally { 
+                    if (!signal.aborted) this.isSearching = false; 
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
