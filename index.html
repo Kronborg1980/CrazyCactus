@@ -19,10 +19,8 @@
         :root {
             --neon-green: #39ff14;
             --neon-glow: rgba(57, 255, 20, 0.6);
-            --sunset-orange: #ff9f43;
-            --deep-space: #0f0c29;
             --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-surface: rgba(15, 12, 41, 0.75);
+            --glass-surface: rgba(15, 12, 41, 0.85);
         }
 
         body {
@@ -31,7 +29,6 @@
             color: #e2e8f0;
             min-height: 100vh;
             overflow-x: hidden;
-            /* Sand Grain Texture Overlay */
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"), linear-gradient(to bottom, #302b63, #0f0c29);
         }
 
@@ -40,8 +37,8 @@
         /* --- GLASSMORPHISM --- */
         .glass-panel {
             background: var(--glass-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-top: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
@@ -54,111 +51,50 @@
             transform: translateY(-2px);
         }
 
-        /* --- DESERT SCENERY ANIMATIONS --- */
+        /* --- SCENERY --- */
         .bg-watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vw;
-            height: 80vh;
-            opacity: 0.03; /* Very subtle transparency */
-            pointer-events: none;
-            z-index: -2;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80vw; height: 80vh; opacity: 0.03; pointer-events: none; z-index: -2;
             background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            filter: grayscale(1) contrast(1.5); /* Grayscale so it doesn't clash */
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            filter: grayscale(1) contrast(1.5);
         }
-
-        .bg-scenery {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
-
+        .bg-scenery { position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
         .heat-haze {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 20vh;
             background: linear-gradient(to top, rgba(57, 255, 20, 0.05), transparent);
-            filter: blur(10px);
-            animation: haze 5s infinite linear;
-            opacity: 0.5;
+            filter: blur(10px); animation: haze 5s infinite linear; opacity: 0.5;
         }
-        @keyframes haze {
-            0% { transform: skewX(0deg) translateY(0); }
-            25% { transform: skewX(2deg) translateY(-5px); }
-            50% { transform: skewX(0deg) translateY(0); }
-            75% { transform: skewX(-2deg) translateY(-5px); }
-            100% { transform: skewX(0deg) translateY(0); }
-        }
-
+        @keyframes haze { 0% { transform: skewX(0deg) translateY(0); } 50% { transform: skewX(2deg) translateY(-5px); } 100% { transform: skewX(0deg) translateY(0); } }
         .tumbleweed {
-            position: absolute;
-            bottom: 15%;
-            width: 60px;
-            height: 60px;
-            opacity: 0.6;
+            position: absolute; bottom: 15%; width: 60px; height: 60px; opacity: 0.6;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4a373' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21a9 9 0 1 0-9-9c0 4.97 4.03 9 9 9z'/%3E%3Cpath d='M12 3a9 9 0 0 1 9 9'/%3E%3Cpath d='M3.6 9h16.8'/%3E%3Cpath d='M3.6 15h16.8'/%3E%3Cpath d='M12 3v18'/%3E%3Cpath d='M16.5 7.5l-9 9'/%3E%3Cpath d='M7.5 7.5l9 9'/%3E%3C/svg%3E");
-            background-size: contain;
-            animation: tumble 25s linear infinite;
+            background-size: contain; animation: tumble 25s linear infinite;
         }
-        @keyframes tumble {
-            0% { left: -150px; transform: rotate(0deg); }
-            100% { left: 100vw; transform: rotate(1440deg); }
-        }
-
+        @keyframes tumble { 0% { left: -150px; transform: rotate(0deg); } 100% { left: 100vw; transform: rotate(1440deg); } }
         .stars {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: radial-gradient(white 1px, transparent 1px);
-            background-size: 50px 50px;
-            opacity: 0.1;
-            z-index: -3;
+            background-size: 50px 50px; opacity: 0.1; z-index: -3;
         }
 
         /* --- UI COMPONENTS --- */
         .btn-neon {
-            background: linear-gradient(135deg, var(--neon-green), #2ecc71);
-            color: #000;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            padding: 12px 24px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px var(--neon-glow);
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-neon::after {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
-            transform: rotate(45deg) translateX(-100%);
-            transition: transform 0.5s;
+            background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 24px; border-radius: 12px;
+            box-shadow: 0 0 15px var(--neon-glow); transition: all 0.3s; position: relative; overflow: hidden;
         }
         .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--neon-green); }
-        .btn-neon:hover::after { transform: rotate(45deg) translateX(100%); }
-        .btn-neon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+        .btn-neon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; transform: none; }
 
         .glass-input {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 12px; border-radius: 10px;
-            width: 100%; transition: 0.3s;
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;
+            padding: 12px; border-radius: 10px; width: 100%; transition: 0.3s;
         }
         .glass-input:focus {
-            border-color: var(--neon-green);
-            background: rgba(0,0,0,0.8);
-            box-shadow: 0 0 15px var(--neon-glow);
-            outline: none;
+            border-color: var(--neon-green); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px var(--neon-glow); outline: none;
         }
 
-        /* --- NAVIGATION --- */
         .nav-item {
             color: #a0aec0; font-weight: 600; padding: 10px 16px; border-radius: 12px;
             transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 8px;
@@ -166,22 +102,16 @@
         .nav-item:hover { color: white; background: rgba(255,255,255,0.1); }
         .nav-item.active {
             background: rgba(57, 255, 20, 0.15); color: var(--neon-green);
-            text-shadow: 0 0 8px var(--neon-glow);
-            border: 1px solid rgba(57, 255, 20, 0.3);
+            text-shadow: 0 0 8px var(--neon-glow); border: 1px solid rgba(57, 255, 20, 0.3);
         }
 
-        /* --- TABLE --- */
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
-        .data-table th {
-            text-align: left; padding: 16px; font-size: 11px; font-weight: 800;
-            text-transform: uppercase; color: var(--neon-green); letter-spacing: 1px;
-        }
-        .data-table td { padding: 12px 16px; background: rgba(0,0,0,0.4); first-child: border-radius: 10px 0 0 10px; last-child: border-radius: 0 10px 10px 0; }
+        .data-table th { text-align: left; padding: 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--neon-green); letter-spacing: 1px; }
+        .data-table td { padding: 12px 16px; background: rgba(0,0,0,0.4); }
         .data-table tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
         .data-table tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
         .data-table tr:hover td { background: rgba(57, 255, 20, 0.05); }
 
-        /* --- SCROLLBAR --- */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -195,16 +125,12 @@
 
 <div class="stars"></div>
 <div class="bg-watermark"></div>
-
 <div class="bg-scenery">
     <div class="heat-haze"></div>
     <div class="tumbleweed"></div>
-    
     <svg class="absolute bottom-0 right-[5%] w-48 h-48 opacity-30 text-black fill-current" viewBox="0 0 100 100"><path d="M50 90 L50 40 Q50 20 70 20 L70 30 M50 60 Q30 60 30 40 L30 30" stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
     <svg class="absolute bottom-0 left-[2%] w-64 h-64 opacity-20 text-black fill-current" viewBox="0 0 100 100"><path d="M50 95 L50 20 Q50 5 65 5 M50 60 Q20 60 20 40 L20 30 M50 50 Q80 50 80 30" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
     <svg class="absolute bottom-0 left-[30%] w-32 h-32 opacity-15 text-black fill-current" viewBox="0 0 100 100"><path d="M50 90 L50 50 Q50 30 40 30 L40 40 M50 70 Q60 70 60 50 L60 40" stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
-    <svg class="absolute bottom-0 right-[35%] w-40 h-40 opacity-25 text-black fill-current" viewBox="0 0 100 100"><path d="M50 95 L50 30 Q50 15 35 15 M50 60 Q70 60 70 40 L70 30" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
-    <svg class="absolute bottom-0 right-[60%] w-24 h-24 opacity-10 text-black fill-current" viewBox="0 0 100 100"><path d="M50 90 L50 40" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="none"/></svg>
 </div>
 
 <div id="app" v-cloak class="min-h-screen flex flex-col relative z-10">
@@ -225,15 +151,9 @@
             </div>
 
             <div class="hidden md:flex items-center gap-2 p-2 bg-black/30 rounded-2xl backdrop-blur-md border border-white/10 shadow-xl">
-                <div @click="switchView('collection')" class="nav-item" :class="{active: currentView==='collection'}">
-                    <i class="fa-solid fa-table-cells-large"></i> Dashboard
-                </div>
-                <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}">
-                    <i class="fa-solid fa-calculator"></i> Profit Calc
-                </div>
-                <div @click="switchView('binders')" class="nav-item" :class="{active: currentView==='binders'}">
-                    <i class="fa-solid fa-book-journal-whills"></i> Binders
-                </div>
+                <div @click="switchView('collection')" class="nav-item" :class="{active: currentView==='collection'}"><i class="fa-solid fa-table-cells-large"></i> Dashboard</div>
+                <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}"><i class="fa-solid fa-calculator"></i> Profit Calc</div>
+                <div @click="switchView('binders')" class="nav-item" :class="{active: currentView==='binders'}"><i class="fa-solid fa-book-journal-whills"></i> Binders</div>
             </div>
 
             <div class="flex items-center gap-4">
@@ -241,13 +161,8 @@
                     <span class="text-xs font-bold text-white shadow-black drop-shadow-md">{{ user.displayName }}</span>
                     <button @click="logout" class="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Log Out</button>
                 </div>
-                <button v-else @click="loginWithGoogle" class="hidden md:block text-xs font-bold text-[#39ff14] border border-[#39ff14] px-4 py-2 rounded-lg hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_10px_rgba(57,255,20,0.3)]">
-                    TRAINER LOGIN
-                </button>
-                
-                <button @click="openSearch" class="btn-neon text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Card</span>
-                </button>
+                <button v-else @click="loginWithGoogle" class="hidden md:block text-xs font-bold text-[#39ff14] border border-[#39ff14] px-4 py-2 rounded-lg hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_10px_rgba(57,255,20,0.3)]">TRAINER LOGIN</button>
+                <button @click="openSearch" class="btn-neon text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Card</span></button>
             </div>
         </div>
     </nav>
@@ -256,31 +171,16 @@
         
         <div v-if="currentView !== 'calculator'" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div class="glass-panel p-8 flex justify-between items-center group">
-                <div>
-                    <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Portfolio Value</div>
-                    <div class="text-5xl font-black text-white tracking-tight drop-shadow-lg group-hover:text-[#39ff14] transition">${{ formatNumber(totalValue) }}</div>
-                </div>
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(57,255,20,0.5)]">
-                    <i class="fa-solid fa-sack-dollar"></i>
-                </div>
+                <div><div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Portfolio Value</div><div class="text-5xl font-black text-white tracking-tight drop-shadow-lg group-hover:text-[#39ff14] transition">${{ formatNumber(totalValue) }}</div></div>
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(57,255,20,0.5)]"><i class="fa-solid fa-sack-dollar"></i></div>
             </div>
             <div class="glass-panel p-8 flex justify-between items-center group">
-                <div>
-                    <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Total Cards</div>
-                    <div class="text-5xl font-black text-white tracking-tight drop-shadow-lg">{{ cards.length }}</div>
-                </div>
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-                    <i class="fa-solid fa-layer-group"></i>
-                </div>
+                <div><div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Total Cards</div><div class="text-5xl font-black text-white tracking-tight drop-shadow-lg">{{ cards.length }}</div></div>
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(59,130,246,0.5)]"><i class="fa-solid fa-layer-group"></i></div>
             </div>
             <div class="glass-panel p-8 flex justify-between items-center group">
-                <div>
-                    <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Binders</div>
-                    <div class="text-5xl font-black text-white tracking-tight drop-shadow-lg">{{ binders.length }}</div>
-                </div>
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(147,51,234,0.5)]">
-                    <i class="fa-solid fa-folder-open"></i>
-                </div>
+                <div><div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Binders</div><div class="text-5xl font-black text-white tracking-tight drop-shadow-lg">{{ binders.length }}</div></div>
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(147,51,234,0.5)]"><i class="fa-solid fa-folder-open"></i></div>
             </div>
         </div>
 
@@ -291,29 +191,19 @@
                 <p class="text-gray-400 mb-8 text-lg">Plant your first seed and watch it grow!</p>
                 <button @click="openSearch" class="btn-neon text-lg px-8 py-4">Find My Card</button>
             </div>
-
             <div v-else class="space-y-10">
                 <div v-for="(setGroup, setName) in cardsBySet" :key="setName" class="glass-panel overflow-hidden">
                     <div class="px-8 py-6 border-b border-white/10 bg-black/20 flex justify-between items-center">
-                        <h3 class="font-black text-2xl text-white uppercase tracking-wider flex items-center gap-3 text-glow">
-                             <i class="fa-solid fa-certificate text-[#ff9f43]"></i> {{ setName }}
-                        </h3>
-                        <span class="text-sm font-bold bg-[#39ff14]/20 text-[#39ff14] px-4 py-2 rounded-full border border-[#39ff14]/50 shadow-[0_0_15px_rgba(57,255,20,0.3)]">
-                            {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}
-                        </span>
+                        <h3 class="font-black text-2xl text-white uppercase tracking-wider flex items-center gap-3 text-glow"><i class="fa-solid fa-certificate text-[#ff9f43]"></i> {{ setName }}</h3>
+                        <span class="text-sm font-bold bg-[#39ff14]/20 text-[#39ff14] px-4 py-2 rounded-full border border-[#39ff14]/50 shadow-[0_0_15px_rgba(57,255,20,0.3)]">{{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}</span>
                     </div>
                     <div class="p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-10">
-                        <div v-for="card in setGroup.cards" :key="card.uid" @click="openCardDetail(card)" 
-                             class="group cursor-pointer relative transition duration-300 hover:-translate-y-3 hover:rotate-2">
-                            
+                        <div v-for="card in setGroup.cards" :key="card.uid" @click="openCardDetail(card)" class="group cursor-pointer relative transition duration-300 hover:-translate-y-3 hover:rotate-2">
                             <div class="relative rounded-2xl overflow-hidden shadow-2xl transition duration-300 group-hover:shadow-[0_0_40px_rgba(57,255,20,0.4)] border border-white/5 group-hover:border-[#39ff14]/50">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
                                 <img :src="card.image" class="w-full object-cover">
-                                <div class="absolute bottom-3 right-3 z-20 text-lg font-black text-[#39ff14] drop-shadow-md bg-black/70 px-3 py-1 rounded-lg backdrop-blur-md border border-[#39ff14]/30">
-                                    ${{ Math.round(card.market) }}
-                                </div>
+                                <div class="absolute bottom-3 right-3 z-20 text-lg font-black text-[#39ff14] drop-shadow-md bg-black/70 px-3 py-1 rounded-lg backdrop-blur-md border border-[#39ff14]/30">${{ Math.round(card.market) }}</div>
                             </div>
-                            
                             <div class="mt-4 text-center">
                                 <div class="text-sm font-bold text-white truncate group-hover:text-[#39ff14] transition text-glow">{{ card.name }}</div>
                                 <div class="text-xs font-bold text-gray-500 mt-1">x{{ setGroup.cardCounts[card.id] }}</div>
@@ -329,28 +219,22 @@
                 <h2 class="text-4xl font-black text-white tracking-wide drop-shadow-lg text-glow">CARD VAULTS</h2>
                 <button @click="createBinder" class="text-sm font-bold text-[#39ff14] border-2 border-[#39ff14] px-6 py-3 rounded-xl hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_20px_rgba(57,255,20,0.3)]">+ NEW BINDER</button>
             </div>
-            
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 <div @click="selectBinder(null); switchView('calculator')" class="glass-panel h-64 p-10 cursor-pointer relative overflow-hidden group border-2 border-transparent hover:border-[#39ff14]/50 transition-all duration-500">
                     <div class="absolute inset-0 bg-gradient-to-br from-gray-900/80 to-black/80 z-0"></div>
                     <i class="fa-solid fa-server text-[12rem] text-white/5 absolute -bottom-8 -right-8 group-hover:scale-110 transition duration-500 group-hover:text-[#39ff14]/10"></i>
-                    
                     <div class="relative z-10 h-full flex flex-col justify-end">
                         <h3 class="text-3xl font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition drop-shadow-lg">Master Archive</h3>
                         <p class="text-lg font-bold text-gray-400 mt-2">Total: <span class="text-white">{{ cards.length }}</span> Cards</p>
                     </div>
                 </div>
-
                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); switchView('calculator')" class="glass-panel h-64 p-10 cursor-pointer relative overflow-hidden group border-2 border-transparent hover:border-[#39ff14]/50 transition-all duration-500">
                     <div class="absolute inset-0 bg-gradient-to-br from-[#302b63]/60 to-black/60 z-0"></div>
-                    
                     <div class="absolute top-6 right-6 flex gap-3 z-20 opacity-0 group-hover:opacity-100 transition duration-300">
                         <button @click.stop="renameBinder(b)" class="w-10 h-10 rounded-full bg-black/50 text-white hover:bg-[#39ff14] hover:text-black flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-pen"></i></button>
                         <button @click.stop="deleteBinder(b.id)" class="w-10 h-10 rounded-full bg-black/50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-trash"></i></button>
                     </div>
-
                     <i class="fa-solid fa-book-bookmark text-[12rem] text-[#39ff14]/5 absolute -bottom-8 -right-8 group-hover:text-[#39ff14]/20 group-hover:rotate-12 transition duration-500"></i>
-                    
                     <div class="relative z-10 h-full flex flex-col justify-end">
                         <h3 class="text-3xl font-black text-white uppercase tracking-wider truncate pr-4 drop-shadow-lg">{{ b.name }}</h3>
                         <p class="text-lg font-bold text-[#39ff14] mt-2 drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]">{{ getBinderCount(b.id) }} Cards</p>
@@ -362,18 +246,13 @@
         <div v-if="currentView === 'calculator'">
             <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 glass-panel p-8">
                 <div>
-                    <h2 class="text-3xl font-black text-white uppercase flex items-center gap-4 text-glow">
-                        <i class="fa-solid fa-folder-open text-[#ff9f43]"></i> {{ currentBinder ? currentBinder.name : 'Master List' }}
-                    </h2>
+                    <h2 class="text-3xl font-black text-white uppercase flex items-center gap-4 text-glow"><i class="fa-solid fa-folder-open text-[#ff9f43]"></i> {{ currentBinder ? currentBinder.name : 'Master List' }}</h2>
                     <p class="text-sm font-bold text-gray-400 mt-2 tracking-wider">Profitability Analysis Engine</p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-600 text-white text-sm font-bold px-6 py-3 rounded-xl hover:bg-red-700 transition shadow-[0_0_20px_rgba(239,68,68,0.5)] uppercase tracking-widest">
-                        DELETE {{ selectedIds.length }} ITEMS
-                    </button>
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-600 text-white text-sm font-bold px-6 py-3 rounded-xl hover:bg-red-700 transition shadow-[0_0_20px_rgba(239,68,68,0.5)] uppercase tracking-widest">DELETE {{ selectedIds.length }} ITEMS</button>
                 </div>
             </div>
-
             <div class="glass-panel overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="data-table min-w-[1000px]">
@@ -392,42 +271,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-if="paginatedCards.length === 0">
-                                <td colspan="10" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No cards buried here...</td>
-                            </tr>
+                            <tr v-if="paginatedCards.length === 0"><td colspan="10" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No cards buried here...</td></tr>
                             <tr v-for="c in paginatedCards" :key="c.uid" :class="{'bg-[#39ff14]/10': selectedIds.includes(c.uid)}" class="transition duration-200 hover:bg-white/5">
                                 <td class="text-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="accent-[#39ff14] w-5 h-5 cursor-pointer"></td>
-                                <td class="text-center py-3">
-                                    <div class="w-12 h-16 bg-gray-900 rounded-lg overflow-hidden border-2 border-white/10 mx-auto cursor-pointer hover:scale-110 hover:border-[#39ff14] transition shadow-lg hover:shadow-[0_0_15px_rgba(57,255,20,0.3)]" @click="openCardDetail(c)">
-                                        <img :src="c.image" class="w-full h-full object-cover">
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="font-black text-white text-base cursor-pointer hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}</div>
-                                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">{{ c.set }} #{{ c.number }}</div>
-                                </td>
-                                <td>
-                                    <select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-black/50 border border-white/20 rounded-lg text-sm px-3 py-2 text-gray-300 w-full focus:border-[#39ff14] outline-none transition focus:shadow-[0_0_10px_rgba(57,255,20,0.2)]">
-                                        <option :value="null">Master Archive</option>
-                                        <option v-for="b in binders" :value="b.id">{{ b.name }}</option>
-                                    </select>
-                                </td>
+                                <td class="text-center py-3"><div class="w-12 h-16 bg-gray-900 rounded-lg overflow-hidden border-2 border-white/10 mx-auto cursor-pointer hover:scale-110 hover:border-[#39ff14] transition shadow-lg hover:shadow-[0_0_15px_rgba(57,255,20,0.3)]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></td>
+                                <td><div class="font-black text-white text-base cursor-pointer hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">{{ c.set }} #{{ c.number }}</div></td>
+                                <td><select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-black/50 border border-white/20 rounded-lg text-sm px-3 py-2 text-gray-300 w-full focus:border-[#39ff14] outline-none transition focus:shadow-[0_0_10px_rgba(57,255,20,0.2)]"><option :value="null">Master Archive</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></td>
                                 <td><input v-model.number="c.rawCost" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white transition"></td>
                                 <td><input v-model.number="c.fee" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white transition"></td>
-                                <td class="text-center">
-                                    <select v-model="c.targetGrade" @change="saveData()" class="bg-black/50 border-2 border-[#39ff14]/50 rounded-lg text-xs px-3 py-2 text-[#39ff14] font-black shadow-[0_0_10px_rgba(57,255,20,0.2)] focus:border-[#39ff14] outline-none">
-                                        <option value="10">PSA 10</option>
-                                        <option value="9">PSA 9</option>
-                                        <option value="8">PSA 8</option>
-                                    </select>
-                                </td>
+                                <td class="text-center"><select v-model="c.targetGrade" @change="saveData()" class="bg-black/50 border-2 border-[#39ff14]/50 rounded-lg text-xs px-3 py-2 text-[#39ff14] font-black shadow-[0_0_10px_rgba(57,255,20,0.2)] focus:border-[#39ff14] outline-none"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></td>
                                 <td class="text-right font-mono font-bold text-gray-300 text-base">${{ formatNumber(getEstValue(c)) }}</td>
-                                <td class="text-right font-mono font-black text-base" :class="getProfit(c) >= 0 ? 'text-[#39ff14] drop-shadow-[0_0_8px_rgba(57,255,20,0.6)]' : 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]'">
-                                    ${{ Math.round(getProfit(c)) }}
-                                </td>
-                                <td class="text-center">
-                                    <button @click="deleteCard(c.uid)" class="text-gray-500 hover:text-red-500 transition text-lg hover:scale-125"><i class="fa-solid fa-trash"></i></button>
-                                </td>
+                                <td class="text-right font-mono font-black text-base" :class="getProfit(c) >= 0 ? 'text-[#39ff14] drop-shadow-[0_0_8px_rgba(57,255,20,0.6)]' : 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]'">${{ Math.round(getProfit(c)) }}</td>
+                                <td class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-500 hover:text-red-500 transition text-lg hover:scale-125"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -441,31 +296,19 @@
                 </div>
             </div>
         </div>
-
     </main>
 
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-        <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}">
-            <i class="fa-solid fa-table-cells-large text-2xl"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest">Home</span>
-        </button>
-        <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}">
-            <i class="fa-solid fa-calculator text-2xl"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest">Calc</span>
-        </button>
-        <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}">
-            <i class="fa-solid fa-book-journal-whills text-2xl"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest">Binders</span>
-        </button>
+        <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Home</span></button>
+        <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Calc</span></button>
+        <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Binders</span></button>
     </div>
 
     <Transition name="fade">
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div class="glass-panel w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
-                <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40">
-                    <h2 class="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-4 text-glow">
-                        <i class="fa-solid fa-satellite-dish text-[#39ff14] animate-pulse"></i> Find My Card
-                    </h2>
+                <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
+                    <h2 class="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-4 text-glow"><i class="fa-solid fa-satellite-dish text-[#39ff14] animate-pulse"></i> Find My Card</h2>
                     <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90 hover:scale-125"><i class="fa-solid fa-xmark text-3xl"></i></button>
                 </div>
                 
@@ -478,40 +321,44 @@
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set Selection</label>
                         <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
                     </div>
-                    <div class="md:col-span-1">
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
-                        <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase" placeholder="e.g. CHARIZARD" :disabled="!selectedSet">
+                    <div>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Sort Results</label>
+                        <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="number">Card Number</option>
+                            <option value="name">Card Name</option>
+                        </select>
                     </div>
-                    <div class="flex items-end">
-                        <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="w-full btn-neon text-base h-14 flex items-center justify-center gap-3 tracking-widest">
-                            <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'SCANNING...' : 'INITIATE SEARCH' }}
-                        </button>
+                    <div>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Pokemon Name</label>
+                        <div class="flex gap-2">
+                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
+                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar">
-                     <div v-if="paginatedSearchResults.length > 0" class="flex justify-end gap-4 mb-6 sticky top-0 z-10 bg-black/80 p-4 rounded-2xl backdrop-blur-xl border border-white/10 shadow-xl">
-                         <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-6 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold">PREV</button>
-                         <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-sm px-6 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">{{ searchPage }} / {{ totalSearchPages }}</span>
-                         <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black/50 border-2 border-white/20 text-xs px-6 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold">NEXT</button>
-                     </div>
-
+                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
                      <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
                          <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
                      </div>
 
                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
-                         <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" 
-                              class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
+                         <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
                              <img :src="card.images.small" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
                              <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
                              <div class="text-sm font-bold text-[#39ff14] mt-2 drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
-                             <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">
-                                 ACQUIRED!
-                             </div>
+                             <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
                          </div>
                      </div>
+                </div>
+
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
+                    <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">PREVIOUS</button>
+                    <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-sm px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
+                    <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">NEXT</button>
                 </div>
             </div>
         </div>
@@ -521,37 +368,20 @@
         <div v-if="detailCard" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative shadow-[0_0_150px_rgba(57,255,20,0.25)] rounded-3xl border-2 border-[#39ff14]/20">
                 <button @click="detailCard=null" class="absolute top-6 right-6 z-20 text-gray-400 hover:text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center transition hover:bg-red-500 hover:rotate-90"><i class="fa-solid fa-xmark text-xl"></i></button>
-
                 <div class="w-full md:w-1/2 bg-black/40 p-12 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/10 relative group">
                     <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(57,255,20,0.15),transparent)] opacity-50 group-hover:opacity-100 transition duration-500"></div>
                     <img :src="detailCard.image.replace('small','large')" class="max-h-[70vh] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.9)] rounded-2xl relative z-10 border-2 border-white/10 group-hover:border-[#39ff14]/30 transition duration-500 group-hover:scale-105">
                 </div>
-
                 <div class="w-full md:w-1/2 p-12 flex flex-col bg-[#0f0c29]/90 justify-between">
                     <div>
                         <h2 class="text-4xl font-black text-white uppercase leading-none mb-4 drop-shadow-lg text-glow">{{ detailCard.name }}</h2>
-                        <div class="flex gap-4 text-sm font-bold text-gray-400 mb-12 uppercase tracking-widest">
-                            <span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10 shadow-inner">{{ detailCard.set }}</span>
-                            <span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10 shadow-inner">#{{ detailCard.number }}</span>
-                        </div>
-
+                        <div class="flex gap-4 text-sm font-bold text-gray-400 mb-12 uppercase tracking-widest"><span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10 shadow-inner">{{ detailCard.set }}</span><span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10 shadow-inner">#{{ detailCard.number }}</span></div>
                         <div class="grid grid-cols-2 gap-8 mb-12">
-                            <div class="p-6 bg-white/5 rounded-2xl border border-white/10 shadow-xl hover:border-[#ff9f43]/50 transition">
-                                <div class="text-xs font-black text-[#ff9f43] uppercase mb-2 tracking-widest">Paid Cost</div>
-                                <div class="text-3xl font-mono font-black text-white drop-shadow-md">${{ formatNumber(detailCard.rawCost) }}</div>
-                            </div>
-                            <div class="p-6 bg-[#39ff14]/5 rounded-2xl border border-[#39ff14]/20 shadow-[0_0_20px_rgba(57,255,20,0.1)] hover:bg-[#39ff14]/10 transition">
-                                <div class="text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Potential Value</div>
-                                <div class="text-3xl font-mono font-black text-[#39ff14] drop-shadow-[0_0_10px_rgba(57,255,20,0.6)]">${{ formatNumber(getEstValue(detailCard)) }}</div>
-                            </div>
+                            <div class="p-6 bg-white/5 rounded-2xl border border-white/10 shadow-xl hover:border-[#ff9f43]/50 transition"><div class="text-xs font-black text-[#ff9f43] uppercase mb-2 tracking-widest">Paid Cost</div><div class="text-3xl font-mono font-black text-white drop-shadow-md">${{ formatNumber(detailCard.rawCost) }}</div></div>
+                            <div class="p-6 bg-[#39ff14]/5 rounded-2xl border border-[#39ff14]/20 shadow-[0_0_20px_rgba(57,255,20,0.1)] hover:bg-[#39ff14]/10 transition"><div class="text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Potential Value</div><div class="text-3xl font-mono font-black text-[#39ff14] drop-shadow-[0_0_10px_rgba(57,255,20,0.6)]">${{ formatNumber(getEstValue(detailCard)) }}</div></div>
                         </div>
                     </div>
-
-                    <div class="border-t border-white/10 pt-10">
-                         <button @click="deleteCard(detailCard.uid)" class="w-full border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-red-600 hover:text-white transition shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] hover:border-red-600">
-                             Remove from Collection
-                         </button>
-                    </div>
+                    <div class="border-t border-white/10 pt-10"><button @click="deleteCard(detailCard.uid)" class="w-full border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-red-600 hover:text-white transition shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_40px_rgba(239,68,68,0.6)] hover:border-red-600">Remove from Collection</button></div>
                 </div>
             </div>
         </div>
@@ -560,245 +390,77 @@
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
-        authDomain: "gladiator-portfolio.firebaseapp.com",
-        projectId: "gladiator-portfolio",
-        storageBucket: "gladiator-portfolio.firebasestorage.app",
-        messagingSenderId: "61051937804",
-        appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE", authDomain: "gladiator-portfolio.firebaseapp.com", projectId: "gladiator-portfolio", storageBucket: "gladiator-portfolio.firebasestorage.app", messagingSenderId: "61051937804", appId: "1:61051937804:web:535cbbcb5417c4bde67a29" };
+    let auth, db, provider; try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); provider = new firebase.auth.GoogleAuthProvider(); } catch(e) { console.log("Guest Mode"); }
 
-    let auth, db, provider;
-    try {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-        provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Guest Mode"); }
-
-    const { createApp } = Vue;
-    let searchController = null;
+    const { createApp } = Vue; let searchController = null;
 
     createApp({
         data() {
             return {
-                user: null, currentView: 'collection', currentBinder: null, 
-                localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
+                user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_desert_v4_final',
-                
-                totalSetData: {}, 
-                
+                cacheKey: 'cactus_final_v5', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
-                searchPage: 1, searchPerPage: 18, 
-                addedIds: [], selectedIds: [], 
-                searchSort: 'price-desc', 
-                totalSearchPagesCount: 1, 
-                searchCache: {}, 
-                searchTimeout: null
+                searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
+                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
             }
         },
         watch: {
             selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } }
+            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
+            searchSort() { this.fetchCards(1); } // Trigger fetch when sort changes
         },
-        mounted() {
-            this.loadLocalData();
-            this.loadSetsAPI(); 
-            if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } });
-        },
+        mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
         computed: {
-            binders() { return this.user ? this.cloudBinders : this.localBinders; },
-            cards() { return this.user ? this.cloudCards : this.localCards; },
-            displayCards() { 
-                let list = this.cards; 
-                if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                return list;
-            },
+            binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
+            displayCards() { let list = this.cards; if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id); return list; },
             isAllSelected() { return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length; },
-            sortedCards() {
-                let list = [...this.displayCards];
-                return list.sort((a, b) => {
-                    let valA, valB;
-                    if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
-                    else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
-                    else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
-                    else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
-                    else { valA = a.id; valB = b.id; }
-                    if(valA < valB) return this.sortDesc ? 1 : -1;
-                    if(valA > valB) return this.sortDesc ? -1 : 1;
-                    return 0;
-                });
-            },
-            totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
-            paginatedCards() {
-                const start = (this.currentPage - 1) * this.itemsPerPage;
-                return this.sortedCards.slice(start, start + this.itemsPerPage);
-            },
-            cardsBySet() {
-                const grouped = {};
-                this.cards.forEach(c => {
-                    if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
-                    grouped[c.set].cards.push(c);
-                    grouped[c.set].uniqueCardIds.add(c.id); 
-                    grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
-                });
-                for (const setName in grouped) {
-                    grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
-                    grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
-                    const uniqueCards = [];
-                    const seenIds = new Set();
-                    grouped[setName].cards.forEach(card => {
-                        if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); }
-                    });
-                    grouped[setName].cards = uniqueCards;
-                }
-                return grouped;
-            },
-            paginatedSearchResults() { return this.searchResults; },
-            totalSearchPages() { return this.totalSearchPagesCount; },
-            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
-            totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            sortedCards() { let list = [...this.displayCards]; return list.sort((a, b) => { let valA, valB; if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } else { valA = a.id; valB = b.id; } if(valA < valB) return this.sortDesc ? 1 : -1; if(valA > valB) return this.sortDesc ? -1 : 1; return 0; }); },
+            totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
+            cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
+            paginatedSearchResults() { return this.searchResults; }, totalSearchPages() { return this.totalSearchPagesCount; },
+            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
-            switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); },
-            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
-            logout() { if(auth) auth.signOut(); },
-            
-            getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); },
-            toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
-            deleteSelected() {
-                if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
-                this.selectedIds.forEach(uid => {
-                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
-                    else this.localCards = this.localCards.filter(c => c.uid !== uid);
-                });
-                this.selectedIds = [];
-                this.saveData();
-            },
-            setSort(key) {
-                if(this.sortBy === key) this.sortDesc = !this.sortDesc; 
-                else { this.sortBy = key; this.sortDesc = true; }
-                this.currentPage = 1; 
-            },
+            switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, logout() { if(auth) auth.signOut(); },
+            getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
+            deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
+            setSort(key) { if(this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; },
             nextPage() { if(this.currentView === 'calculator' ? this.currentPage < this.totalPages : this.searchPage < this.totalSearchPagesCount) this.currentView === 'calculator' ? this.currentPage++ : this.fetchCards(this.searchPage + 1); },
             prevPage() { if(this.currentView === 'calculator' ? this.currentPage > 1 : this.searchPage > 1) this.currentView === 'calculator' ? this.currentPage-- : this.fetchCards(this.searchPage - 1); },
-            
-            loadLocalData() {
-                const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b);
-                const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c);
-            },
-            saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
-            initCloudData() {
-                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
-                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
-            },
-            createBinder() {
-                const name = prompt("Name your new binder:");
-                if(!name) return;
-                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
-                else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
-            },
-            renameBinder(b) {
-                const newName = prompt("Rename binder:", b.name);
-                if (!newName || newName === b.name) return;
-                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName });
-                else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } }
-            },
-            deleteBinder(id) {
-                if(!confirm("Delete this binder? Cards remain in master.")) return;
-                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
-                else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
-            },
-            addCard(c) {
-                const market = this.getCardPrice(c);
-                const cardData = {
-                    id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
-                    image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10,
-                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
-                };
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
-                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
-                this.addedIds.push(c.id);
-                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
-            },
-            deleteCard(uid) {
-                if(!confirm("Remove card?")) return;
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
-                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
-                this.detailCard = null; 
-            },
-            updateCardBinder(card) {
-                const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
-                else this.saveData();
-            },
-            getEstValue(c) {
-                const raw = c.market || 0;
-                if(c.targetGrade == 10) return raw * 3.2;
-                if(c.targetGrade == 9) return raw * 1.1;
-                return raw * 0.85;
-            },
-            getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
-            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, 
-            getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { 
-                this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master';
-            },
-            openCardDetail(c) { this.detailCard = c; },
-            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            getCardPrice(c) { 
-                const prices = c.tcgplayer?.prices;
-                if (!prices) return 0;
-                const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); 
-                if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
-                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
-            },
-            debouncedSearch() {
-                if(this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); 
-            },
-            async loadSetsAPI(force=false) {
-                this.setsLoading = true;
-                const cacheKey = 'cactus_sets_v3_final';
-                const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-                if (!force) {
-                    const c = localStorage.getItem(cacheKey);
-                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} }
-                }
-                try {
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } });
-                    if (!res.ok) throw new Error(`API Error`);
-                    const data = await res.json();
-                    const setSizeMap = {};
-                    data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
-                    this.allSets = data.data; 
-                    this.eras = [...new Set(data.data.map(s => s.series))];
-                    this.totalSetData = setSizeMap; 
-                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
-                } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; }
-            },
+            loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
+            initCloudData() { db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); },
+            createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
+            renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
+            deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
+            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
+            deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
+            updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
+            getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
+            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
+            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
+            openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
+            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); },
+            async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
             async fetchCards(page=1) {
                 if(!this.selectedSet) return;
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${qName}_${page}`;
+                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
                 if (this.searchCache[cacheKey]) { this.searchResults=this.searchCache[cacheKey].data; this.totalSearchPagesCount=this.searchCache[cacheKey].total; this.searchPage=page; this.isSearching=false; return; }
-                if (searchController) searchController.abort();
-                searchController = new AbortController();
+                if (searchController) searchController.abort(); searchController = new AbortController();
                 this.isSearching = true; this.searchPage = page; 
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
                 let q = `set.id:${this.selectedSet}`; if(qName) q += ` name:"${qName}*"`; 
-                try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=number`, { headers: { 'X-Api-Key': apiKey }, signal: searchController.signal });
-                    if (!res.ok) throw new Error(`Err`);
-                    const data = await res.json();
-                    this.searchCache[cacheKey] = { data: data.data || [], total: Math.ceil((data.totalCount || 0) / 18) };
-                    this.searchResults = this.searchCache[cacheKey].data;
-                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
-                } catch(e) { if (e.name !== 'AbortError') this.searchResults=[]; } finally { if (!searchController.signal.aborted) this.isSearching = false; }
+                
+                let orderBy = 'number';
+                if (this.searchSort === 'name') orderBy = 'name';
+                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
+                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
+
+                try { const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { headers: { 'X-Api-Key': apiKey }, signal: searchController.signal }); if (!res.ok) throw new Error(`Err`); const data = await res.json(); this.searchCache[cacheKey] = { data: data.data || [], total: Math.ceil((data.totalCount || 0) / 18) }; this.searchResults = this.searchCache[cacheKey].data; this.totalSearchPagesCount = this.searchCache[cacheKey].total; } catch(e) { if (e.name !== 'AbortError') this.searchResults=[]; } finally { if (!searchController.signal.aborted) this.isSearching = false; }
             }
         }
     }).mount('#app');
