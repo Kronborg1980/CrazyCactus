@@ -9,319 +9,225 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { 
-            --neon: #00ff41; 
-            --neon-dim: rgba(0, 255, 65, 0.1);
-            --neon-glow: rgba(0, 255, 65, 0.4);
-            --void: #030804;
-            --panel-bg: rgba(5, 20, 10, 0.65);
-        }
-        
-        body { 
-            font-family: 'Inter', sans-serif;
-            background-color: var(--void);
-            /* Abstract Organic Grid Background */
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(0, 255, 65, 0.08) 0%, transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(0, 100, 50, 0.15) 0%, transparent 40%),
-                linear-gradient(0deg, rgba(0,0,0,0.8), transparent 1px),
-                linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-            color: #d1d5db; 
-            min-height: 100vh;
-            overflow: hidden; 
+        :root {
+            --cactus-green: #2ecc71;
+            --cactus-dark: #27ae60;
+            --dark-bg: #0f1012;
+            --card-bg: #18191c;
+            --border-color: #2d3035;
         }
 
-        .font-tech { font-family: 'Rajdhani', sans-serif; }
+        body {
+            font-family: 'Rubik', sans-serif;
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
+            /* Subtle texture pattern */
+            background-image: radial-gradient(#2d3035 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding-bottom: 80px; /* Space for mobile nav */
+        }
+
         [v-cloak] { display: none; }
 
-        /* --- THE CYBER-CARD CONTAINER --- */
-        .cyber-card {
-            background: var(--panel-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 255, 65, 0.15);
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8);
+        /* --- UI COMPONENTS --- */
+        .cactus-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
         }
-
-        /* --- THE RUNNING LED EFFECT --- */
-        .led-running {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 50;
-            border-radius: 4px;
-        }
-        .led-running::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border: 2px solid transparent;
-            border-radius: 4px;
-            background: linear-gradient(90deg, transparent 50%, var(--neon), transparent 100%) border-box;
-            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            background-size: 200% 200%;
-            animation: circuit-flow 3s linear infinite;
-        }
-        @keyframes circuit-flow {
-            0% { background-position: 100% 0%; }
-            100% { background-position: -100% 0%; }
-        }
-
-        /* --- TYPOGRAPHY EFFECTS --- */
-        .text-glow { text-shadow: 0 0 10px var(--neon-glow); }
         
-        /* --- NAVIGATION "SPINE" --- */
-        .nav-spine-item {
-            position: relative;
+        .cactus-btn-primary {
+            background-color: var(--cactus-green);
+            color: #000;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 0 var(--cactus-dark);
+        }
+        .cactus-btn-primary:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 var(--cactus-dark);
+        }
+        .cactus-btn-primary:disabled {
+            background-color: #333;
+            color: #666;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .cactus-input {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            font-weight: 600;
+        }
+        .cactus-input:focus {
+            border-color: var(--cactus-green);
+            outline: none;
+        }
+
+        /* --- NAVIGATION --- */
+        .nav-item {
+            color: #94a3b8;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: 0.2s;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            margin-bottom: 8px;
-            color: #6b7280;
-            transition: 0.3s;
-            border-left: 2px solid transparent;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
+            gap: 8px;
         }
-        .nav-spine-item:hover {
-            color: white;
-            background: linear-gradient(90deg, rgba(0,255,65,0.05), transparent);
-            text-shadow: 0 0 8px var(--neon);
+        .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-item.active {
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--cactus-green);
         }
-        .nav-spine-item.active {
-            color: var(--neon);
-            border-left: 2px solid var(--neon);
-            background: linear-gradient(90deg, rgba(0,255,65,0.1), transparent);
-            box-shadow: inset 10px 0 20px -10px rgba(0,255,65,0.3);
-        }
-        .nav-spine-item.active i { transform: scale(1.2); filter: drop-shadow(0 0 5px var(--neon)); }
 
-        /* --- DATA TABLES --- */
-        .data-row {
-            display: grid;
-            grid-template-columns: 40px 60px 2fr 1.5fr 1fr 1fr 1fr 1fr 50px;
-            gap: 12px;
-            align-items: center;
-            padding: 10px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            font-size: 13px;
-            color: #9ca3af;
-        }
-        .data-row:hover { background: rgba(0,255,65,0.03); color: white; }
-        .data-header {
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
+        /* --- TABLE STYLES --- */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            text-align: left;
+            padding: 12px;
             font-size: 11px;
-            color: var(--neon);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            padding: 16px;
-            background: rgba(0,0,0,0.4);
-            border-bottom: 1px solid rgba(0,255,65,0.3);
-            position: sticky; top: 0; z-index: 10;
+            color: #64748b;
+            border-bottom: 2px solid #2d3035;
         }
-        
-        @media (max-width: 768px) {
-            .data-row { grid-template-columns: 30px 50px 1fr 60px; padding: 12px; }
-            .data-header { display: none; } 
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #2d3035;
+            font-size: 13px;
         }
+        .data-table tr:hover td { background-color: rgba(255,255,255,0.02); }
 
-        /* --- INPUT STYLING --- */
-        .cyber-input {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #333;
-            color: var(--neon);
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 2px;
-            width: 100%;
-            text-align: right;
-            transition: 0.3s;
-        }
-        .cyber-input:focus { border-color: var(--neon); outline: none; box-shadow: 0 0 10px var(--neon-dim); }
-
-        .cyber-select {
-            background: #000;
-            border: 1px solid #333;
-            color: #888;
-            font-size: 10px;
-            text-transform: uppercase;
-            padding: 4px;
-            width: 100%;
-        }
-        
-        /* --- UTILS --- */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #1f2937; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon); }
-
-        .modal-enter-active, .modal-leave-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(10px); }
-
-        .clip-corner { clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%); }
+        /* Animation Utils */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
 
-<div id="app" v-cloak class="h-screen w-screen flex flex-col md:flex-row bg-[#030804] text-gray-300 relative overflow-hidden">
+<div id="app" v-cloak class="min-h-screen flex flex-col">
 
-    <div class="md:hidden h-16 border-b border-[#00ff41]/20 flex items-center justify-between px-4 bg-black/80 backdrop-blur z-50 shrink-0">
-        <div class="flex items-center gap-3">
-             <img src="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg" class="w-8 h-8 rounded-full border border-[#00ff41]">
-             <div class="font-tech font-bold text-lg text-white">CRAZY CACTUS</div>
+    <nav class="sticky top-0 z-40 bg-[#0f1012]/95 backdrop-blur border-b border-[#2d3035] shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full border-2 border-green-500 overflow-hidden bg-black p-0.5">
+                    <img src="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h1 class="font-black text-xl leading-none text-white tracking-wide">CRAZY CACTUS</h1>
+                    <div class="text-[10px] font-bold text-green-500 uppercase">Binder Love</div>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-2">
+                <div @click="switchView('collection')" class="nav-item" :class="{active: currentView==='collection'}">
+                    <i class="fa-solid fa-grid-2"></i> Dashboard
+                </div>
+                <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}">
+                    <i class="fa-solid fa-calculator"></i> Profit Calc
+                </div>
+                <div @click="switchView('binders')" class="nav-item" :class="{active: currentView==='binders'}">
+                    <i class="fa-solid fa-book-open"></i> Binders
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div v-if="user" class="hidden md:flex flex-col items-end">
+                    <span class="text-xs font-bold text-white">{{ user.displayName }}</span>
+                    <button @click="logout" class="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase">Log Out</button>
+                </div>
+                <button v-else @click="loginWithGoogle" class="hidden md:block text-xs font-bold text-green-500 border border-green-500 px-3 py-1.5 rounded hover:bg-green-500 hover:text-black transition">
+                    TRAINER LOGIN
+                </button>
+                
+                <button @click="openSearch" class="cactus-btn-primary text-sm">
+                    <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Card</span>
+                </button>
+            </div>
         </div>
-        <button @click="showMobileNav = !showMobileNav" class="text-[#00ff41] text-xl p-2 border border-[#00ff41]/30 rounded bg-[#00ff41]/10">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-    </div>
+    </nav>
 
-    <aside class="fixed inset-y-0 left-0 w-64 bg-black/90 backdrop-blur-xl z-40 transform transition-transform duration-300 md:relative md:translate-x-0 md:bg-transparent md:w-64 md:flex md:flex-col border-r border-[#00ff41]/10"
-           :class="showMobileNav ? 'translate-x-0' : '-translate-x-full'">
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-8">
         
-        <div class="p-8 flex flex-col items-center">
-            <div class="relative w-24 h-24 mb-4 group cursor-pointer">
-                <div class="absolute inset-0 rounded-full border-2 border-dashed border-[#00ff41] animate-[spin_10s_linear_infinite] opacity-30 group-hover:opacity-100 transition"></div>
-                <img src="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg" class="w-full h-full rounded-full object-cover p-1.5 bg-black relative z-10 shadow-[0_0_20px_rgba(0,255,65,0.3)]">
+        <div v-if="currentView !== 'calculator'" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="cactus-card p-6 flex justify-between items-center bg-gradient-to-br from-[#18191c] to-[#1e2024]">
+                <div>
+                    <div class="text-xs font-bold text-gray-500 uppercase mb-1">Portfolio Value</div>
+                    <div class="text-3xl font-black text-white tracking-tight">${{ formatNumber(totalValue) }}</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 text-xl">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
             </div>
-            <h1 class="text-3xl font-tech font-bold text-white tracking-wider">CRAZY CACTUS</h1>
-            <div class="text-xs font-mono text-[#00ff41] tracking-[0.3em] uppercase opacity-70 mt-1">Binder Love</div>
+            <div class="cactus-card p-6 flex justify-between items-center">
+                <div>
+                    <div class="text-xs font-bold text-gray-500 uppercase mb-1">Total Cards</div>
+                    <div class="text-3xl font-black text-white tracking-tight">{{ cards.length }}</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 text-xl">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="cactus-card p-6 flex justify-between items-center">
+                <div>
+                    <div class="text-xs font-bold text-gray-500 uppercase mb-1">Binders</div>
+                    <div class="text-3xl font-black text-white tracking-tight">{{ binders.length }}</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 text-xl">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+            </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-4 py-2">
-            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 pl-4">Navigation</div>
-            
-            <div @click="currentView='collection'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='collection'}">
-                <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
-            </div>
-            <div @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='calculator' && currentBinder===null}">
-                <i class="fa-solid fa-calculator w-6"></i> Profit Calc
-            </div>
-            <div @click="currentView='binders'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='binders'}">
-                <i class="fa-solid fa-book-open w-6"></i> Binders
+        <div v-if="currentView === 'collection'">
+            <div v-if="cards.length === 0" class="text-center py-20 cactus-card border-dashed">
+                <i class="fa-solid fa-cactus text-6xl text-gray-700 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-400">Your collection is empty</h3>
+                <p class="text-gray-600 mb-6">Start by adding your first Pokemon card.</p>
+                <button @click="openSearch" class="cactus-btn-primary">Find My Card</button>
             </div>
 
-            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 mt-8 pl-4">My Binders</div>
-            
-            <div v-for="b in binders" :key="b.id" class="nav-spine-item group justify-between" 
-                 :class="{active: currentView === 'calculator' && currentBinder?.id === binder.id}"
-                 @click="selectBinder(b); currentView='calculator'; showMobileNav=false">
-                <div class="flex items-center truncate">
-                    <i class="fa-solid fa-folder w-6 text-gray-600 group-hover:text-[#00ff41] transition"></i> 
-                    <span class="truncate">{{ b.name }}</span>
-                </div>
-                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                    <i @click.stop="renameBinder(b)" class="fa-solid fa-pen text-xs hover:text-white"></i>
-                    <i @click.stop="deleteBinder(b.id)" class="fa-solid fa-trash text-xs hover:text-red-500"></i>
-                </div>
-            </div>
-            
-            <button @click="createBinder" class="w-full mt-2 py-3 border border-dashed border-gray-700 text-gray-500 text-xs font-bold uppercase tracking-widest hover:border-[#00ff41] hover:text-[#00ff41] transition">
-                + New Binder
-            </button>
-        </div>
-
-        <div class="p-6 border-t border-[#00ff41]/10 bg-black/40">
-            <div v-if="user" class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-[#00ff41] rounded-full shadow-[0_0_5px_#00ff41] animate-pulse"></div>
-                    <span class="text-xs font-bold text-white font-tech uppercase">{{ user.displayName.split(' ')[0] }}</span>
-                </div>
-                <button @click="logout" class="text-xs text-red-500 hover:text-white font-bold uppercase">Log Out</button>
-            </div>
-            <button v-else @click="loginWithGoogle" class="w-full bg-[#00ff41] text-black font-bold py-2 font-tech uppercase tracking-widest hover:bg-white transition">
-                Trainer Login
-            </button>
-        </div>
-    </aside>
-
-    <main class="flex-1 relative flex flex-col p-2 md:p-6 overflow-hidden">
-        
-        <header class="h-20 shrink-0 cyber-card flex items-center justify-between px-6 mb-6 led-running">
-            <div>
-                <div class="flex items-baseline gap-3">
-                    <h2 class="text-3xl font-tech font-bold text-white uppercase">{{ headerTitle }}</h2>
-                    <span class="text-[10px] text-[#00ff41] border border-[#00ff41] px-1 rounded uppercase">System Ready</span>
-                </div>
-                <div class="flex items-center gap-4 mt-1 text-xs font-mono text-gray-500">
-                    <span>CARDS: <b class="text-gray-300">{{ displayCards.length }}</b></span>
-                    <span>VALUE: <b class="text-[#00ff41] text-glow">${{ formatNumber(totalValue) }}</b></span>
-                </div>
-            </div>
-            
-            <button @click="openSearch" class="group relative overflow-hidden bg-[#00ff41]/10 hover:bg-[#00ff41] border border-[#00ff41] transition-all duration-300 px-6 py-2 clip-corner">
-                <span class="relative z-10 font-tech font-bold text-[#00ff41] group-hover:text-black uppercase tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Add Card
-                </span>
-            </button>
-        </header>
-
-        <div v-if="currentView === 'collection'" class="flex-1 overflow-y-auto space-y-6 pb-20">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
-                    <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Portfolio Value</div>
-                        <div class="text-4xl font-tech font-bold text-white group-hover:text-[#00ff41] transition">${{ formatNumber(totalValue) }}</div>
-                    </div>
-                    <i class="fa-solid fa-chart-line text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
-                </div>
-                <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
-                    <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Total Cards</div>
-                        <div class="text-4xl font-tech font-bold text-white">{{ cards.length }}</div>
-                    </div>
-                    <i class="fa-solid fa-layer-group text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
-                </div>
-                <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
-                    <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Sets Collected</div>
-                        <div class="text-4xl font-tech font-bold text-white">{{ Object.keys(cardsBySet).length }}</div>
-                    </div>
-                    <i class="fa-solid fa-folder-open text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
-                </div>
-            </div>
-
-            <div v-if="cards.length === 0" class="flex flex-col items-center justify-center h-64 opacity-30 border border-dashed border-gray-700 rounded-lg">
-                <i class="fa-solid fa-box-open text-5xl mb-4"></i>
-                <div class="font-tech uppercase tracking-widest">Collection Empty</div>
-            </div>
-
-            <div v-else class="grid gap-8">
-                <div v-for="(setGroup, setName) in cardsBySet" :key="setName" class="cyber-card p-6">
-                    <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-                        <h3 class="text-xl font-tech font-bold text-white uppercase tracking-wider">{{ setName }}</h3>
-                        <div class="text-xs font-bold text-[#00ff41] bg-[#00ff41]/10 px-2 py-1 rounded border border-[#00ff41]/30">
+            <div v-else class="space-y-8">
+                <div v-for="(setGroup, setName) in cardsBySet" :key="setName" class="cactus-card overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#2d3035] bg-[#1a1c20] flex justify-between items-center">
+                        <h3 class="font-black text-lg text-white uppercase">{{ setName }}</h3>
+                        <span class="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-1 rounded">
                             {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}
-                        </div>
+                        </span>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                        <div v-for="card in setGroup.cards" :key="card.uid" class="group relative cursor-pointer" @click="openCardDetail(card)">
-                            <div class="absolute -inset-0.5 bg-gradient-to-b from-[#00ff41] to-transparent opacity-0 group-hover:opacity-50 blur transition duration-500"></div>
-                            <div class="relative bg-black rounded p-1 border border-gray-800 group-hover:border-[#00ff41] transition">
-                                <img :src="card.image" class="w-full rounded mb-2 opacity-80 group-hover:opacity-100 transition">
-                                <div class="text-[10px] font-bold text-gray-400 truncate group-hover:text-white">{{ card.name }}</div>
-                                <div class="flex justify-between mt-1">
-                                    <div class="text-[10px] font-mono text-[#00ff41]">${{ Math.round(card.market) }}</div>
-                                    <div class="text-[9px] text-gray-600 font-bold">x{{ setGroup.cardCounts[card.id] }}</div>
+                    <div class="p-6 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
+                        <div v-for="card in setGroup.cards" :key="card.uid" @click="openCardDetail(card)" 
+                             class="group cursor-pointer relative transition hover:-translate-y-1">
+                            <div class="relative rounded-lg overflow-hidden border-2 border-transparent group-hover:border-green-500 shadow-md">
+                                <img :src="card.image" class="w-full object-cover">
+                                <div class="absolute bottom-0 left-0 right-0 bg-black/80 p-1 text-center">
+                                    <span class="text-[10px] font-bold text-green-400">${{ Math.round(card.market) }}</span>
                                 </div>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <div class="text-xs font-bold text-white truncate">{{ card.name }}</div>
+                                <div class="text-[10px] font-bold text-gray-500">x{{ setGroup.cardCounts[card.id] }}</div>
                             </div>
                         </div>
                     </div>
@@ -329,202 +235,218 @@
             </div>
         </div>
 
-        <div v-if="currentView === 'binders'" class="flex-1 overflow-y-auto pb-20">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 <div @click="currentView='calculator'; currentBinder=null" class="cyber-card aspect-video flex flex-col items-center justify-center cursor-pointer group hover:border-[#00ff41] transition">
-                     <i class="fa-solid fa-database text-5xl text-gray-700 group-hover:text-[#00ff41] mb-4 transition duration-500"></i>
-                     <div class="font-tech font-bold text-xl uppercase tracking-widest text-white">Master Collection</div>
-                     <div class="text-xs text-gray-500 mt-2">All Cards</div>
-                 </div>
-
-                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); currentView='calculator'" class="cyber-card aspect-video relative p-6 cursor-pointer group hover:border-[#00ff41] transition">
-                     <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition z-10">
-                        <button @click.stop="renameBinder(b)" class="text-gray-500 hover:text-white"><i class="fa-solid fa-pen"></i></button>
-                        <button @click.stop="deleteBinder(b.id)" class="text-gray-500 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                     </div>
-                     <div class="h-full flex flex-col justify-end relative z-0">
-                         <i class="fa-solid fa-folder text-8xl text-[#00ff41] absolute -right-6 -top-6 opacity-5 group-hover:opacity-10 transition"></i>
-                         <div class="font-tech font-bold text-2xl text-white uppercase truncate">{{ b.name }}</div>
-                         <div class="text-xs font-mono text-[#00ff41] mt-1">{{ getBinderCount(b.id) }} CARDS</div>
-                     </div>
-                 </div>
-                 
-                 <div @click="createBinder" class="border border-dashed border-gray-700 aspect-video rounded flex items-center justify-center cursor-pointer hover:border-[#00ff41] hover:bg-[#00ff41]/5 transition group">
-                     <div class="text-gray-600 group-hover:text-[#00ff41] font-bold uppercase tracking-widest flex flex-col items-center">
-                         <i class="fa-solid fa-plus text-2xl mb-2"></i> Create New
-                     </div>
-                 </div>
+        <div v-if="currentView === 'binders'">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-white">MY BINDERS</h2>
+                <button @click="createBinder" class="text-xs font-bold text-gray-400 hover:text-white border border-gray-600 px-3 py-1.5 rounded">+ NEW BINDER</button>
             </div>
-        </div>
-
-        <div v-if="currentView === 'calculator'" class="flex-1 cyber-card flex flex-col overflow-hidden">
-            <div class="data-row data-header md:grid hidden">
-                <div class="flex justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="appearance-none w-3 h-3 border border-gray-500 checked:bg-[#00ff41] checked:border-[#00ff41] cursor-pointer"></div>
-                <div class="text-center">IMG</div>
-                <div class="cursor-pointer hover:text-white" @click="setSort('name')">CARD NAME <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('name')"></i></div>
-                <div class="text-center">BINDER</div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('rawCost')">CARD COST <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('rawCost')"></i></div>
-                <div class="text-right">GRADING FEE</div>
-                <div class="text-center">TARGET</div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('market')">GRADED VAL <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('market')"></i></div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('profit')">PROFIT <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('profit')"></i></div>
-                <div class="text-center"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="text-red-500 hover:text-white text-[9px] font-bold border border-red-500 px-2 py-0.5 rounded uppercase">DEL</button></div>
-            </div>
-
-            <div class="flex-1 overflow-y-auto custom-scrollbar bg-black/40">
-                <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30 text-xs font-mono uppercase tracking-widest">
-                    No Cards in List
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div @click="selectBinder(null); switchView('calculator')" class="cactus-card p-6 cursor-pointer hover:border-green-500 transition group relative overflow-hidden h-40 flex flex-col justify-end">
+                    <i class="fa-solid fa-database text-6xl text-[#2d3035] absolute top-4 right-4 group-hover:text-green-500/20 transition"></i>
+                    <h3 class="text-xl font-black text-white relative z-10">MASTER COLLECTION</h3>
+                    <p class="text-xs font-bold text-gray-500 relative z-10">View all {{ cards.length }} cards</p>
                 </div>
-                <div v-else v-for="c in paginatedCards" :key="c.uid" class="data-row group relative" :class="{'bg-[#00ff41]/5': selectedIds.includes(c.uid)}">
-                    
-                    <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="appearance-none w-3 h-3 border border-gray-600 rounded-sm checked:bg-[#00ff41] checked:border-[#00ff41] cursor-pointer transition"></div>
-                    
-                    <div class="flex justify-center">
-                        <div class="w-8 h-10 bg-gray-800 rounded overflow-hidden cursor-pointer border border-transparent group-hover:border-[#00ff41] transition" @click="openCardDetail(c)">
-                            <img :src="c.image" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-                    
-                    <div class="truncate">
-                        <div class="text-gray-200 font-bold font-tech truncate cursor-pointer hover:text-[#00ff41]" @click="openCardDetail(c)">{{ c.name }}</div>
-                        <div class="text-[9px] text-gray-600 uppercase">{{ c.set }} #{{ c.number }}</div>
-                    </div>
-                    
-                    <div class="md:hidden text-right">
-                         <div class="text-[#00ff41] font-mono font-bold text-xs">${{ Math.round(getProfit(c)) }}</div>
-                         <div class="text-[9px] text-gray-500">PROFIT</div>
-                    </div>
 
-                    <div class="hidden md:block">
-                        <select v-model="c.binderId" @change="updateCardBinder(c)" class="cyber-select bg-transparent border-none text-gray-500 hover:text-white cursor-pointer focus:ring-0">
-                            <option :value="null">MASTER</option>
-                            <option v-for="b in binders" :value="b.id">{{ b.name }}</option>
-                        </select>
+                <div v-for="b in binders" :key="b.id" @click="selectBinder(b); switchView('calculator')" class="cactus-card p-6 cursor-pointer hover:border-green-500 transition group relative overflow-hidden h-40 flex flex-col justify-end">
+                    <div class="absolute top-4 right-4 flex gap-2 z-20">
+                        <button @click.stop="renameBinder(b)" class="text-gray-600 hover:text-white"><i class="fa-solid fa-pen"></i></button>
+                        <button @click.stop="deleteBinder(b.id)" class="text-gray-600 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </div>
-                    <div class="hidden md:block"><input v-model.number="c.rawCost" @change="saveData()" type="number" class="cyber-input"></div>
-                    <div class="hidden md:block"><input v-model.number="c.fee" @change="saveData()" type="number" class="cyber-input"></div>
-                    <div class="hidden md:block flex justify-center">
-                        <select v-model="c.targetGrade" @change="saveData()" class="bg-black text-[#00ff41] text-[10px] font-bold border border-gray-700 rounded px-1 text-center outline-none focus:border-[#00ff41]">
-                            <option value="10">PSA 10</option>
-                            <option value="9">PSA 9</option>
-                            <option value="8">PSA 8</option>
-                        </select>
-                    </div>
-                    <div class="hidden md:block text-right font-mono text-xs font-bold text-gray-400">${{ formatNumber(getEstValue(c)) }}</div>
-                    <div class="hidden md:block text-right font-mono text-sm font-bold" :class="getProfit(c) >= 0 ? 'text-[#00ff41] text-glow' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
-                    
-                    <div class="hidden md:flex justify-center"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500 transition"><i class="fa-solid fa-xmark"></i></button></div>
-                </div>
-            </div>
-
-            <div class="p-3 border-t border-white/5 bg-black/60 flex justify-between items-center text-[10px] uppercase font-bold text-gray-500">
-                <span>Showing {{ paginatedCards.length }} of {{ sortedCards.length }}</span>
-                <div class="flex gap-2">
-                    <button @click="prevPage" :disabled="currentPage===1" class="hover:text-white disabled:opacity-30">< PREV</button>
-                    <span class="text-[#00ff41]">PAGE {{ currentPage }}</span>
-                    <button @click="nextPage" :disabled="currentPage===totalPages" class="hover:text-white disabled:opacity-30">NEXT ></button>
+                    <i class="fa-solid fa-book text-6xl text-[#2d3035] absolute top-4 right-8 group-hover:text-green-500/20 transition"></i>
+                    <h3 class="text-xl font-black text-white relative z-10 truncate pr-8">{{ b.name }}</h3>
+                    <p class="text-xs font-bold text-green-500 relative z-10">{{ getBinderCount(b.id) }} Cards</p>
                 </div>
             </div>
         </div>
+
+        <div v-if="currentView === 'calculator'">
+            <div class="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase">{{ currentBinder ? currentBinder.name : 'Master List' }}</h2>
+                    <p class="text-xs font-bold text-gray-500">Manage costs, fees, and potential profit.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500/10 text-red-500 text-xs font-bold px-4 py-2 rounded hover:bg-red-500 hover:text-white transition">
+                        DELETE SELECTED ({{ selectedIds.length }})
+                    </button>
+                </div>
+            </div>
+
+            <div class="cactus-card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="data-table min-w-[800px]">
+                        <thead>
+                            <tr class="bg-[#1a1c20]">
+                                <th class="w-10 text-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll"></th>
+                                <th class="w-16 text-center">Image</th>
+                                <th @click="setSort('name')" class="cursor-pointer hover:text-white">Card Details <i class="fa-solid fa-sort ml-1"></i></th>
+                                <th>Location</th>
+                                <th class="text-right cursor-pointer hover:text-white" @click="setSort('rawCost')">Cost ($) <i class="fa-solid fa-sort ml-1"></i></th>
+                                <th class="text-right">Fee ($)</th>
+                                <th class="text-center">Target</th>
+                                <th class="text-right cursor-pointer hover:text-white" @click="setSort('market')">Est. Value <i class="fa-solid fa-sort ml-1"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white" @click="setSort('profit')">Profit <i class="fa-solid fa-sort ml-1"></i></th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="paginatedCards.length === 0">
+                                <td colspan="10" class="text-center py-10 text-gray-500 font-bold">No cards found in this view.</td>
+                            </tr>
+                            <tr v-for="c in paginatedCards" :key="c.uid" :class="{'bg-green-500/5': selectedIds.includes(c.uid)}">
+                                <td class="text-center"><input type="checkbox" :value="c.uid" v-model="selectedIds"></td>
+                                <td class="text-center">
+                                    <img :src="c.image" class="w-8 h-10 object-cover rounded border border-gray-700 mx-auto cursor-pointer" @click="openCardDetail(c)">
+                                </td>
+                                <td>
+                                    <div class="font-bold text-white cursor-pointer hover:text-green-500" @click="openCardDetail(c)">{{ c.name }}</div>
+                                    <div class="text-[10px] text-gray-500">{{ c.set }} #{{ c.number }}</div>
+                                </td>
+                                <td>
+                                    <select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-[#0f1012] border border-gray-700 rounded text-xs px-2 py-1 text-gray-300 w-full">
+                                        <option :value="null">Master</option>
+                                        <option v-for="b in binders" :value="b.id">{{ b.name }}</option>
+                                    </select>
+                                </td>
+                                <td><input v-model.number="c.rawCost" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b border-gray-700 focus:border-green-500 outline-none pb-1"></td>
+                                <td><input v-model.number="c.fee" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b border-gray-700 focus:border-green-500 outline-none pb-1"></td>
+                                <td class="text-center">
+                                    <select v-model="c.targetGrade" @change="saveData()" class="bg-[#0f1012] border border-gray-700 rounded text-xs px-1 py-1 text-green-500 font-bold">
+                                        <option value="10">PSA 10</option>
+                                        <option value="9">PSA 9</option>
+                                        <option value="8">PSA 8</option>
+                                    </select>
+                                </td>
+                                <td class="text-right font-mono font-bold text-gray-400">${{ formatNumber(getEstValue(c)) }}</td>
+                                <td class="text-right font-mono font-bold" :class="getProfit(c) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                    ${{ Math.round(getProfit(c)) }}
+                                </td>
+                                <td class="text-center">
+                                    <button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-[#2d3035] flex justify-between items-center bg-[#1a1c20]">
+                    <span class="text-xs font-bold text-gray-500">{{ paginatedCards.length }} items showing</span>
+                    <div class="flex gap-2">
+                        <button @click="prevPage" :disabled="currentPage===1" class="px-3 py-1 bg-black border border-gray-700 rounded text-xs font-bold hover:border-green-500 disabled:opacity-50">PREV</button>
+                        <button @click="nextPage" :disabled="currentPage===totalPages" class="px-3 py-1 bg-black border border-gray-700 rounded text-xs font-bold hover:border-green-500 disabled:opacity-50">NEXT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <Transition name="modal">
-    <div v-if="showSearch" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="w-full max-w-5xl h-[85vh] bg-[#05100a] border border-[#00ff41]/30 relative rounded-lg flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,255,65,0.1)]">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00ff41] to-transparent animate-pulse"></div>
-            
-            <div class="p-6 border-b border-[#00ff41]/20 flex justify-between items-center bg-black/40">
-                <h2 class="text-2xl font-tech font-bold text-white uppercase tracking-widest text-glow">Find My Card</h2>
-                <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            </div>
-            
-            <div class="p-6 bg-black/20 grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-white/5">
-                <div>
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Era</label>
-                    <select v-model="selectedEra" class="w-full bg-black/50 border border-gray-700 text-gray-300 text-xs p-2 rounded focus:border-[#00ff41] outline-none"><option value="">SELECT ERA</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
-                </div>
-                <div>
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Set</label>
-                    <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-black/50 border border-gray-700 text-gray-300 text-xs p-2 rounded focus:border-[#00ff41] outline-none disabled:opacity-30"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
-                </div>
-                <div class="col-span-2 md:col-span-1">
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Pokemon Name</label>
-                    <input v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="CHARIZARD..." class="w-full bg-black/50 border border-gray-700 text-white text-xs p-2 rounded focus:border-[#00ff41] outline-none disabled:opacity-30 uppercase">
-                </div>
-                <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00ff41] hover:bg-white text-black font-bold font-tech text-sm uppercase tracking-widest rounded transition disabled:opacity-50 mt-auto h-9">
-                    {{ isSearching ? 'SEARCHING...' : 'SEARCH' }}
-                </button>
-            </div>
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-[#18191c] border-t border-[#2d3035] flex justify-around items-center h-16 z-50 shadow-2xl">
+        <button @click="switchView('collection')" class="flex flex-col items-center gap-1 w-1/3 text-gray-500" :class="{'text-green-500': currentView==='collection'}">
+            <i class="fa-solid fa-grid-2 text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Home</span>
+        </button>
+        <button @click="switchView('calculator')" class="flex flex-col items-center gap-1 w-1/3 text-gray-500" :class="{'text-green-500': currentView==='calculator'}">
+            <i class="fa-solid fa-calculator text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Profit</span>
+        </button>
+        <button @click="switchView('binders')" class="flex flex-col items-center gap-1 w-1/3 text-gray-500" :class="{'text-green-500': currentView==='binders'}">
+            <i class="fa-solid fa-book-open text-xl"></i>
+            <span class="text-[10px] font-bold uppercase">Binders</span>
+        </button>
+    </div>
 
-            <div class="flex-1 overflow-y-auto p-6 bg-black/60 relative">
-                 <div v-if="paginatedSearchResults.length > 0" class="flex justify-end gap-2 mb-4 sticky top-0 z-10">
-                     <button @click="prevPage" :disabled="searchPage === 1" class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-white hover:border-[#00ff41]"><</button>
-                     <span class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-[#00ff41]">{{ searchPage }} / {{ totalSearchPages }}</span>
-                     <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-white hover:border-[#00ff41]">></button>
-                 </div>
+    <Transition name="fade">
+        <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div class="bg-[#18191c] w-full max-w-4xl h-[85vh] rounded-xl border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-[#0f1012]">
+                    <h2 class="text-xl font-black text-white uppercase">Find My Card</h2>
+                    <button @click="showSearch=false" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+                
+                <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#141518] border-b border-gray-700 shrink-0">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Era</label>
+                        <select v-model="selectedEra" class="cactus-input text-xs"><option value="">Select Era</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Set</label>
+                        <select v-model="selectedSet" class="cactus-input text-xs" :disabled="!selectedEra"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Pokemon Name</label>
+                        <input v-model="query" @input="debouncedSearch" class="cactus-input text-xs" placeholder="e.g. Charizard" :disabled="!selectedSet">
+                    </div>
+                    <div class="flex items-end">
+                        <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="w-full bg-white text-black font-bold text-xs py-3 rounded uppercase hover:bg-green-500 transition disabled:opacity-50">
+                            {{ isSearching ? 'Searching...' : 'Search' }}
+                        </button>
+                    </div>
+                </div>
 
-                 <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-20">
-                     <i class="fa-solid fa-magnifying-glass text-6xl mb-4"></i>
-                     <div class="font-tech uppercase tracking-widest">Search for a Pokemon</div>
-                 </div>
-
-                 <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                     <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a1a0f] p-2 rounded border border-transparent hover:border-[#00ff41] cursor-pointer group relative transition duration-200">
-                         <img :src="card.images.small" class="w-full rounded mb-2 opacity-80 group-hover:opacity-100">
-                         <div class="text-[10px] font-bold text-gray-400 font-tech truncate group-hover:text-white">{{ card.name }}</div>
-                         <div class="absolute top-2 right-2 bg-black/90 text-[#00ff41] text-[9px] px-1.5 py-0.5 rounded font-mono">${{ formatNumber(getCardPrice(card)) }}</div>
-                         <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#00ff41]/80 flex items-center justify-center text-black font-bold text-xs uppercase tracking-widest">Added</div>
+                <div class="flex-1 overflow-y-auto p-6 bg-[#0f1012]">
+                     <div v-if="paginatedSearchResults.length > 0" class="flex justify-end gap-2 mb-4 sticky top-0 z-10">
+                         <button @click="prevPage" :disabled="searchPage === 1" class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-white rounded">Prev</button>
+                         <span class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-green-500 rounded">{{ searchPage }}</span>
+                         <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black border border-gray-700 text-[10px] px-3 py-1 text-white rounded">Next</button>
                      </div>
-                 </div>
+
+                     <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
+                         <i class="fa-solid fa-magnifying-glass text-5xl mb-4"></i>
+                         <p class="font-bold uppercase">Waiting for input</p>
+                     </div>
+
+                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                         <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" 
+                              class="bg-[#18191c] p-2 rounded border border-transparent hover:border-green-500 cursor-pointer group relative">
+                             <img :src="card.images.small" class="w-full rounded mb-2 shadow-sm">
+                             <div class="text-[10px] font-bold text-white truncate">{{ card.name }}</div>
+                             <div class="text-[10px] text-gray-500">Price: ${{ formatNumber(getCardPrice(card)) }}</div>
+                             <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded font-bold text-black uppercase animate-pulse">
+                                 Added!
+                             </div>
+                         </div>
+                     </div>
+                </div>
             </div>
         </div>
-    </div>
     </Transition>
 
-    <Transition name="modal">
-    <div v-if="detailCard" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
-        <div class="bg-[#030804] border border-[#00ff41]/30 w-full max-w-4xl h-auto max-h-[90vh] flex flex-col md:flex-row overflow-hidden rounded-lg shadow-[0_0_60px_rgba(0,255,65,0.15)] relative">
-            
-            <button @click="detailCard=null" class="absolute top-4 left-4 z-20 text-[#00ff41] text-xs font-bold uppercase tracking-widest hover:text-white flex items-center gap-2">
-                <i class="fa-solid fa-arrow-left"></i> Return
-            </button>
+    <Transition name="fade">
+        <div v-if="detailCard" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <div class="bg-[#18191c] w-full max-w-2xl rounded-xl border border-gray-700 shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
+                <button @click="detailCard=null" class="absolute top-4 right-4 z-20 text-gray-500 hover:text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
 
-            <div class="w-full md:w-2/5 bg-black/40 p-8 flex items-center justify-center border-r border-[#00ff41]/10 relative">
-                 <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(0,255,65,0.05),transparent)]"></div>
-                 <img :src="detailCard.image.replace('small','large')" class="max-w-full max-h-[60vh] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)] border border-[#00ff41]/20 rounded-lg relative z-10">
-            </div>
-            
-            <div class="w-full md:w-3/5 p-8 flex flex-col bg-[#05100a]">
-                <div class="mb-auto">
-                    <h2 class="text-3xl font-tech font-bold text-white uppercase text-glow mb-2">{{ detailCard.name }}</h2>
-                    <div class="flex items-center gap-3 text-xs font-mono text-gray-500 mb-6">
-                        <span class="bg-[#00ff41]/10 text-[#00ff41] px-2 py-1 rounded border border-[#00ff41]/20">{{ detailCard.set }}</span>
-                        <span>#{{ detailCard.number }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-black/40 p-4 border-l-2 border-[#00ff41]">
-                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Card Cost</div>
-                            <div class="text-xl font-mono text-white">${{ formatNumber(detailCard.rawCost) }}</div>
-                        </div>
-                        <div class="bg-black/40 p-4 border-l-2 border-[#00ff41]">
-                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Graded Value</div>
-                            <div class="text-xl font-mono text-[#00ff41]">${{ formatNumber(getEstValue(detailCard)) }}</div>
-                        </div>
-                    </div>
+                <div class="w-full md:w-1/2 bg-[#0f1012] p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-700">
+                    <img :src="detailCard.image.replace('small','large')" class="max-h-[50vh] object-contain drop-shadow-xl rounded">
                 </div>
 
-                <div class="border-t border-white/5 pt-6 flex justify-between items-center">
-                    <button @click="deleteCard(detailCard.uid)" class="text-red-500 text-[10px] font-bold uppercase tracking-widest hover:text-white border border-red-900 px-4 py-2 hover:bg-red-600 transition">
-                        Remove Card
-                    </button>
-                    <div class="text-xs font-bold text-gray-500 uppercase">
-                        Est. Profit: <span :class="getProfit(detailCard) > 0 ? 'text-[#00ff41]' : 'text-red-500'">${{ Math.round(getProfit(detailCard)) }}</span>
+                <div class="w-full md:w-1/2 p-8 flex flex-col">
+                    <h2 class="text-2xl font-black text-white uppercase leading-tight mb-2">{{ detailCard.name }}</h2>
+                    <div class="flex gap-2 text-xs font-bold text-gray-500 mb-6">
+                        <span class="bg-gray-800 px-2 py-1 rounded border border-gray-700">{{ detailCard.set }}</span>
+                        <span class="bg-gray-800 px-2 py-1 rounded border border-gray-700">#{{ detailCard.number }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">Paid Price</div>
+                            <div class="text-xl font-bold text-white">${{ formatNumber(detailCard.rawCost) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">Potential Value</div>
+                            <div class="text-xl font-bold text-green-500">${{ formatNumber(getEstValue(detailCard)) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto border-t border-gray-700 pt-6">
+                         <button @click="deleteCard(detailCard.uid)" class="w-full border border-red-500/50 text-red-500 font-bold text-xs uppercase py-3 rounded hover:bg-red-500 hover:text-white transition">
+                             Remove Card from Collection
+                         </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </Transition>
 
 </div>
@@ -545,7 +467,7 @@
         auth = firebase.auth();
         db = firebase.firestore();
         provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Guest Mode Active"); }
+    } catch(e) { console.log("Guest Mode"); }
 
     const { createApp } = Vue;
     let searchController = null;
@@ -557,71 +479,37 @@
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_matrix_v1',
+                cacheKey: 'cactus_reset_v2',
                 
                 totalSetData: {}, 
                 
-                // PAGINATION & SEARCH
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 searchPage: 1, searchPerPage: 18, 
                 addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', 
                 totalSearchPagesCount: 1, 
                 searchCache: {}, 
-
-                showMobileNav: false,
                 searchTimeout: null
             }
         },
         watch: {
-            selectedEra(newEra, oldEra) {
-                if (newEra !== oldEra) {
-                    this.selectedSet = ""; 
-                    this.searchResults = [];
-                    this.searchPage = 1;
-                    this.query = "";
-                    this.searchCache = {}; 
-                }
-            },
-            selectedSet(newSet, oldSet) {
-                if (newSet !== oldSet) {
-                    this.searchResults = []; 
-                    this.searchPage = 1;
-                    this.query = "";
-                    this.searchCache = {}; 
-                }
-            },
-            searchSort() { this.fetchCards(1); }
+            selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
+            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } }
         },
         mounted() {
             this.loadLocalData();
             this.loadSetsAPI(); 
-            
-            if(auth) {
-                auth.onAuthStateChanged(u => {
-                    if(u) { this.user = u; this.initCloudData(); } 
-                    else { this.user = null; }
-                });
-            }
+            if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } });
         },
         computed: {
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
-            headerTitle() {
-                if(this.currentView === 'collection') return 'Dashboard';
-                if(this.currentView === 'binders') return 'Binders';
-                return this.currentBinder ? this.currentBinder.name.toUpperCase() : 'Profit Calculator';
-            },
             displayCards() { 
                 let list = this.cards; 
-                if (this.currentBinder) {
-                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                }
+                if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 return list;
             },
-            isAllSelected() {
-                return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
-            },
+            isAllSelected() { return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length; },
             sortedCards() {
                 let list = [...this.displayCards];
                 return list.sort((a, b) => {
@@ -631,7 +519,6 @@
                     else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
                     else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
                     else { valA = a.id; valB = b.id; }
-                    
                     if(valA < valB) return this.sortDesc ? 1 : -1;
                     if(valA > valB) return this.sortDesc ? -1 : 1;
                     return 0;
@@ -645,9 +532,7 @@
             cardsBySet() {
                 const grouped = {};
                 this.cards.forEach(c => {
-                    if(!grouped[c.set]) {
-                        grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
-                    }
+                    if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
                     grouped[c.set].cards.push(c);
                     grouped[c.set].uniqueCardIds.add(c.id); 
                     grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
@@ -658,44 +543,24 @@
                     const uniqueCards = [];
                     const seenIds = new Set();
                     grouped[setName].cards.forEach(card => {
-                        if (!seenIds.has(card.id)) {
-                            uniqueCards.push(card);
-                            seenIds.add(card.id);
-                        }
+                        if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); }
                     });
                     grouped[setName].cards = uniqueCards;
                 }
                 return grouped;
             },
-            
             paginatedSearchResults() { return this.searchResults; },
             totalSearchPages() { return this.totalSearchPagesCount; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
+            switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); },
             loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if(auth) auth.signOut(); },
-
-            getSortIcon(key) {
-                if(this.sortBy !== key) return 'fa-sort text-gray-700';
-                return this.sortDesc ? 'fa-caret-down text-[#00ff41]' : 'fa-caret-up text-[#00ff41]';
-            },
-            getBinderName(id) {
-                if(id===null) return 'Master';
-                const b = this.binders.find(x => x.id === id);
-                return b ? b.name : 'Unknown';
-            },
-            getSetTotal(setName) {
-                const set = this.totalSetData[setName];
-                if (!set) return '?';
-                return (set.total && set.total > 0) ? set.total : set.printedTotal;
-            },
             
-            toggleSelectAll() {
-                if (this.isAllSelected) this.selectedIds = [];
-                else this.selectedIds = this.displayCards.map(c => c.uid);
-            },
+            getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); },
+            toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
             deleteSelected() {
                 if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
                 this.selectedIds.forEach(uid => {
@@ -705,69 +570,37 @@
                 this.selectedIds = [];
                 this.saveData();
             },
-
             setSort(key) {
                 if(this.sortBy === key) this.sortDesc = !this.sortDesc; 
                 else { this.sortBy = key; this.sortDesc = true; }
                 this.currentPage = 1; 
             },
-            nextPage() { 
-                if(this.currentView === 'collection' || this.currentView === 'calculator') {
-                    if(this.currentPage < this.totalPages) this.currentPage++; 
-                } else if (this.showSearch) {
-                    if(this.searchPage < this.totalSearchPagesCount) this.fetchCards(this.searchPage + 1);
-                }
-            },
-            prevPage() { 
-                if(this.currentView === 'collection' || this.currentView === 'calculator') {
-                    if(this.currentPage > 1) this.currentPage--; 
-                } else if (this.showSearch) {
-                    if(this.searchPage > 1) this.fetchCards(this.searchPage - 1);
-                }
-            },
-            jumpToPage() {
-                if(this.searchPage >= 1 && this.searchPage <= this.totalSearchPagesCount) {
-                    this.fetchCards(this.searchPage);
-                } else {
-                    this.searchPage = 1;
-                    this.fetchCards(1);
-                }
-            },
-
+            nextPage() { if(this.currentView === 'calculator' ? this.currentPage < this.totalPages : this.searchPage < this.totalSearchPagesCount) this.currentView === 'calculator' ? this.currentPage++ : this.fetchCards(this.searchPage + 1); },
+            prevPage() { if(this.currentView === 'calculator' ? this.currentPage > 1 : this.searchPage > 1) this.currentView === 'calculator' ? this.currentPage-- : this.fetchCards(this.searchPage - 1); },
+            
             loadLocalData() {
                 const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b);
                 const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c);
             },
-            saveData() {
-                if(!this.user) {
-                    localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders));
-                    localStorage.setItem('cactus_cards', JSON.stringify(this.localCards));
-                }
-            },
+            saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
             initCloudData() {
                 db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
                 db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
             },
-
             createBinder() {
-                const name = prompt("New Binder Name:");
+                const name = prompt("Name your new binder:");
                 if(!name) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
                 else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
             },
-            renameBinder(binder) {
-                const newName = prompt("Rename Binder:", binder.name);
-                if (!newName || newName === binder.name) return;
-
-                if (this.user) {
-                    db.collection('users').doc(this.user.uid).collection('binders').doc(binder.id).update({ name: newName });
-                } else {
-                    const b = this.localBinders.find(x => x.id === binder.id);
-                    if (b) { b.name = newName; this.saveData(); }
-                }
+            renameBinder(b) {
+                const newName = prompt("Rename binder:", b.name);
+                if (!newName || newName === b.name) return;
+                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName });
+                else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } }
             },
             deleteBinder(id) {
-                if(!confirm("Delete this binder? Cards will remain in Master.")) return;
+                if(!confirm("Delete this binder? Cards remain in master.")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
@@ -775,19 +608,16 @@
                 const market = this.getCardPrice(c);
                 const cardData = {
                     id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
-                    image: c.images.small, number: c.number, 
-                    market: market, 
-                    rawCost: market, fee: 15, targetGrade: 10,
+                    image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
                 };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
-                
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
             deleteCard(uid) {
-                if(!confirm("Delete card?")) return;
+                if(!confirm("Remove card?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
                 this.detailCard = null; 
@@ -797,7 +627,6 @@
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
                 else this.saveData();
             },
-
             getEstValue(c) {
                 const raw = c.market || 0;
                 if(c.targetGrade == 10) return raw * 3.2;
@@ -805,143 +634,63 @@
                 return raw * 0.85;
             },
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
-
-            selectBinder(b) { 
-                this.currentBinder = b; 
-                this.currentPage = 1; 
-                this.showMobileNav = false; 
-            }, 
+            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, 
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
-                else this.targetBinder = 'master';
+                this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master';
             },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            
             getCardPrice(c) { 
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
-                const marketPrices = Object.values(prices).map(priceDetail => priceDetail?.market).filter(price => price > 0); 
+                const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); 
                 if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
-
             debouncedSearch() {
                 if(this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => {
-                    this.fetchCards(1);
-                }, 600); 
+                this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); 
             },
-
-            async loadSetsAPI(forceRefresh = false) {
+            async loadSetsAPI(force=false) {
                 this.setsLoading = true;
-                const cacheKeySets = 'cactus_all_sets_v1';
+                const cacheKey = 'cactus_sets_v2';
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-
-                if (!forceRefresh) {
-                    const c = localStorage.getItem(cacheKeySets);
-                    if(c) { 
-                        try {
-                            const data = JSON.parse(c);
-                            if(data.sets && data.sets.length > 0) {
-                                this.allSets = data.sets; 
-                                this.eras = data.eras;
-                                this.totalSetData = data.totalSetData; 
-                                this.setsLoading = false;
-                                return;
-                            }
-                        } catch (e) { console.error("Cache corrupted"); }
-                    }
+                if (!force) {
+                    const c = localStorage.getItem(cacheKey);
+                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} }
                 }
-                
                 try {
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', {
-                        headers: { 'X-Api-Key': apiKey }
-                    });
-                    
-                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } });
+                    if (!res.ok) throw new Error(`API Error`);
                     const data = await res.json();
                     const setSizeMap = {};
-                    data.data.forEach(s => {
-                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal };
-                    });
-
+                    data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = setSizeMap; 
-                    
-                    localStorage.setItem(cacheKeySets, JSON.stringify({
-                        sets: this.allSets, 
-                        eras: this.eras, 
-                        totalSetData: this.totalSetData
-                    }));
-                    
-                } catch(error) {
-                    console.error("Set Sync Failed:", error);
-                } finally {
-                    this.setsLoading = false;
-                }
+                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
+                } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; }
             },
-            
-            async fetchCards(page = 1) {
+            async fetchCards(page=1) {
                 if(!this.selectedSet) return;
-                
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${nameQuery}_${this.searchSort}_${page}`;
-                
-                if (this.searchCache[cacheKey]) {
-                    this.searchResults = this.searchCache[cacheKey].data;
-                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
-                    this.searchPage = page;
-                    this.isSearching = false;
-                    return; 
-                }
-
+                let qName = this.query ? this.query.trim().toLowerCase() : '';
+                const cacheKey = `search_${this.selectedSet}_${qName}_${page}`;
+                if (this.searchCache[cacheKey]) { this.searchResults=this.searchCache[cacheKey].data; this.totalSearchPagesCount=this.searchCache[cacheKey].total; this.searchPage=page; this.isSearching=false; return; }
                 if (searchController) searchController.abort();
                 searchController = new AbortController();
-                const signal = searchController.signal;
-
-                this.isSearching = true; 
-                this.searchPage = page; 
-
+                this.isSearching = true; this.searchPage = page; 
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-                let q = `set.id:${this.selectedSet}`; 
-                if(nameQuery) q += ` name:"${nameQuery}*"`; 
-                
-                let orderBy = 'number';
-                if (this.searchSort === 'name') orderBy = 'name';
-                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
-                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
-
+                let q = `set.id:${this.selectedSet}`; if(qName) q += ` name:"${qName}*"`; 
                 try {
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`;
-                    
-                    const res = await fetch(url, {
-                        headers: { 'X-Api-Key': apiKey },
-                        signal: signal
-                    });
-                    
-                    if (!res.ok) throw new Error(`Search Error: ${res.status}`);
-                    
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=number`, { headers: { 'X-Api-Key': apiKey }, signal: searchController.signal });
+                    if (!res.ok) throw new Error(`Err`);
                     const data = await res.json();
-                    
-                    this.searchCache[cacheKey] = {
-                        data: data.data || [],
-                        total: Math.ceil((data.totalCount || 0) / 18)
-                    };
-
+                    this.searchCache[cacheKey] = { data: data.data || [], total: Math.ceil((data.totalCount || 0) / 18) };
                     this.searchResults = this.searchCache[cacheKey].data;
                     this.totalSearchPagesCount = this.searchCache[cacheKey].total;
-
-                } catch(e) { 
-                    if (e.name === 'AbortError') return;
-                    this.searchResults = []; 
-                } finally { 
-                    if (!signal.aborted) this.isSearching = false; 
-                }
+                } catch(e) { if (e.name !== 'AbortError') this.searchResults=[]; } finally { if (!searchController.signal.aborted) this.isSearching = false; }
             }
         }
     }).mount('#app');
