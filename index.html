@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crazy Cactus | Pro Collector</title>
+    <title>Crazy Cactus | Binder Love</title>
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -22,7 +22,6 @@
             --neon-glow: rgba(0, 255, 65, 0.4);
             --void: #030804;
             --panel-bg: rgba(5, 20, 10, 0.65);
-            --glass-shine: rgba(255, 255, 255, 0.05);
         }
         
         body { 
@@ -37,7 +36,7 @@
             background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
             color: #d1d5db; 
             min-height: 100vh;
-            overflow: hidden; /* App-like feel */
+            overflow: hidden; 
         }
 
         .font-tech { font-family: 'Rajdhani', sans-serif; }
@@ -51,7 +50,7 @@
             border: 1px solid rgba(0, 255, 65, 0.15);
             position: relative;
             overflow: hidden;
-            border-radius: 4px; /* Sharper corners for tech look */
+            border-radius: 4px;
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8);
         }
 
@@ -83,7 +82,6 @@
 
         /* --- TYPOGRAPHY EFFECTS --- */
         .text-glow { text-shadow: 0 0 10px var(--neon-glow); }
-        .text-glitch { animation: glitch-anim 3s infinite; }
         
         /* --- NAVIGATION "SPINE" --- */
         .nav-spine-item {
@@ -139,10 +137,9 @@
             position: sticky; top: 0; z-index: 10;
         }
         
-        /* Mobile Adjustments for Table */
         @media (max-width: 768px) {
             .data-row { grid-template-columns: 30px 50px 1fr 60px; padding: 12px; }
-            .data-header { display: none; } /* Custom mobile header handled in HTML */
+            .data-header { display: none; } 
         }
 
         /* --- INPUT STYLING --- */
@@ -170,19 +167,16 @@
             width: 100%;
         }
         
-        /* --- CUSTOM SCROLLBAR --- */
+        /* --- UTILS --- */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #1f2937; }
         ::-webkit-scrollbar-thumb:hover { background: var(--neon); }
 
-        /* --- SEARCH MODAL ANIMATION --- */
         .modal-enter-active, .modal-leave-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(10px); }
 
-        /* --- UTILS --- */
         .clip-corner { clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%); }
-        .clip-corner-top { clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 20%); }
     </style>
 </head>
 <body class="overflow-hidden">
@@ -212,19 +206,19 @@
         </div>
 
         <div class="flex-1 overflow-y-auto px-4 py-2">
-            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 pl-4">Command</div>
+            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 pl-4">Navigation</div>
             
             <div @click="currentView='collection'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='collection'}">
                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
             </div>
             <div @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='calculator' && currentBinder===null}">
-                <i class="fa-solid fa-calculator w-6"></i> ROI Terminal
+                <i class="fa-solid fa-calculator w-6"></i> Profit Calc
             </div>
             <div @click="currentView='binders'; currentBinder=null; showMobileNav=false" class="nav-spine-item" :class="{active: currentView==='binders'}">
-                <i class="fa-solid fa-server w-6"></i> Archives
+                <i class="fa-solid fa-book-open w-6"></i> Binders
             </div>
 
-            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 mt-8 pl-4">Collections</div>
+            <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-3 mt-8 pl-4">My Binders</div>
             
             <div v-for="b in binders" :key="b.id" class="nav-spine-item group justify-between" 
                  :class="{active: currentView === 'calculator' && currentBinder?.id === binder.id}"
@@ -250,10 +244,10 @@
                     <div class="w-2 h-2 bg-[#00ff41] rounded-full shadow-[0_0_5px_#00ff41] animate-pulse"></div>
                     <span class="text-xs font-bold text-white font-tech uppercase">{{ user.displayName.split(' ')[0] }}</span>
                 </div>
-                <button @click="logout" class="text-xs text-red-500 hover:text-white font-bold uppercase">Exit</button>
+                <button @click="logout" class="text-xs text-red-500 hover:text-white font-bold uppercase">Log Out</button>
             </div>
             <button v-else @click="loginWithGoogle" class="w-full bg-[#00ff41] text-black font-bold py-2 font-tech uppercase tracking-widest hover:bg-white transition">
-                System Login
+                Trainer Login
             </button>
         </div>
     </aside>
@@ -264,17 +258,17 @@
             <div>
                 <div class="flex items-baseline gap-3">
                     <h2 class="text-3xl font-tech font-bold text-white uppercase">{{ headerTitle }}</h2>
-                    <span class="text-[10px] text-[#00ff41] border border-[#00ff41] px-1 rounded uppercase">System Active</span>
+                    <span class="text-[10px] text-[#00ff41] border border-[#00ff41] px-1 rounded uppercase">System Ready</span>
                 </div>
                 <div class="flex items-center gap-4 mt-1 text-xs font-mono text-gray-500">
-                    <span>ASSETS: <b class="text-gray-300">{{ displayCards.length }}</b></span>
+                    <span>CARDS: <b class="text-gray-300">{{ displayCards.length }}</b></span>
                     <span>VALUE: <b class="text-[#00ff41] text-glow">${{ formatNumber(totalValue) }}</b></span>
                 </div>
             </div>
             
             <button @click="openSearch" class="group relative overflow-hidden bg-[#00ff41]/10 hover:bg-[#00ff41] border border-[#00ff41] transition-all duration-300 px-6 py-2 clip-corner">
                 <span class="relative z-10 font-tech font-bold text-[#00ff41] group-hover:text-black uppercase tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Inject Data
+                    <i class="fa-solid fa-plus"></i> Add Card
                 </span>
             </button>
         </header>
@@ -284,30 +278,30 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Net Worth</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Portfolio Value</div>
                         <div class="text-4xl font-tech font-bold text-white group-hover:text-[#00ff41] transition">${{ formatNumber(totalValue) }}</div>
                     </div>
                     <i class="fa-solid fa-chart-line text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
                 </div>
                 <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Total Units</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Total Cards</div>
                         <div class="text-4xl font-tech font-bold text-white">{{ cards.length }}</div>
                     </div>
-                    <i class="fa-solid fa-microchip text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
+                    <i class="fa-solid fa-layer-group text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
                 </div>
                 <div class="cyber-card p-6 flex items-center justify-between group hover:border-[#00ff41]/50 transition">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Sets Tracked</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Sets Collected</div>
                         <div class="text-4xl font-tech font-bold text-white">{{ Object.keys(cardsBySet).length }}</div>
                     </div>
-                    <i class="fa-solid fa-layer-group text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
+                    <i class="fa-solid fa-folder-open text-4xl text-[#00ff41] opacity-20 group-hover:opacity-100 group-hover:scale-110 transition duration-500"></i>
                 </div>
             </div>
 
             <div v-if="cards.length === 0" class="flex flex-col items-center justify-center h-64 opacity-30 border border-dashed border-gray-700 rounded-lg">
-                <i class="fa-solid fa-wifi text-5xl mb-4"></i>
-                <div class="font-tech uppercase tracking-widest">No Signal</div>
+                <i class="fa-solid fa-box-open text-5xl mb-4"></i>
+                <div class="font-tech uppercase tracking-widest">Collection Empty</div>
             </div>
 
             <div v-else class="grid gap-8">
@@ -339,8 +333,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                  <div @click="currentView='calculator'; currentBinder=null" class="cyber-card aspect-video flex flex-col items-center justify-center cursor-pointer group hover:border-[#00ff41] transition">
                      <i class="fa-solid fa-database text-5xl text-gray-700 group-hover:text-[#00ff41] mb-4 transition duration-500"></i>
-                     <div class="font-tech font-bold text-xl uppercase tracking-widest text-white">Master Archive</div>
-                     <div class="text-xs text-gray-500 mt-2">All Assets</div>
+                     <div class="font-tech font-bold text-xl uppercase tracking-widest text-white">Master Collection</div>
+                     <div class="text-xs text-gray-500 mt-2">All Cards</div>
                  </div>
 
                  <div v-for="b in binders" :key="b.id" @click="selectBinder(b); currentView='calculator'" class="cyber-card aspect-video relative p-6 cursor-pointer group hover:border-[#00ff41] transition">
@@ -351,7 +345,7 @@
                      <div class="h-full flex flex-col justify-end relative z-0">
                          <i class="fa-solid fa-folder text-8xl text-[#00ff41] absolute -right-6 -top-6 opacity-5 group-hover:opacity-10 transition"></i>
                          <div class="font-tech font-bold text-2xl text-white uppercase truncate">{{ b.name }}</div>
-                         <div class="text-xs font-mono text-[#00ff41] mt-1">{{ getBinderCount(b.id) }} UNITS</div>
+                         <div class="text-xs font-mono text-[#00ff41] mt-1">{{ getBinderCount(b.id) }} CARDS</div>
                      </div>
                  </div>
                  
@@ -367,19 +361,19 @@
             <div class="data-row data-header md:grid hidden">
                 <div class="flex justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="appearance-none w-3 h-3 border border-gray-500 checked:bg-[#00ff41] checked:border-[#00ff41] cursor-pointer"></div>
                 <div class="text-center">IMG</div>
-                <div class="cursor-pointer hover:text-white" @click="setSort('name')">DETAILS <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('name')"></i></div>
-                <div class="text-center">LOCATION</div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('rawCost')">RAW COST <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('rawCost')"></i></div>
-                <div class="text-right">FEE</div>
+                <div class="cursor-pointer hover:text-white" @click="setSort('name')">CARD NAME <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('name')"></i></div>
+                <div class="text-center">BINDER</div>
+                <div class="text-right cursor-pointer hover:text-white" @click="setSort('rawCost')">CARD COST <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('rawCost')"></i></div>
+                <div class="text-right">GRADING FEE</div>
                 <div class="text-center">TARGET</div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('market')">EST. VAL <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('market')"></i></div>
-                <div class="text-right cursor-pointer hover:text-white" @click="setSort('profit')">NET <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('profit')"></i></div>
+                <div class="text-right cursor-pointer hover:text-white" @click="setSort('market')">GRADED VAL <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('market')"></i></div>
+                <div class="text-right cursor-pointer hover:text-white" @click="setSort('profit')">PROFIT <i class="fa-solid text-[9px] ml-1" :class="getSortIcon('profit')"></i></div>
                 <div class="text-center"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="text-red-500 hover:text-white text-[9px] font-bold border border-red-500 px-2 py-0.5 rounded uppercase">DEL</button></div>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar bg-black/40">
                 <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30 text-xs font-mono uppercase tracking-widest">
-                    Buffer Empty
+                    No Cards in List
                 </div>
                 <div v-else v-for="c in paginatedCards" :key="c.uid" class="data-row group relative" :class="{'bg-[#00ff41]/5': selectedIds.includes(c.uid)}">
                     
@@ -398,7 +392,7 @@
                     
                     <div class="md:hidden text-right">
                          <div class="text-[#00ff41] font-mono font-bold text-xs">${{ Math.round(getProfit(c)) }}</div>
-                         <div class="text-[9px] text-gray-500">NET</div>
+                         <div class="text-[9px] text-gray-500">PROFIT</div>
                     </div>
 
                     <div class="hidden md:block">
@@ -440,25 +434,25 @@
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00ff41] to-transparent animate-pulse"></div>
             
             <div class="p-6 border-b border-[#00ff41]/20 flex justify-between items-center bg-black/40">
-                <h2 class="text-2xl font-tech font-bold text-white uppercase tracking-widest text-glow">Database Injection</h2>
+                <h2 class="text-2xl font-tech font-bold text-white uppercase tracking-widest text-glow">Find My Card</h2>
                 <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
             <div class="p-6 bg-black/20 grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-white/5">
                 <div>
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Series</label>
-                    <select v-model="selectedEra" class="w-full bg-black/50 border border-gray-700 text-gray-300 text-xs p-2 rounded focus:border-[#00ff41] outline-none"><option value="">SELECT SERIES</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
+                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Era</label>
+                    <select v-model="selectedEra" class="w-full bg-black/50 border border-gray-700 text-gray-300 text-xs p-2 rounded focus:border-[#00ff41] outline-none"><option value="">SELECT ERA</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
                 </div>
                 <div>
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Expansion</label>
+                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Set</label>
                     <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-black/50 border border-gray-700 text-gray-300 text-xs p-2 rounded focus:border-[#00ff41] outline-none disabled:opacity-30"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
                 </div>
                 <div class="col-span-2 md:col-span-1">
-                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Identifier</label>
-                    <input v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="SEARCH..." class="w-full bg-black/50 border border-gray-700 text-white text-xs p-2 rounded focus:border-[#00ff41] outline-none disabled:opacity-30 uppercase">
+                    <label class="text-[9px] text-[#00ff41] font-bold uppercase mb-1 block">Pokemon Name</label>
+                    <input v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="CHARIZARD..." class="w-full bg-black/50 border border-gray-700 text-white text-xs p-2 rounded focus:border-[#00ff41] outline-none disabled:opacity-30 uppercase">
                 </div>
                 <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00ff41] hover:bg-white text-black font-bold font-tech text-sm uppercase tracking-widest rounded transition disabled:opacity-50 mt-auto h-9">
-                    {{ isSearching ? 'SCANNING...' : 'EXECUTE' }}
+                    {{ isSearching ? 'SEARCHING...' : 'SEARCH' }}
                 </button>
             </div>
 
@@ -470,8 +464,8 @@
                  </div>
 
                  <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-20">
-                     <i class="fa-solid fa-database text-6xl mb-4"></i>
-                     <div class="font-tech uppercase tracking-widest">Awaiting Input Query</div>
+                     <i class="fa-solid fa-magnifying-glass text-6xl mb-4"></i>
+                     <div class="font-tech uppercase tracking-widest">Search for a Pokemon</div>
                  </div>
 
                  <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
@@ -510,11 +504,11 @@
 
                     <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-black/40 p-4 border-l-2 border-[#00ff41]">
-                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Raw Cost</div>
+                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Card Cost</div>
                             <div class="text-xl font-mono text-white">${{ formatNumber(detailCard.rawCost) }}</div>
                         </div>
                         <div class="bg-black/40 p-4 border-l-2 border-[#00ff41]">
-                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Target Value</div>
+                            <div class="text-[9px] text-gray-500 uppercase font-bold mb-1">Graded Value</div>
                             <div class="text-xl font-mono text-[#00ff41]">${{ formatNumber(getEstValue(detailCard)) }}</div>
                         </div>
                     </div>
@@ -522,10 +516,10 @@
 
                 <div class="border-t border-white/5 pt-6 flex justify-between items-center">
                     <button @click="deleteCard(detailCard.uid)" class="text-red-500 text-[10px] font-bold uppercase tracking-widest hover:text-white border border-red-900 px-4 py-2 hover:bg-red-600 transition">
-                        Eject Asset
+                        Remove Card
                     </button>
                     <div class="text-xs font-bold text-gray-500 uppercase">
-                        Net Potential: <span :class="getProfit(detailCard) > 0 ? 'text-[#00ff41]' : 'text-red-500'">${{ Math.round(getProfit(detailCard)) }}</span>
+                        Est. Profit: <span :class="getProfit(detailCard) > 0 ? 'text-[#00ff41]' : 'text-red-500'">${{ Math.round(getProfit(detailCard)) }}</span>
                     </div>
                 </div>
             </div>
@@ -614,9 +608,9 @@
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
             headerTitle() {
-                if(this.currentView === 'collection') return 'Overview';
-                if(this.currentView === 'binders') return 'Binder Archives';
-                return this.currentBinder ? this.currentBinder.name.toUpperCase() : 'ROI Terminal';
+                if(this.currentView === 'collection') return 'Dashboard';
+                if(this.currentView === 'binders') return 'Binders';
+                return this.currentBinder ? this.currentBinder.name.toUpperCase() : 'Profit Calculator';
             },
             displayCards() { 
                 let list = this.cards; 
@@ -703,7 +697,7 @@
                 else this.selectedIds = this.displayCards.map(c => c.uid);
             },
             deleteSelected() {
-                if(!confirm(`Purge ${this.selectedIds.length} cards?`)) return;
+                if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
                 this.selectedIds.forEach(uid => {
                     if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                     else this.localCards = this.localCards.filter(c => c.uid !== uid);
