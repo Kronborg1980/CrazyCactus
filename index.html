@@ -347,20 +347,20 @@
                         <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Sort Results</label>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
+                        <div class="flex gap-2">
+                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
+                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Sort Results</label>
                         <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
                             <option value="number">Card Number</option>
                             <option value="name">Card Name</option>
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
                         </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Pokemon Name</label>
-                        <div class="flex gap-2">
-                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
-                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
-                        </div>
                     </div>
                 </div>
 
