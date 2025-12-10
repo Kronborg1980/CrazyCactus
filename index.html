@@ -21,6 +21,10 @@
             --neon-glow: rgba(57, 255, 20, 0.6);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-surface: rgba(15, 12, 41, 0.85);
+            /* Tumbleweed colors */
+            --tw-c1: #8b5a2b;
+            --tw-c2: #a0522d;
+            --tw-c3: #6b4226;
         }
 
         body {
@@ -51,11 +55,11 @@
             transform: translateY(-2px);
         }
 
-        /* --- SCENERY --- */
+        /* --- SCENERY & BACKGROUNDS --- */
         .bg-watermark {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 80vw; height: 80vh; 
-            opacity: 0.08; /* INCREASED OPACITY HERE */
+            opacity: 0.08; 
             pointer-events: none; z-index: -2;
             background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg');
             background-size: contain; background-repeat: no-repeat; background-position: center;
@@ -68,12 +72,71 @@
             filter: blur(10px); animation: haze 5s infinite linear; opacity: 0.5;
         }
         @keyframes haze { 0% { transform: skewX(0deg) translateY(0); } 50% { transform: skewX(2deg) translateY(-5px); } 100% { transform: skewX(0deg) translateY(0); } }
-        .tumbleweed {
-            position: absolute; bottom: 15%; width: 60px; height: 60px; opacity: 0.6;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4a373' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21a9 9 0 1 0-9-9c0 4.97 4.03 9 9 9z'/%3E%3Cpath d='M12 3a9 9 0 0 1 9 9'/%3E%3Cpath d='M3.6 9h16.8'/%3E%3Cpath d='M3.6 15h16.8'/%3E%3Cpath d='M12 3v18'/%3E%3Cpath d='M16.5 7.5l-9 9'/%3E%3Cpath d='M7.5 7.5l9 9'/%3E%3C/svg%3E");
-            background-size: contain; animation: tumble 25s linear infinite;
+        
+        /* --- REALISTIC TUMBLEWEEDS --- */
+        /* The container handles horizontal movement */
+        .tumbleweed-container { position: absolute; z-index: 1; }
+        
+        /* The graphic handles the look, rotation, and bouncing */
+        .tumbleweed-graphic {
+            width: 100%; height: 100%;
+            /* Complex border radii for irregular shape */
+            border-radius: 43% 57% 50% 50% / 57% 44% 56% 43%;
+            /* Layered borders to create twig look without images */
+            border: 3px solid var(--tw-c1);
+            box-shadow: 
+                inset 0 0 0 4px var(--tw-c2),
+                3px 5px 0 0 var(--tw-c3),
+                -2px -3px 0 0 var(--tw-c1);
+            position: relative; opacity: 0.9;
         }
-        @keyframes tumble { 0% { left: -150px; transform: rotate(0deg); } 100% { left: 100vw; transform: rotate(1440deg); } }
+        /* Inner details for more chaos */
+        .tumbleweed-graphic::before, .tumbleweed-graphic::after {
+            content: ''; position: absolute; border-radius: 50%; border: 2px solid rgba(139, 90, 43, 0.6);
+        }
+        .tumbleweed-graphic::before { top: 15%; left: 25%; width: 60%; height: 60%; transform: rotate(35deg); border-radius: 50% 40% 60% 50%; border-color: var(--tw-c2); }
+        .tumbleweed-graphic::after { bottom: 15%; right: 20%; width: 50%; height: 50%; transform: rotate(-20deg); border-radius: 60% 50% 40% 50%; border-color: var(--tw-c3); }
+
+        /* Instances defined by scale, speed, and delay */
+        .tw-1 { bottom: 15%; width: 70px; height: 70px; animation: moveRight 25s linear infinite; }
+        .tw-1 .tumbleweed-graphic { animation: rollBounce1 25s linear infinite; }
+
+        .tw-2 { bottom: 22%; width: 40px; height: 40px; animation: moveRight 18s linear infinite; animation-delay: 7s; opacity: 0; /* Start invisible due to delay */ }
+        .tw-2 .tumbleweed-graphic { animation: rollBounce2 18s linear infinite; animation-delay: 7s; }
+
+        .tw-3 { bottom: 10%; width: 55px; height: 55px; animation: moveRight 30s linear infinite; animation-delay: 15s; opacity: 0; }
+        .tw-3 .tumbleweed-graphic { animation: rollBounce3 30s linear infinite; animation-delay: 15s; }
+
+        /* Horizontal Movement */
+        @keyframes moveRight { 0% { left: -150px; opacity: 1; } 95% { opacity: 1; } 100% { left: 100vw; opacity: 0; } }
+
+        /* Rotation and Bounce Physics (Gravity simulation) */
+        @keyframes rollBounce1 {
+            0% { transform: rotate(0deg) translateY(0); }
+            20% { transform: rotate(360deg) translateY(-30px); } /* Big bounce */
+            40% { transform: rotate(720deg) translateY(0); } /* Land */
+            50% { transform: rotate(900deg) translateY(-15px); } /* Small bounce */
+            60% { transform: rotate(1080deg) translateY(0); } /* Land */
+            80% { transform: rotate(1440deg) translateY(-25px); } /* Medium bounce */
+            100% { transform: rotate(1800deg) translateY(0); }
+        }
+        @keyframes rollBounce2 { /* Faster, smaller bounces */
+            0% { transform: rotate(0deg) translateY(0); }
+            15% { transform: rotate(360deg) translateY(-15px); }
+            30% { transform: rotate(720deg) translateY(0); }
+            45% { transform: rotate(1080deg) translateY(-20px); }
+            60% { transform: rotate(1440deg) translateY(0); }
+            100% { transform: rotate(2400deg) translateY(0); }
+        }
+        @keyframes rollBounce3 { /* Slow, heavy bounces */
+            0% { transform: rotate(0deg) translateY(0); }
+            25% { transform: rotate(360deg) translateY(-40px); }
+            50% { transform: rotate(720deg) translateY(0); }
+            75% { transform: rotate(1080deg) translateY(-30px); }
+            100% { transform: rotate(1440deg) translateY(0); }
+        }
+
+
         .stars {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: radial-gradient(white 1px, transparent 1px);
@@ -129,7 +192,11 @@
 <div class="bg-watermark"></div>
 <div class="bg-scenery">
     <div class="heat-haze"></div>
-    <div class="tumbleweed"></div>
+    
+    <div class="tumbleweed-container tw-1"><div class="tumbleweed-graphic"></div></div>
+    <div class="tumbleweed-container tw-2"><div class="tumbleweed-graphic"></div></div>
+    <div class="tumbleweed-container tw-3"><div class="tumbleweed-graphic"></div></div>
+
     <svg class="absolute bottom-0 right-[5%] w-48 h-48 opacity-30 text-black fill-current" viewBox="0 0 100 100"><path d="M50 90 L50 40 Q50 20 70 20 L70 30 M50 60 Q30 60 30 40 L30 30" stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
     <svg class="absolute bottom-0 left-[2%] w-64 h-64 opacity-20 text-black fill-current" viewBox="0 0 100 100"><path d="M50 95 L50 20 Q50 5 65 5 M50 60 Q20 60 20 40 L20 30 M50 50 Q80 50 80 30" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
     <svg class="absolute bottom-0 left-[30%] w-32 h-32 opacity-15 text-black fill-current" viewBox="0 0 100 100"><path d="M50 90 L50 50 Q50 30 40 30 L40 40 M50 70 Q60 70 60 50 L60 40" stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
