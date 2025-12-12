@@ -458,8 +458,8 @@
 </div>
 
 <script>
-    // --- API CONFIGURATION ---
-    const POKEMON_TCG_API_KEY = "7f0faa6e-d36b-4f9f-a02d-709e15f1cfce"; // Key Included as requested
+    // --- CONNECTED TO YOUR CLOUDFLARE WORKER ---
+    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -486,7 +486,8 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", targetBinder: 'master',
-                cacheKey: 'cactus_final_v6', totalSetData: {}, 
+                // BUMP CACHE TO RELOAD SETS VIA WORKER
+                cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
                 
                 // SORTING
                 sortBy: null, sortDesc: true, currentPage: 1, itemsPerPage: 30, 
@@ -499,7 +500,7 @@
                 isLoadingSet: false,      
                 isLoadingPrice: false,   
                 fetchError: false,
-                errorMessage: "", // NEW: Holds specific error text
+                errorMessage: "",
                 searchPage: 1, 
                 abortController: null,
                 debounceTimer: null
@@ -526,17 +527,21 @@
 
                 this.isLoadingPrice = true;
                 try {
-                    const headers = {};
-                    // Only attach header if key exists
-                    if(POKEMON_TCG_API_KEY) headers["X-Api-Key"] = POKEMON_TCG_API_KEY;
-
-                    const res = await fetch(
-                        `https://api.pokemontcg.io/v2/cards/${newId}?select=tcgplayer`,
-                        { headers }
-                    );
+                    // SECURE PRICE FETCH VIA WORKER
+                    // Using query search logic for ID since worker is generic proxy
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=id:${newId}&select=tcgplayer`);
                     const data = await res.json();
-                    if(data.data && data.data.tcgplayer) {
-                        card.tcgplayer = data.data.tcgplayer;
+                    
+                    // Handle response (might be list or object depending on worker/API quirk, usually list for 'q')
+                    let cardData = null;
+                    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+                        cardData = data.data[0];
+                    } else if (data.data && !Array.isArray(data.data)) {
+                        cardData = data.data;
+                    }
+
+                    if(cardData && cardData.tcgplayer) {
+                        card.tcgplayer = cardData.tcgplayer;
                     }
                 } catch(e) {
                     console.error("Price fetch error:", e);
@@ -627,21 +632,19 @@
             
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
-                const cacheKey = 'cactus_sets_v6'; 
                 
-                // CORS FIX: Use key conditionally for headers
-                const options = {};
-                if(POKEMON_TCG_API_KEY) {
-                    options.headers = { 'X-Api-Key': POKEMON_TCG_API_KEY };
-                }
-
-                if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } 
+                if (!force) { 
+                    const c = localStorage.getItem(this.cacheKey); // Use Dynamic Key
+                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } 
+                } 
+                
                 try { 
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', options); 
+                    // FETCH FROM WORKER PROXY
+                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
                     if (!res.ok) throw new Error(`API Error: ${res.status}`); 
                     const data = await res.json(); 
                     const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; 
-                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
+                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
                 } catch(e) { 
                     console.error("Set Sync Failed", e); 
                 } finally { this.setsLoading = false; } 
@@ -681,16 +684,11 @@
                 
                 const finalQuery = queries.join(" ");
 
-                // CORS FIX: Use key conditionally for headers
-                const requestOptions = { signal };
-                if (POKEMON_TCG_API_KEY) {
-                    requestOptions.headers = { 'X-Api-Key': POKEMON_TCG_API_KEY };
-                }
-
                 try {
+                    // FETCH FROM WORKER PROXY
                     const res = await fetch(
-                        `https://api.pokemontcg.io/v2/cards?q=${finalQuery}&select=id,name,number,images,set&pageSize=250&page=${this.searchPage}`,
-                        requestOptions
+                        `${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(finalQuery)}&select=id,name,number,images,set&pageSize=250&page=${this.searchPage}`,
+                        { signal }
                     );
 
                     if (!res.ok) {
