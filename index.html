@@ -3,475 +3,366 @@
 <html lang="da">
 <head>
   <meta charset="utf-8" />
-  <title>Crazy Cactus — Binder Love</title>
+  <title>Crazy Cactus — Binder Love (Online v2)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #0f172a;       /* slate-900 */
-      --panel: #111827;    /* gray-900 */
-      --muted: #1f2937;    /* gray-800 */
-      --accent: #22c55e;   /* green-500 */
-      --accent-2: #06b6d4; /* cyan-500 */
-      --text: #e5e7eb;     /* gray-200 */
-      --sub: #9ca3af;      /* gray-400 */
-      --danger: #ef4444;   /* red-500 */
-      --warn: #f59e0b;     /* amber-500 */
-      --ok: #10b981;       /* emerald-500 */
-      --border: #374151;   /* gray-700 */
-    }
-    * { box-sizing: border-box; }
-    html,body { height:100%; }
-    body {
-      margin:0; background:var(--bg); color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    }
-    a { color: var(--accent-2); text-decoration: none; }
-    header {
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 14px 18px; background: linear-gradient(90deg, #0b1220, #0b1a26 40%, #0b1220);
-      border-bottom:1px solid var(--border);
-      position: sticky; top:0; z-index: 10;
-    }
-    header h1 { font-size: 18px; margin:0; letter-spacing:.5px; }
-    header .metrics { display:flex; gap:16px; flex-wrap: wrap; }
-    .pill {
-      background:var(--muted); padding:8px 10px; border-radius:10px; border:1px solid var(--border);
-      display:flex; gap:8px; align-items:center; font-size:13px;
-    }
-    .pill b { color:#fff; }
-    .wrap { display:flex; min-height: calc(100vh - 58px); }
-    aside {
-      width: 280px; border-right:1px solid var(--border);
-      background: #0c1422; padding: 16px; position: sticky; top:58px; height: calc(100vh - 58px); overflow:auto;
-    }
-    main { flex:1; padding: 16px; display:flex; gap:16px; flex-direction: column; }
-    h2,h3,h4 { margin:10px 0; }
-    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding: 14px; }
-    .grid { display:grid; gap:16px; }
-    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .grid.cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
-    @media (max-width: 1100px) { .grid.cols-3,.grid.cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); } aside{width: 240px;} }
-    @media (max-width: 800px) { .grid.cols-2,.grid.cols-3,.grid.cols-4 { grid-template-columns: 1fr; } aside{display:none;} }
-    .muted { color: var(--sub); }
-    .btn {
-      cursor:pointer; border:1px solid var(--border); background: var(--muted);
-      color:#fff; padding:8px 12px; border-radius:8px; font-weight:600;
-    }
-    .btn:hover { filter: brightness(1.05); }
-    .btn.primary { background: linear-gradient(180deg,#1f7a50,#11633f); border-color:#145c3d; }
-    .btn.warn { background: linear-gradient(180deg,#7a5a1f,#6a4b10); border-color:#5a3e0c; }
-    .btn.danger { background: linear-gradient(180deg,#933131,#7a2222); border-color:#6b1c1c; }
-    .btn.ghost { background: transparent; }
-    .row { display:flex; gap:12px; flex-wrap: wrap; align-items:center; }
-    .row.stretch > * { flex:1; }
-    input,select {
-      width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border);
-      background:#0b1220; color:#fff; outline:none;
-    }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom:1px solid var(--border); padding:10px; vertical-align: middle; font-size: 14px; }
-    th { text-align:left; color:#cbd5e1; }
-    tr:hover td { background:#0c1524; }
-    .right { text-align:right; }
-    .center { text-align:center; }
-    .tag { background:#0b1b2b; border:1px solid #0f2b44; color:#bfe7ff; padding:2px 6px; border-radius:6px; font-size:12px; }
-    .small { font-size:12px; }
-    .spacer { flex:1; }
-    .hr { height:1px; background:var(--border); margin: 10px 0; }
-    .hint { color:#a7f3d0; }
-    .empty {
-      border:1px dashed var(--border); border-radius:10px; padding:16px; text-align:center; color:var(--sub);
-      background: #0a1220;
-    }
-  </style>
+  <link reld.css
 </head>
 <body>
-  <header>
-    <h1>🌵 Crazy Cactus — <span class="muted">Binder Love</span></h1>
-    <div class="metrics">
-      <div class="pill">💰 Portfolio Value: <b id="m-totalValue">0,00 kr.</b></div>
-      <div class="pill">🃏 Total Cards: <b id="m-totalCards">0</b></div>
-      <div class="pill">📚 Binders: <b id="m-binders">1</b></div>
+  <header class="cc-header">
+    <div class="cc-brand">
+      <h1>🌵 CRAZY CACTUS</h1>
+      <div class="sub">Binder Love</div>
+    </div>
+    <nav class="cc-nav">
+      <a class="nav-link active">Dashboard</a>
+      <a class="nav-link">Profit Calc</a>
+      <a class="nav-link">Binders</a>
+    </nav>
+    <div class="cc-user">
+      <span class="muted">{{ user.displayName }}</span>
+      <button class="btn ghost">Log Out</button>
     </div>
   </header>
 
-  <div class="wrap">
-    <!-- SIDEBAR: Binders -->
-    <aside>
-      <h3>📚 CARD VAULTS</h3>
-      <div class="row">
-        <input id="newBinderName" placeholder="+ Ny binder navn…" />
-        <button class="btn" id="btnAddBinder">+ NY BINDER</button>
-      </div>
-      <div class="hr"></div>
-      <div id="binderList"></div>
-      <div class="hr"></div>
-      <div class="small muted">Tip: Klik på en binder for at filtrere tabellen. “Master Archive” viser alt.</div>
+  <div class="cc-wrap">
+    <!-- SIDEBAR -->
+    <aside class="cc-sidebar">
+      <section class="card">
+        <h3>📊 Portfolio</h3>
+        <div class="metrics">
+          <div class="pill">Value <b id="m-totalValue">0,00 kr.</b></div>
+          <div class="pill">Cards <b id="m-totalCards">0</b></div>
+          <div class="pill">Binders <b id="m-binders">1</b></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>📚 CARD VAULTS</h3>
+        <div class="row">
+          <input id="newBinderName" placeholder="+ Ny binder navn…" />
+          <button class="btn" id="btnAddBinder">+ NEW BINDER</button>
+        </div>
+        <div class="hr"></div>
+        <div id="binderList"></div>
+      </section>
+
+      <!-- API SETTINGS -->
+      <section class="card">
+        <h3>🛠️ API Settings</h3>
+        <div class="small muted">Pokémon TCG API v2 (alle calls kræver HTTPS + X-Api-Key).</div>
+        <div class="row" style="margin-top:8px">
+          <input id="apiBase" placeholder="Base URL (fx https://api.pokemontcg.io/v2)" />
+        </div>
+        <div class="row">
+          <input id="apiToken" placeholder="API Key (X-Api-Key)" />
+        </div>
+        <div class="row">
+          <button class="btn" id="btnTestApi">Test API</button>
+          <span class="tag" id="apiStatus">Idle</span>
+        </div>
+        <div class="small muted" style="margin-top:8px">
+          Tip: Af sikkerhedshensyn bør en produktionsløsning proxye nøglen via backend. (Doksen anbefaler ikke at dele nøglen offentligt). [1](https://docs.pokemontcg.io/getting-started/authentication/)
+        </div>
+      </section>
     </aside>
 
     <!-- MAIN -->
-    <main>
-      <!-- Dashboard quicks -->
-      <div class="grid cols-3">
-        <div class="card">
-          <h3>📈 Dashboard</h3>
-          <div class="row">
-            <div class="pill">Net Profit (alle): <b id="m-netAll">0,00 kr.</b></div>
-            <div class="pill">Gns. Market/Kort: <b id="m-avgMarket">0,00 kr.</b></div>
-          </div>
-          <div class="small muted" style="margin-top:8px">Alt er beregnet i realtid og gemmes i din browser (localStorage).</div>
-        </div>
-        <div class="card">
-          <h3>🔎 Find My Card</h3>
-          <div class="row stretch">
-            <div>
-              <label class="small muted">1. Era</label>
-              <select id="selEra"></select>
-            </div>
-            <div>
-              <label class="small muted">2. Set</label>
-              <select id="selSet"></select>
-            </div>
-          </div>
-          <div class="row stretch" style="margin-top:8px">
-            <div>
+    <main class="cc-main">
+      <section class="empty" id="emptyTop">
+        <h4>This Desert is Empty</h4>
+        <div>Plant your first seed and watch it grow!</div>
+      </section>
+
+      <section class="card">
+        <h3>Find My Card</h3>
+        <ol class="steps">
+          <li>
+            <label class="small muted">1. Era (Series)</label>
+            <select id="selEra"></select>
+          </li>
+          <li>
+            <label class="small muted">2. Set</label>
+            <select id="selSet"></select>
+          </li>
+          <li class="flex">
+            <div class="grow">
               <label class="small muted">3. Card</label>
               <select id="selCard"></select>
+              <div class="small tag" id="loadState">LOADING...</div>
             </div>
             <div>
               <label class="small muted">Market Price</label>
-              <div id="marketBox" class="pill">CHECKING…</div>
+              <div id="marketBox" class="pill">CHECKING...</div>
             </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn primary" id="btnAddToBinder">ADD TO BINDER</button>
-            <span class="tag" id="addedToast" style="display:none">ADDED TO COLLECTION!</span>
-            <span class="spacer"></span>
-            <span class="small muted">Aktiv binder: <b id="activeBinderName">Master Archive</b></span>
-          </div>
+          </li>
+        </ol>
+        <div class="row">
+          <button class="btn primary" id="btnAddToBinder">ADD TO BINDER</button>
+          <span class="tag" id="addedToast" style="display:none">ADDED TO COLLECTION!</span>
+          <span class="spacer"></span>
+          <span class="small muted">Active binder: <b id="activeBinderName">Master Archive</b></span>
         </div>
-        <div class="card">
-          <h3>⚙️ Indstillinger</h3>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h3 class="grow">{{ currentBinder ? currentBinder.name : 'Master List' }}</h3>
           <div class="row">
-            <label class="small muted">Side-størrelse</label>
-            <select id="selPageSize" style="max-width:140px">
+            <label class="small muted">Page size</label>
+            <select id="selPageSize">
               <option>10</option><option selected>20</option><option>50</option><option>100</option>
             </select>
-            <span class="spacer"></span>
-            <button class="btn ghost small" id="btnReset">Nulstil alt</button>
+            <button class="btn ghost small" id="btnReset">Reset</button>
           </div>
-          <div class="small muted" style="margin-top:8px">Nulstil sletter bindere og samling (kun lokalt).</div>
         </div>
-      </div>
 
-      <!-- Collection Table -->
-      <div class="card">
-        <div class="row" style="margin-bottom:8px">
-          <h3 style="margin:0">🗃️ <span id="tableTitle">Master List</span> — Profitability Analysis</h3>
-          <span class="spacer"></span>
+        <div class="row">
+          <h4 class="grow">Profitability Analysis Engine</h4>
           <button id="btnDelete" class="btn danger" disabled>DELETE 0 ITEMS</button>
         </div>
 
-        <div id="tableWrap"></div>
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Visual</th>
+              <th>Card Identity</th>
+              <th>Binder Location</th>
+              <th class="right">Raw Cost</th>
+              <th class="right">Fees</th>
+              <th>Target Grade</th>
+              <th class="right">Est. Value</th>
+              <th class="right">Net Profit</th>
+              <th>Ops</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
 
-        <div class="row" style="margin-top:10px">
+        <div class="row">
           <div class="small muted" id="visibleCount">0 items visible</div>
           <span class="spacer"></span>
           <button class="btn" id="btnPrev">PREV</button>
           <button class="btn" id="btnNext">NEXT</button>
         </div>
-      </div>
+      </section>
 
-      <!-- Helpful info -->
-      <div class="empty">
-        <h4>🌵 This Desert is Empty</h4>
-        <div>Plant your first seed og se den gro — brug “Find My Card” ovenfor og klik <b>ADD TO BINDER</b>.</div>
-      </div>
+      <section class="card">
+        <h4>Master Archive</h4>
+        <div class="small muted">Total: <span id="totalInMaster">0</span> Cards</div>
+      </section>
     </main>
   </div>
 
   <script>
-  // ==========
-  // UTILITIES
-  // ==========
+  // ===== UTIL =====
   const DKK = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', minimumFractionDigits: 2 });
-  const NUM = new Intl.NumberFormat('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const uid = () => Math.random().toString(36).slice(2,10);
-  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+  const toNum = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const debounce = (fn, d=250) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), d); }; };
 
-  // ======================
-  // MOCK DATA (offline)
-  // ======================
-  const MOCK = (() => {
-    const eras = ['Vintage', 'Modern'];
-    const sets = [
-      { id: 'base-1999', era: 'Vintage', name: 'Base Set (1999)', total: 102 },
-      { id: 'jungle-1999', era: 'Vintage', name: 'Jungle (1999)', total: 64 },
-      { id: 'sv-2023', era: 'Modern', name: 'Scarlet & Violet (2023)', total: 198 },
-      { id: 'pa-2024', era: 'Modern', name: 'Paradox Rift (2024)', total: 182 },
-    ];
-    // Generér et lille kortkatalog pr. set
-    const cardsBySet = {};
-    for (const s of sets) {
-      const list = [];
-      const baseNames = ['Bulbasaur','Charmander','Squirtle','Pikachu','Eevee','Mew','Mewtwo','Charizard','Blastoise','Venusaur'];
-      for (let i=1;i<=20;i++){
-        const name = baseNames[i % baseNames.length] + (i>10? ' ▲':'');
-        // Market svinger pr. set, lidt højere i Vintage
-        const base = s.era === 'Vintage' ? 50 : 10;
-        const market = +(base + Math.random()* (s.era==='Vintage'? 200:60)).toFixed(2);
-        list.push({
-          id: `${s.id}-${i}`,
-          setId: s.id,
-          number: i,
-          name,
-          market,
-        });
-      }
-      cardsBySet[s.id] = list;
-    }
-    return { eras, sets, cardsBySet };
-  })();
-
-  // ======================
-  // STATE + STORAGE
-  // ======================
-  const STORAGE_KEY = 'cactus_state_v1';
+  // ===== STORAGE =====
+  const STORE_KEY = 'cactus_online_pokemontcg_v2';
   const defaultState = () => ({
-    binders: [ { id: 'master', name: 'Master Archive' } ],
-    currentBinder: 'master',
-    collection: [], // items: { rowId, cardId, setId, name, number, market, binderId, rawCost, fees, grade }
-    ui: {
-      page: 1,
-      pageSize: 20,
-      filterBinder: 'master', // 'master' viser alt
-      selEra: '',
-      selSet: '',
-      selCard: '',
-    }
+    binders: [{ id:'master', name:'Master Archive' }],
+    ui: { page:1, pageSize:20, filterBinder:'master', selEra:'', selSet:'', selCard:'' },
+    collection: [],
+    api: { base: 'https://api.pokemontcg.io/v2', token: '' }
   });
-
   let state = loadState();
+  function loadState(){ try{ const raw = localStorage.getItem(STORE_KEY); return raw? JSON.parse(raw): defaultState(); }catch{ return defaultState(); } }
+  function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 
-  function loadState(){
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaultState();
-      const obj = JSON.parse(raw);
-      // defensiv migration
-      obj.ui ||= defaultState().ui;
-      obj.binders ||= defaultState().binders;
-      obj.currentBinder ||= 'master';
-      return obj;
-    } catch {
-      return defaultState();
+  // ===== API WRAPPER (Pokémon TCG v2) =====
+  async function apiFetch(path, { timeoutMs=15000, page, pageSize, queryParams }={}){
+    const controller = new AbortController(); const id = setTimeout(()=>controller.abort(), timeoutMs);
+    const headers = { 'Accept':'application/json' };
+    if (state.api.token) headers['X-Api-Key'] = state.api.token; // v2 key header
+    const url = new URL(path, state.api.base);
+    if (page) url.searchParams.set('page', page);
+    if (pageSize) url.searchParams.set('pageSize', pageSize);
+    if (queryParams) Object.entries(queryParams).forEach(([k,v]) => url.searchParams.set(k,v));
+    const res = await fetch(url.toString(), { headers, signal: controller.signal, cache: 'no-store' });
+    clearTimeout(id);
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    return res.json(); // { data, page, pageSize, count, totalCount }
+  }
+
+  // Cache for sets/cards
+  const cache = { setsAll: null, cardsBySet: new Map() };
+
+  async function fetchAllSets(){
+    if (cache.setsAll) return cache.setsAll;
+    const pageSize = 250; let page = 1; let all = [];
+    // loop pages
+    while(true){
+      const json = await apiFetch('/sets', { page, pageSize });
+      all = all.concat(json.data || []);
+      if (all.length >= (json.totalCount || all.length)) break;
+      page++;
     }
+    cache.setsAll = all;
+    return all;
   }
-  const saveState = throttle(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(state)), 150);
+  function getSeriesList(sets){
+    // unique list of series (Era)
+    const series = Array.from(new Set((sets||[]).map(s => s.series).filter(Boolean))).sort();
+    return series;
+  }
+  function getSetsBySeries(sets, series){
+    return (sets||[]).filter(s => s.series === series);
+  }
 
-  function throttle(fn, wait=150){
-    let t=0, lastArgs=null, queued=false;
-    return (...args) => {
-      const now = Date.now();
-      lastArgs = args;
-      if (!queued && now - t > wait){
-        queued = true;
-        requestAnimationFrame(() => {
-          queued=false; t=Date.now(); fn(...lastArgs);
-        });
+  async function fetchCardsForSet(setId){
+    if (cache.cardsBySet.has(setId)) return cache.cardsBySet.get(setId);
+    const pageSize = 250; let page = 1; let all = [];
+    while(true){
+      const json = await apiFetch('/cards', { page, pageSize, queryParams: { q: `set.id:${setId}` } });
+      all = all.concat(json.data || []);
+      if (all.length >= (json.totalCount || all.length)) break;
+      page++;
+    }
+    cache.cardsBySet.set(setId, all);
+    return all;
+  }
+
+  // Price extractor (TCGplayer/Cardmarket)
+  function pickMarketPrice(card){
+    try {
+      const p = card?.tcgplayer?.prices || {};
+      // Prioritér markedspris; fald tilbage til mid/avg
+      const order = ['holofoil','reverseHolofoil','1stEditionHolofoil','1stEdition','unlimitedHolofoil','unlimited','normal'];
+      for (const key of order){
+        const obj = p[key];
+        if (obj){
+          const val = obj.market ?? obj.mid ?? obj.averagePrice ?? obj.low ?? obj.high;
+          if (typeof val === 'number' && !isNaN(val)) return +val;
+        }
       }
-    };
+      const cm = card?.cardmarket?.prices || {};
+      const cmVal = cm.averageSellPrice ?? cm.trendPrice ?? cm.avg30 ?? cm.avg7 ?? cm.lowPrice ?? cm.highPrice;
+      if (typeof cmVal === 'number' && !isNaN(cmVal)) return +cmVal;
+      return 0;
+    } catch { return 0; }
   }
 
-  // ======================
-  // BUSINESS LOGIC
-  // ======================
+  // ===== BUSINESS =====
   const gradeMultipliers = { 'PSA 8': 0.85, 'PSA 9': 0.95, 'PSA 10': 1.15 };
-  const defaultGrade = 'PSA 9';
+  const estValue = it => +((it.market * (gradeMultipliers[it.grade] ?? 1)).toFixed(2));
+  const profit   = it => +((estValue(it) - (toNum(it.rawCost)+toNum(it.fees))).toFixed(2));
 
-  function getSetsByEra(era){
-    return MOCK.sets.filter(s => s.era === era);
-  }
-  function getCardsInSet(setId){
-    return MOCK.cardsBySet[setId] || [];
-  }
-  function getCardPrice(card){
-    return card?.market ?? 0;
-  }
-  function estValue(item){
-    const mult = gradeMultipliers[item.grade] ?? 1;
-    return +(item.market * mult).toFixed(2);
-  }
-  function profit(item){
-    return +(estValue(item) - (toNum(item.rawCost)+toNum(item.fees))).toFixed(2);
-  }
-  function toNum(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
-
-  // ======================
-  // RENDERING
-  // ======================
+  // ===== UI refs =====
   const el = {
-    mTotalValue: $('#m-totalValue'),
-    mTotalCards:  $('#m-totalCards'),
-    mBinders:     $('#m-binders'),
-    mNetAll:      $('#m-netAll'),
-    mAvgMarket:   $('#m-avgMarket'),
-    binderList:   $('#binderList'),
-    activeBinderName: $('#activeBinderName'),
-    selEra:       $('#selEra'),
-    selSet:       $('#selSet'),
-    selCard:      $('#selCard'),
-    marketBox:    $('#marketBox'),
-    btnAddToBinder: $('#btnAddToBinder'),
-    addedToast:   $('#addedToast'),
-    tableWrap:    $('#tableWrap'),
-    tableTitle:   $('#tableTitle'),
-    visibleCount: $('#visibleCount'),
-    btnPrev:      $('#btnPrev'),
-    btnNext:      $('#btnNext'),
-    btnDelete:    $('#btnDelete'),
-    selPageSize:  $('#selPageSize'),
-    emptyBlock:   $('.empty'),
-    btnAddBinder: $('#btnAddBinder'),
-    newBinderName: $('#newBinderName'),
-    btnReset:     $('#btnReset'),
+    mTotalValue: $('#m-totalValue'), mTotalCards: $('#m-totalCards'), mBinders: $('#m-binders'),
+    binderList: $('#binderList'), activeBinderName: $('#activeBinderName'),
+    selEra: $('#selEra'), selSet: $('#selSet'), selCard: $('#selCard'),
+    loadState: $('#loadState'), marketBox: $('#marketBox'), addedToast: $('#addedToast'),
+    tbl: $('#tbl'), tbody: $('#tbody'), visibleCount: $('#visibleCount'),
+    btnPrev: $('#btnPrev'), btnNext: $('#btnNext'), btnDelete: $('#btnDelete'),
+    selPageSize: $('#selPageSize'), totalInMaster: $('#totalInMaster'), emptyTop: $('#emptyTop'),
+    btnAddBinder: $('#btnAddBinder'), newBinderName: $('#newBinderName'), btnReset: $('#btnReset'),
+    apiBase: $('#apiBase'), apiToken: $('#apiToken'), btnTestApi: $('#btnTestApi'), apiStatus: $('#apiStatus'),
   };
 
-  function renderAll(){
-    renderMetrics();
-    renderBinders();
-    renderFindSelectors();
-    renderMarketBox();
-    renderTable();
-    saveState();
-  }
-
+  // ===== RENDER =====
   function renderMetrics(){
     const items = filteredCollection();
-    const tv = items.reduce((s,i)=> s + estValue(i), 0);
-    const net = items.reduce((s,i)=> s + profit(i), 0);
-    const avgM = items.length ? items.reduce((s,i)=> s + i.market,0) / items.length : 0;
-
-    el.mTotalValue.textContent = DKK.format(tv);
-    el.mNetAll.textContent = DKK.format(net);
-    el.mAvgMarket.textContent = DKK.format(avgM);
+    const totalValue = items.reduce((s,i)=> s+estValue(i), 0);
+    el.mTotalValue.textContent = DKK.format(totalValue);
     el.mTotalCards.textContent = String(items.length);
     el.mBinders.textContent = String(state.binders.length);
+    el.totalInMaster.textContent = String(state.collection.length);
+    el.emptyTop.style.display = state.collection.length ? 'none' : 'block';
   }
-
   function renderBinders(){
-    const list = document.createElement('div');
-    for (const b of state.binders){
-      const count = state.collection.filter(it => it.binderId === b.id || state.ui.filterBinder === 'master').length;
+    const frag = document.createDocumentFragment();
+    state.binders.forEach(b => {
       const btn = document.createElement('button');
-      btn.className = 'btn' + (state.ui.filterBinder === b.id ? ' primary' : '');
+      btn.className = 'btn' + (state.ui.filterBinder===b.id ? ' primary' : '');
       btn.style.width='100%'; btn.style.marginBottom='8px';
-      btn.textContent = b.name + (b.id==='master' ? ` — Total: ${state.collection.length}` : ` — ${binderCount(b.id)} Cards`);
-      btn.onclick = () => { state.ui.filterBinder = b.id; state.ui.page=1; el.activeBinderName.textContent=b.name; renderAll(); };
-      list.appendChild(btn);
+      btn.textContent = b.name + (b.id==='master' ? ` — Total: ${state.collection.length} Cards` : ` — ${binderCount(b.id)} Cards`);
+      btn.onclick = () => { state.ui.filterBinder=b.id; state.ui.page=1; el.activeBinderName.textContent=b.name; renderAll(); };
+      frag.appendChild(btn);
+    });
+    el.binderList.innerHTML=''; el.binderList.appendChild(frag);
+  }
+  function binderCount(id){ return state.collection.filter(i=>i.binderId===id).length; }
+  function filteredCollection(){ return state.ui.filterBinder==='master' ? state.collection : state.collection.filter(i=>i.binderId===state.ui.filterBinder); }
+
+  async function renderFindSelectors(){
+    el.loadState.textContent = 'LOADING...';
+    try {
+      const sets = await fetchAllSets();
+      const series = getSeriesList(sets);
+      // Era = Series
+      el.selEra.innerHTML = [''].concat(series).map(e => e ? `<option value="${e}">${e}</option>` : `<option value="">SELECT ERA</option>`).join('');
+      if (!state.ui.selEra) state.ui.selEra = series[0] ?? '';
+      el.selEra.value = state.ui.selEra;
+
+      const setsInSeries = getSetsBySeries(sets, state.ui.selEra);
+      el.selSet.innerHTML = [''].concat(setsInSeries).map(s => s ? `<option value="${s.id}">${s.name}</option>` : `<option value="">SELECT SET</option>`).join('');
+      if (!setsInSeries.find(s=>s?.id===state.ui.selSet)) state.ui.selSet = setsInSeries[0]?.id ?? '';
+      el.selSet.value = state.ui.selSet;
+
+      const cards = state.ui.selSet ? await fetchCardsForSet(state.ui.selSet) : [];
+      el.selCard.innerHTML = [''].concat(cards).map(c => {
+        if (!c) return `<option value="">${cards.length?'SELECT CARD':'EMPTY SET'}</option>`;
+        return `<option value="${c.id}">#${c.number} — ${c.name}</option>`;
+      }).join('');
+      if (!cards.find(c=>c?.id===state.ui.selCard)) state.ui.selCard = cards[0]?.id ?? '';
+      el.selCard.value = state.ui.selCard;
+
+      el.loadState.textContent = cards.length ? 'READY' : (setsInSeries.length ? 'SELECT CARD' : 'SELECT SET');
+      renderMarketBox();
+    } catch (err) {
+      console.error('Finder load error', err);
+      el.loadState.textContent = 'RETRY CONNECTION';
     }
-    el.binderList.innerHTML='';
-    el.binderList.appendChild(list);
-    el.tableTitle.textContent = (state.ui.filterBinder==='master' ? 'Master List' : (state.binders.find(b=>b.id===state.ui.filterBinder)?.name || 'Binder'));
   }
 
-  function binderCount(id){
-    return state.collection.filter(i => i.binderId === id).length;
-  }
-
-  function renderFindSelectors(){
-    // Era
-    const eras = ['', ...MOCK.eras];
-    el.selEra.innerHTML = eras.map(e => `<option value="${e}">${e?e:'SELECT ERA'}</option>`).join('');
-    el.selEra.value = state.ui.selEra;
-
-    // Set afhænger af era
-    const sets = state.ui.selEra ? getSetsByEra(state.ui.selEra) : [];
-    el.selSet.innerHTML = [''].concat(sets).map(s => {
-      if (!s) return `<option value="">SELECT SET</option>`;
-      return `<option value="${s.id}">${s.name}</option>`;
-    }).join('');
-    if (!sets.find(s => s?.id === state.ui.selSet)) state.ui.selSet = '';
-    el.selSet.value = state.ui.selSet;
-
-    // Cards afhænger af set
-    const cards = state.ui.selSet ? getCardsInSet(state.ui.selSet) : [];
-    el.selCard.innerHTML = [''].concat(cards).map(c => {
-      if (!c) return `<option value="">${cards.length? 'SELECT CARD':'EMPTY SET'}</option>`;
-      return `<option value="${c.id}">#${c.number} — ${c.name}</option>`;
-    }).join('');
-    if (!cards.find(c => c?.id === state.ui.selCard)) state.ui.selCard = '';
-    el.selCard.value = state.ui.selCard;
-  }
-
-  function renderMarketBox(){
-    const card = currentSelectedCard();
-    if (!card) { el.marketBox.textContent = 'CHECKING…'; return; }
-    el.marketBox.textContent = DKK.format(getCardPrice(card));
-  }
-
-  function currentSelectedCard(){
-    const setId = state.ui.selSet;
+  const updatePriceDebounced = debounce(async () => {
     const cId = state.ui.selCard;
-    if (!setId || !cId) return null;
-    return getCardsInSet(setId).find(c => c.id === cId) || null;
-  }
+    if (!cId){ el.marketBox.textContent='CHECKING...'; return; }
+    try {
+      const list = await fetchCardsForSet(state.ui.selSet);
+      const card = list.find(c => c.id === cId);
+      const price = pickMarketPrice(card);
+      el.marketBox.textContent = DKK.format(+price || 0);
+    } catch (err) {
+      console.error('Price error', err);
+      el.marketBox.textContent = 'ERROR';
+    }
+  }, 250);
 
-  function filteredCollection(){
-    if (state.ui.filterBinder === 'master') return state.collection;
-    return state.collection.filter(i => i.binderId === state.ui.filterBinder);
-  }
+  function renderMarketBox(){ updatePriceDebounced(); }
 
   function renderTable(){
     const all = filteredCollection();
     const pageSize = +state.ui.pageSize || 20;
     const maxPage = Math.max(1, Math.ceil(all.length / pageSize));
     state.ui.page = clamp(state.ui.page, 1, maxPage);
-    const start = (state.ui.page - 1) * pageSize;
-    const pageItems = all.slice(start, start + pageSize);
+    const start = (state.ui.page-1)*pageSize;
+    const pageItems = all.slice(start, start+pageSize);
 
-    // Header + rows
-    const table = document.createElement('table');
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th class="center" style="width:34px"><input type="checkbox" id="chkAll"></th>
-          <th style="width:60px">Visual</th>
-          <th>Card Identity</th>
-          <th>Binder Location</th>
-          <th class="right">Raw Cost</th>
-          <th class="right">Fees</th>
-          <th style="width:120px">Target Grade</th>
-          <th class="right">Est. Value</th>
-          <th class="right">Net Profit</th>
-          <th>Ops</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    `;
-    const tbody = $('tbody', table);
-
-    if (pageItems.length === 0){
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-      td.colSpan = 10;
-      td.innerHTML = `<div class="empty">No cards buried here…</div>`;
-      tr.appendChild(td);
-      tbody.appendChild(tr);
+    el.tbody.innerHTML='';
+    if (!pageItems.length){
+      const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan=10;
+      td.innerHTML = `<div class="empty">No cards buried here...</div>`;
+      tr.appendChild(td); el.tbody.appendChild(tr);
     } else {
-      for (const it of pageItems){
+      const frag = document.createDocumentFragment();
+      pageItems.forEach(it => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="center"><input type="checkbox" class="rowChk" data-row="${it.rowId}"></td>
-          <td class="center"><div class="tag">#${it.number}</div></td>
+        const imageCell = `<img src="${it.imageSmall || ''}" alt="${it.name}" style="width:48px;height:auto;border-radiusbox" class="rowChk" data-row="${it.rowId}"></td>
+          <td class="center">${imageCell || `<div class="tag">#${it.number}</div>`}</td>
           <td>
             <div><b>${it.name}</b></div>
             <div class="small muted">${it.setId} · #${it.number}</div>
           </td>
-          <td>${state.binders.find(b => b.id === it.binderId)?.name || 'Master Archive'}</td>
+          <td>${state.binders.find(b=>b.id===it.binderId)?.name || 'Master Archive'}</td>
           <td class="right"><input type="number" step="0.01" value="${toNum(it.rawCost)}" data-row="${it.rowId}" data-k="rawCost"></td>
           <td class="right"><input type="number" step="0.01" value="${toNum(it.fees)}" data-row="${it.rowId}" data-k="fees"></td>
           <td>
@@ -480,150 +371,137 @@
             </select>
           </td>
           <td class="right">${DKK.format(estValue(it))}</td>
-          <td class="right ${profit(it)>=0?'hint':''}">${DKK.format(profit(it))}</td>
+          <td class="right ${profit(it)>=0?'pos':''}">${DKK.format(profit(it))}</td>
           <td><button class="btn warn small" data-del="${it.rowId}">Remove</button></td>
         `;
-        tbody.appendChild(tr);
-      }
+        frag.appendChild(tr);
+      });
+      el.tbody.appendChild(frag);
     }
 
-    // Mount and bind events
-    el.tableWrap.innerHTML = '';
-    el.tableWrap.appendChild(table);
-
-    // Events for inputs
-    $$('input[type="number"]', table).forEach(inp => {
+    // events
+    $$('#tbody input[type="number"]').forEach(inp => {
       inp.addEventListener('change', e => {
-        const rowId = e.target.dataset.row;
-        const key = e.target.dataset.k;
-        const it = state.collection.find(x => x.rowId === rowId);
-        if (it){ it[key] = toNum(e.target.value); renderAll(); }
+        const rowId = e.target.dataset.row, key=e.target.dataset.k;
+        const it = state.collection.find(x=>x.rowId===rowId);
+        if (it){ it[key]=toNum(e.target.value); renderMetrics(); renderTable(); saveState(); }
       });
     });
-    $$('select[data-k="grade"]', table).forEach(sel => {
+    $$('#tbody select[data-k="grade"]').forEach(sel => {
       sel.addEventListener('change', e => {
         const rowId = e.target.dataset.row;
-        const it = state.collection.find(x => x.rowId === rowId);
-        if (it){ it.grade = e.target.value; renderAll(); }
+        const it = state.collection.find(x=>x.rowId===rowId);
+        if (it){ it.grade=e.target.value; renderMetrics(); renderTable(); saveState(); }
       });
     });
-    $$('button[data-del]', table).forEach(btn => {
+    $$('#tbody button[data-del]').forEach(btn => {
       btn.addEventListener('click', e => {
         const rowId = e.target.dataset.del;
-        state.collection = state.collection.filter(x => x.rowId !== rowId);
+        state.collection = state.collection.filter(x=>x.rowId!==rowId);
         renderAll();
       });
     });
 
-    // Select-all + row selection
-    const allChks = $$('.rowChk', table);
-    const chkAll = $('#chkAll', table);
-    const updateDeleteState = () => {
-      const selected = selectedRows();
-      el.btnDelete.disabled = selected.length === 0;
+    const updateDelete = () => {
+      const selected = $$('#tbody .rowChk:checked').map(c=>c.dataset.row);
+      el.btnDelete.disabled = selected.length===0;
       el.btnDelete.textContent = `DELETE ${selected.length} ITEMS`;
+      return selected;
     };
-    if (chkAll) {
-      chkAll.addEventListener('change', () => {
-        allChks.forEach(c => c.checked = chkAll.checked);
-        updateDeleteState();
-      });
-    }
-    allChks.forEach(c => c.addEventListener('change', updateDeleteState));
-    updateDeleteState();
+    $$('#tbody .rowChk').forEach(c => c.addEventListener('change', updateDelete));
+    el.btnDelete.onclick = () => {
+      const rows = updateDelete();
+      if (!rows.length) return;
+      state.collection = state.collection.filter(x => !rows.includes(x.rowId));
+      renderAll();
+    };
 
-    // Pagination footer
     el.visibleCount.textContent = `${pageItems.length} items visible`;
     el.btnPrev.onclick = () => { if (state.ui.page>1){ state.ui.page--; renderTable(); } };
     el.btnNext.onclick = () => { if (state.ui.page<maxPage){ state.ui.page++; renderTable(); } };
-
-    // Empty helper visibility
-    el.emptyBlock.style.display = state.collection.length ? 'none' : 'block';
   }
 
-  function selectedRows(){
-    return $$('.rowChk:checked', el.tableWrap).map(c => c.dataset.row);
-  }
-
-  // ======================
-  // EVENTS (top-level)
-  // ======================
-  el.selEra.addEventListener('change', () => {
-    state.ui.selEra = el.selEra.value;
-    state.ui.selSet = ''; state.ui.selCard = '';
-    renderAll();
+  // ===== Finder events =====
+  $('#selEra').addEventListener('change', async () => {
+    state.ui.selEra = $('#selEra').value; state.ui.selSet=''; state.ui.selCard='';
+    await renderFindSelectors(); saveState();
   });
-  el.selSet.addEventListener('change', () => {
-    state.ui.selSet = el.selSet.value;
-    state.ui.selCard = '';
-    renderAll();
+  $('#selSet').addEventListener('change', async () => {
+    state.ui.selSet = $('#selSet').value; state.ui.selCard='';
+    await renderFindSelectors(); saveState();
   });
-  el.selCard.addEventListener('change', () => {
-    state.ui.selCard = el.selCard.value;
-    renderMarketBox();
+  $('#selCard').addEventListener('change', () => {
+    state.ui.selCard = $('#selCard').value; renderMarketBox(); saveState();
   });
 
-  el.btnAddToBinder.addEventListener('click', () => {
-    const c = currentSelectedCard();
-    if (!c) return;
+  $('#btnAddToBinder').addEventListener('click', async () => {
+    const setId = state.ui.selSet, cId = state.ui.selCard;
+    if (!setId || !cId) return;
+    const list = await fetchCardsForSet(setId);
+    const card = list.find(c=>c.id===cId);
     const row = {
-      rowId: uid(),
-      cardId: c.id,
-      setId: c.setId,
-      name: c.name,
-      number: c.number,
-      market: c.market,
-      binderId: state.ui.filterBinder || 'master',
-      rawCost: 0,
-      fees: 0,
-      grade: defaultGrade
+      rowId: uid(), cardId: card.id, setId,
+      number: card.number, name: card.name,
+      market: pickMarketPrice(card),
+      imageSmall: card.images?.small || '',
+      binderId: state.ui.filterBinder || 'master', rawCost: 0, fees: 0, grade: 'PSA 9'
     };
     state.collection.unshift(row);
     toastAdded();
     renderAll();
   });
 
-  el.btnDelete.addEventListener('click', () => {
-    const rows = selectedRows();
-    if (!rows.length) return;
-    state.collection = state.collection.filter(x => !rows.includes(x.rowId));
-    renderAll();
-  });
-
+  // ===== Misc events =====
   el.selPageSize.addEventListener('change', () => {
-    state.ui.pageSize = +el.selPageSize.value;
-    state.ui.page = 1;
-    renderAll();
+    state.ui.pageSize = +el.selPageSize.value; state.ui.page=1;
+    renderTable(); saveState();
   });
-
   el.btnAddBinder.addEventListener('click', () => {
-    const name = (el.newBinderName.value || '').trim();
-    if (!name) return;
-    const id = uid();
-    state.binders.push({ id, name });
-    state.ui.filterBinder = id;
-    el.newBinderName.value='';
-    renderAll();
+    const name = (el.newBinderName.value || '').trim(); if (!name) return;
+    const id = uid(); state.binders.push({ id, name }); state.ui.filterBinder=id;
+    el.newBinderName.value=''; renderAll();
   });
-
   el.btnReset.addEventListener('click', () => {
-    if (!confirm('Er du sikker? Dette sletter alle lokale data.')) return;
-    state = defaultState();
-    renderAll();
+    if (!confirm('Er du sikker? Dette sletter lokale data.')) return;
+    state = defaultState(); applyApiToInputs(); cache.setsAll=null; cache.cardsBySet.clear(); renderAll(); renderFindSelectors();
+  });
+  function toastAdded(){ el.addedToast.style.display='inline-block'; setTimeout(()=>el.addedToast.style.display='none', 1500); }
+
+  // ===== API Settings UI =====
+  function applyApiToInputs(){
+    el.apiBase.value = state.api.base || '';
+    el.apiToken.value = state.api.token || '';
+  }
+  function readApiFromInputs(){
+    state.api.base = (el.apiBase.value || '').trim();
+    state.api.token = (el.apiToken.value || '').trim();
+    saveState();
+  }
+  ['input','change'].forEach(evt => [el.apiBase, el.apiToken].forEach(inp => inp.addEventListener(evt, readApiFromInputs)));
+  el.btnTestApi.addEventListener('click', async () => {
+    el.apiStatus.textContent='Testing...';
+    try {
+      readApiFromInputs();
+      const sets = await fetchAllSets();
+      const series = getSeriesList(sets);
+      el.apiStatus.textContent = `OK (${series.length} series)`;
+      await renderFindSelectors();
+    } catch (err) {
+      console.error('API test failed', err);
+      el.apiStatus.textContent='FAILED';
+    }
   });
 
-  function toastAdded(){
-    el.addedToast.style.display = 'inline-block';
-    setTimeout(()=> el.addedToast.style.display='none', 1500);
-  }
+  // ===== INIT =====
+  (async function init(){
+    applyApiToInputs();
+    // (Optional) for nem test: forudfyld nøgle
+    if (!state.api.token) { state.api.token = ''; } // indsæt manuelt i UI
+    try { await renderFindSelectors(); } catch(e){ console.warn('Initial load failed:', e); el.loadState.textContent='SET API BASE + KEY'; }
+    renderAll();
+  })();
 
-  // Init selectors default
-  if (!state.ui.selEra) state.ui.selEra = MOCK.eras[0];
-  if (!state.ui.selSet) state.ui.selSet = getSetsByEra(state.ui.selEra)[0]?.id || '';
-  el.selPageSize.value = state.ui.pageSize;
-
-  // Initial render
-  renderAll();
+  function renderAll(){ renderMetrics(); renderBinders(); renderTable(); saveState(); }
   </script>
 </body>
 </html>
