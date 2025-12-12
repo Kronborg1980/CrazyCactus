@@ -233,7 +233,7 @@
                 <div v-if="isSearching" class="scan-overlay">
                     <div class="scanner-beam"></div>
                     <div class="radar-ping"></div>
-                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING...</p>
+                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING FOR CARDS...</p>
                 </div>
 
                 <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
@@ -243,27 +243,37 @@
                 
                 <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era</label>
-                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">ALL ERAS</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
+                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">SELECT ERA</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set</label>
-                        <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold"><option value="">ALL SETS</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set Selection</label>
+                        <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
                     </div>
                     
-                    <div class="col-span-2">
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Search</label>
+                    <div>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
                         <div class="flex gap-2">
-                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black uppercase w-full" placeholder="Type Pokemon Name...">
-                            <button @click="fetchCards(1)" :disabled="isSearching" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
+                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Sort Results</label>
+                        <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
+                            <option value="number">Card Number</option>
+                            <option value="name">Card Name</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
                       <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
-                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14]"></i>
-                          <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Ready.</p>
+                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
+                          <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
                       </div>
 
                       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
@@ -373,7 +383,40 @@
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
+            
+            // --- ADD CARD FETCHES IMAGE ON DEMAND ---
+            async addCard(c) { 
+                // Fetch image if not present (because search result is text-only or lazy)
+                let image = c.images?.small;
+                if (!image) {
+                    try {
+                        const res = await fetch(`${WORKER_URL}/?endpoint=cards/${c.id}&select=images`);
+                        const data = await res.json();
+                        image = data.data?.images?.small;
+                    } catch(e) { console.error("Image fetch failed", e); }
+                }
+                
+                const market = this.getCardPrice(c); 
+                const cardData = { 
+                    id: c.id, 
+                    name: c.name, 
+                    set: this.allSets.find(s=>s.id === this.selectedSet)?.name || (c.set.name || 'Set'), 
+                    image: image || 'https://via.placeholder.com/200x280?text=No+Image', 
+                    number: c.number, 
+                    market: market, 
+                    rawCost: market, 
+                    fee: 15, 
+                    targetGrade: 10, 
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder 
+                }; 
+                
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); 
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } 
+                
+                this.addedIds.push(c.id); 
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); 
+            },
+
             deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
@@ -399,7 +442,7 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- OPTIMIZED FAST SEARCH ---
+            // --- UPDATED: FETCH VIA PROXY (WITH SORTING) ---
             async fetchCards(page=1) {
                 // UNLOCKED: Search even if no set is selected!
                 if(!this.selectedSet && !this.query) return;
@@ -422,7 +465,6 @@
                 this.searchPage = page; 
                 
                 // SPEED FIX: Use "Starts With" (text*) instead of "Contains" (*text*)
-                // This hits the database index and is 100x faster.
                 let q = [];
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
@@ -434,7 +476,7 @@
 
                 try { 
                     // RESTORED IMAGES (With lazy loading in HTML)
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
                     
