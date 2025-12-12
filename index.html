@@ -7,7 +7,8 @@
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -326,7 +327,6 @@
 </div>
 
 <script>
-    // --- CONNECTED TO YOUR CLOUDFLARE WORKER ---
     const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
 
     const firebaseConfig = {
@@ -373,7 +373,20 @@
             sortedCards() { let list = [...this.displayCards]; return list.sort((a, b) => { let valA, valB; if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } else { valA = a.id; valB = b.id; } if(valA < valB) return this.sortDesc ? 1 : -1; if(valA > valB) return this.sortDesc ? -1 : 1; return 0; }); },
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
-            paginatedSearchResults() { return this.searchResults; }, totalSearchPages() { return this.totalSearchPagesCount; },
+            
+            // --- NEW: Dynamic Pagination Logic for Search ---
+            // If we are viewing a Set (Full Set mode), we paginate client-side.
+            // If we are searching by name, we use the server's pagination.
+            paginatedSearchResults() { 
+                const isSetMode = this.selectedSet && !this.query;
+                if (isSetMode) {
+                    const start = (this.searchPage - 1) * 18;
+                    return this.searchResults.slice(start, start + 18);
+                }
+                return this.searchResults; 
+            }, 
+            totalSearchPages() { return this.totalSearchPagesCount; },
+            
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
@@ -381,8 +394,39 @@
             getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
             deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
             setSort(key) { if(this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; },
-            nextPage() { if(this.currentView === 'calculator' ? this.currentPage < this.totalPages : this.searchPage < this.totalSearchPagesCount) this.currentView === 'calculator' ? this.currentPage++ : this.fetchCards(this.searchPage + 1); },
-            prevPage() { if(this.currentView === 'calculator' ? this.currentPage > 1 : this.searchPage > 1) this.currentView === 'calculator' ? this.currentPage-- : this.fetchCards(this.searchPage - 1); },
+            
+            // --- Navigation Logic ---
+            nextPage() { 
+                if(this.currentView === 'calculator') {
+                     if(this.currentPage < this.totalPages) this.currentPage++;
+                } else {
+                     // If we are in "Full Set Mode" (Client Side), just increase the page number var
+                     // If we are in "Search Mode" (Server Side), we must fetch the next page from API
+                     if(this.searchPage < this.totalSearchPagesCount) {
+                        const isSetMode = this.selectedSet && !this.query;
+                        if(isSetMode) {
+                            this.searchPage++;
+                        } else {
+                            this.fetchCards(this.searchPage + 1);
+                        }
+                     }
+                }
+            },
+            prevPage() { 
+                if(this.currentView === 'calculator') {
+                     if(this.currentPage > 1) this.currentPage--;
+                } else {
+                     if(this.searchPage > 1) {
+                        const isSetMode = this.selectedSet && !this.query;
+                        if(isSetMode) {
+                            this.searchPage--;
+                        } else {
+                            this.fetchCards(this.searchPage - 1);
+                        }
+                     }
+                }
+            },
+
             loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
             initCloudData() { db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); },
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
@@ -414,12 +458,23 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- FIXED SEARCH FUNCTION ---
+            // --- HYBRID FETCH STRATEGY ---
             async fetchCards(page=1) {
                 if(!this.selectedSet && !this.query) return;
 
+                // DETECT MODE: Are we viewing a Whole Set? OR Searching specifically?
+                // If just Set selected (and no text query), we want "Set Mode" (fetch all 250, sort locally)
+                const isSetMode = this.selectedSet && !this.query;
+
+                // In "Set Mode", we only fetch ONCE (Page 1) but we ask for 250 cards.
+                // If we are already on page 2, 3, etc. in Set Mode, we don't need to fetch again (data is already in searchResults).
+                if(isSetMode && page > 1 && this.searchResults.length > 0) {
+                    this.searchPage = page;
+                    return;
+                }
+
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
+                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
                 
                 if (this.searchCache[cacheKey]) { 
                     this.searchResults=this.searchCache[cacheKey].data; 
@@ -439,12 +494,12 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
-                // IMPORTANT FIX: We ALWAYS sort by number on the server to prevent 504 Timeouts.
-                // The price sorting is done inside the browser (below).
-                let orderBy = 'number';
+                // If "Set Mode": Get 250 items. If "Search Mode": Get 18 items.
+                const limit = isSetMode ? 250 : 18;
+                const orderBy = 'number'; // Server always sorts by number to avoid crashing
 
                 try { 
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
                     
@@ -453,7 +508,8 @@
                     
                     let results = data.data || [];
 
-                    // --- CLIENT SIDE SORTING (Fixes 504) ---
+                    // --- CLIENT SIDE SORTING ---
+                    // Now that we have the data (18 items OR 250 items), we sort them in browser
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
@@ -461,11 +517,20 @@
                     } else if (this.searchSort === 'name') {
                         results.sort((a, b) => a.name.localeCompare(b.name));
                     }
-                    // ----------------------------------------
+                    
+                    // CALCULATE PAGES
+                    // If Set Mode: Total Pages = Total Cards / 18
+                    // If Search Mode: Total Pages = Total from API / 18
+                    let totalPagesCalc = 1;
+                    if(isSetMode) {
+                        totalPagesCalc = Math.ceil(results.length / 18);
+                    } else {
+                        totalPagesCalc = Math.ceil((data.totalCount || 0) / 18);
+                    }
 
                     this.searchCache[cacheKey] = { 
                         data: results, 
-                        total: Math.ceil((data.totalCount || 0) / 18) 
+                        total: totalPagesCalc
                     }; 
                     this.searchResults = this.searchCache[cacheKey].data; 
                     this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
