@@ -101,39 +101,6 @@
             background-size: 50px 50px; opacity: 0.1; z-index: -3;
         }
 
-        /* --- SEARCH SCANNER ANIMATIONS --- */
-        .scan-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-        .scanner-beam {
-            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--neon-green);
-            box-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-green);
-            animation: scan 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            z-index: 51; opacity: 0.8;
-        }
-        @keyframes scan {
-            0% { top: 0; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .radar-ping {
-            position: relative; width: 80px; height: 80px; border-radius: 50%;
-            border: 2px solid var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            animation: radar 1.5s ease-out infinite;
-        }
-        .radar-ping::before {
-            content: ''; position: absolute; inset: 0; border-radius: 50%;
-            background: var(--neon-green); opacity: 0.3;
-            animation: ping 1.5s ease-out infinite;
-        }
-        @keyframes radar { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-        @keyframes ping { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(1); opacity: 0; } }
-
         /* --- UI COMPONENTS --- */
         .btn-neon {
             background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800;
@@ -366,18 +333,12 @@
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div class="glass-panel w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
                 
-                <div v-if="isSearching" class="scan-overlay">
-                    <div class="scanner-beam"></div>
-                    <div class="radar-ping"></div>
-                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING FOR CARDS...</p>
-                </div>
-
                 <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
                     <h2 class="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-4 text-glow"><i class="fa-solid fa-satellite-dish text-[#39ff14] animate-pulse"></i> Find My Card</h2>
                     <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90 hover:scale-125"><i class="fa-solid fa-xmark text-3xl"></i></button>
                 </div>
                 
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
+                <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 bg-black/30 border-b border-white/10 shrink-0">
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
                         <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">SELECT ERA</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
@@ -388,44 +349,52 @@
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">
+                            3. Card Selection
+                        </label>
                         <div class="flex gap-2">
-                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
-                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                            <select v-model="selectedCardId"
+                                    class="glass-input text-sm h-14 font-bold disabled:opacity-50"
+                                    :disabled="!selectedSet || cardsInSet.length === 0">
+                                <option value="">SELECT CARD</option>
+                                <option v-for="c in cardsInSetSorted"
+                                        :key="c.id"
+                                        :value="c.id">
+                                    #{{ c.number }} — {{ c.name }}
+                                </option>
+                            </select>
+                            <button @click="addCard" :disabled="!selectedCardId" class="btn-neon w-20 flex items-center justify-center rounded-xl"><i class="fa-solid fa-plus text-xl"></i></button>
                         </div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Sort Results</label>
-                        <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
-                            <option value="number">Card Number</option>
-                            <option value="name">Card Name</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                        </select>
-                    </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
-                     <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
+                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24 flex items-center justify-center relative">
+                    <div v-if="addedIds.length > 0" class="absolute top-10 left-1/2 transform -translate-x-1/2 bg-[#39ff14] text-black px-8 py-3 rounded-full font-black text-xl z-50 animate-bounce shadow-[0_0_30px_#39ff14]">
+                        ADDED TO COLLECTION!
+                    </div>
+
+                     <div v-if="!selectedCardId" class="flex flex-col items-center justify-center h-full opacity-40">
                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
-                         <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
+                         <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Select a Card to Preview</p>
                      </div>
 
-                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
-                         <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
-                             <img :src="card.images.small" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
-                             <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
-                             <div class="text-sm font-bold text-[#39ff14] mt-2 drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
-                             <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
+                     <div v-else class="flex flex-col md:flex-row gap-12 items-center justify-center w-full max-w-4xl animate-pulse-once">
+                         <div class="relative group">
+                            <div class="absolute inset-0 bg-[#39ff14] blur-xl opacity-30 group-hover:opacity-50 transition duration-500"></div>
+                            <img :src="cardsInSet.find(c => c.id === selectedCardId).images.large" class="relative z-10 w-[400px] rounded-2xl shadow-2xl border-2 border-white/10 group-hover:border-[#39ff14] transition transform group-hover:scale-105 duration-300">
+                         </div>
+                         <div class="flex flex-col gap-6">
+                            <div>
+                                <h3 class="text-4xl font-black text-white uppercase italic">{{ cardsInSet.find(c => c.id === selectedCardId).name }}</h3>
+                                <p class="text-[#39ff14] font-bold tracking-widest uppercase mt-2 text-xl">{{ allSets.find(s => s.id === selectedSet)?.name }}</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                                <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Market Price</div>
+                                <div class="text-3xl font-mono font-black text-white">${{ formatNumber(getCardPrice(cardsInSet.find(c => c.id === selectedCardId))) }}</div>
+                            </div>
+                            <button @click="addCard" class="btn-neon text-lg py-4 shadow-[0_0_30px_rgba(57,255,20,0.4)]">ADD TO BINDER</button>
                          </div>
                      </div>
-                </div>
-
-                <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
-                    <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">PREVIOUS</button>
-                    <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-sm px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
-                    <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">NEXT</button>
                 </div>
             </div>
         </div>
@@ -475,24 +444,38 @@
         provider = new firebase.auth.GoogleAuthProvider();
     } catch(e) { console.log("Guest Mode"); }
 
-    const { createApp } = Vue; let searchController = null;
+    const { createApp } = Vue;
 
     createApp({
         data() {
             return {
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
-                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
+                showSearch: false, detailCard: null, setsLoading: false,
+                allSets: [], eras: [], selectedEra: "", selectedSet: "", targetBinder: 'master',
                 cacheKey: 'cactus_final_v5', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
-                searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
-                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
+                addedIds: [], selectedIds: [],
+                
+                // NEW DATA FIELDS
+                cardsInSet: [], selectedCardId: "", setCardCache: {}
             }
         },
         watch: {
-            selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            searchSort() { this.fetchCards(1); }
+            selectedEra(n, o) { 
+                if(n!==o) { 
+                    this.selectedSet=""; 
+                    this.cardsInSet=[]; 
+                    this.selectedCardId=""; 
+                } 
+            },
+            // NEW WATCHER FOR SET SELECTION
+            selectedSet(n, o) {
+                if (n !== o) {
+                    this.selectedCardId = "";
+                    this.cardsInSet = [];
+                    this.loadCardsInSet();
+                }
+            },
         },
         mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
         computed: {
@@ -502,48 +485,118 @@
             sortedCards() { let list = [...this.displayCards]; return list.sort((a, b) => { let valA, valB; if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } else { valA = a.id; valB = b.id; } if(valA < valB) return this.sortDesc ? 1 : -1; if(valA > valB) return this.sortDesc ? -1 : 1; return 0; }); },
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
-            paginatedSearchResults() { return this.searchResults; }, totalSearchPages() { return this.totalSearchPagesCount; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            
+            // NEW SORTED COMPUTED PROP
+            cardsInSetSorted() {
+                return [...this.cardsInSet].sort((a, b) => {
+                    const an = parseInt(a.number);
+                    const bn = parseInt(b.number);
+                    return an - bn;
+                });
+            },
         },
         methods: {
             switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, logout() { if(auth) auth.signOut(); },
             getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
             deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
             setSort(key) { if(this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; },
-            nextPage() { if(this.currentView === 'calculator' ? this.currentPage < this.totalPages : this.searchPage < this.totalSearchPagesCount) this.currentView === 'calculator' ? this.currentPage++ : this.fetchCards(this.searchPage + 1); },
-            prevPage() { if(this.currentView === 'calculator' ? this.currentPage > 1 : this.searchPage > 1) this.currentView === 'calculator' ? this.currentPage-- : this.fetchCards(this.searchPage - 1); },
+            nextPage() { if(this.currentPage < this.totalPages) this.currentPage++ },
+            prevPage() { if(this.currentPage > 1) this.currentPage-- },
             loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
             initCloudData() { db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); },
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
+            
+            // REPLACED ADDCARD METHOD
+            addCard() {
+                const card = this.cardsInSet.find(c => c.id === this.selectedCardId);
+                if (!card) return;
+
+                const market = this.getCardPrice(card);
+
+                const cardData = {
+                    id: card.id,
+                    name: card.name,
+                    set: this.allSets.find(s => s.id === this.selectedSet)?.name || "Set",
+                    image: card.images.small,
+                    number: card.number,
+                    market: market,
+                    rawCost: market,
+                    fee: 15,
+                    targetGrade: 10,
+                    binderId: this.targetBinder === "master" ? null : this.targetBinder
+                };
+
+                if (this.user) {
+                    db.collection("users")
+                        .doc(this.user.uid)
+                        .collection("cards")
+                        .add(cardData);
+                } else {
+                    cardData.uid = Date.now().toString();
+                    this.localCards.push(cardData);
+                    this.saveData();
+                }
+
+                this.addedIds.push(card.id);
+                setTimeout(() => {
+                    this.addedIds = this.addedIds.filter(id => id !== card.id);
+                }, 1500);
+            },
+
             deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
+            
+            // UPDATED OPEN SEARCH
+            openSearch() { 
+                this.showSearch = true; 
+                this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; 
+                // Reset fields
+                this.selectedCardId = "";
+                if(!this.selectedSet) this.cardsInSet = [];
+            },
+            
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
-            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); },
+            
             async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
-            async fetchCards(page=1) {
-                if(!this.selectedSet) return;
-                let qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
-                if (this.searchCache[cacheKey]) { this.searchResults=this.searchCache[cacheKey].data; this.totalSearchPagesCount=this.searchCache[cacheKey].total; this.searchPage=page; this.isSearching=false; return; }
-                if (searchController) searchController.abort(); searchController = new AbortController();
-                this.isSearching = true; this.searchPage = page; 
-                const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-                let q = `set.id:${this.selectedSet}`; if(qName) q += ` name:"${qName}*"`; 
-                
-                let orderBy = 'number';
-                if (this.searchSort === 'name') orderBy = 'name';
-                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
-                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
+            
+            // NEW METHOD TO LOAD ALL CARDS IN SET
+            async loadCardsInSet() {
+                if (!this.selectedSet) return;
 
-                try { const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { headers: { 'X-Api-Key': apiKey }, signal: searchController.signal }); if (!res.ok) throw new Error(`Err`); const data = await res.json(); this.searchCache[cacheKey] = { data: data.data || [], total: Math.ceil((data.totalCount || 0) / 18) }; this.searchResults = this.searchCache[cacheKey].data; this.totalSearchPagesCount = this.searchCache[cacheKey].total; } catch(e) { if (e.name !== 'AbortError') this.searchResults=[]; } finally { if (!searchController.signal.aborted) this.isSearching = false; }
-            }
+                const cacheKey = "setCache_" + this.selectedSet;
+
+                // Load from localStorage
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        this.cardsInSet = JSON.parse(cached);
+                        return;
+                    } catch (e) {}
+                }
+
+                // Otherwise fetch
+                try {
+                    const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
+                    const res = await fetch(
+                        `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&select=id,name,number,images,tcgplayer&pageSize=250`,
+                        { headers: { "X-Api-Key": apiKey } }
+                    );
+
+                    const data = await res.json();
+                    this.cardsInSet = data.data || [];
+
+                    localStorage.setItem(cacheKey, JSON.stringify(this.cardsInSet));
+                } catch (e) {
+                    console.error("Failed loading set cards", e);
+                    this.cardsInSet = [];
+                }
+            },
         }
     }).mount('#app');
 </script>
