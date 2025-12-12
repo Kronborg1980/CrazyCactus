@@ -484,7 +484,7 @@
                 isLoadingSet: false,    
                 isLoadingPrice: false,  
                 fetchError: false,
-                abortController: null // <--- Added for aborting stale requests
+                abortController: null 
             }
         },
         watch: {
@@ -502,28 +502,23 @@
                     this.loadCardsInSet();
                 }
             },
-            // PRICE WATCHER: Fetches price only when a card is picked
             async selectedCardId(newId) {
                 if (!newId) return;
                 
-                // Find the card in our list
                 const card = this.cardsInSet.find(c => c.id === newId);
                 if (!card) return;
 
-                // If we already have the price, stop.
                 if (card.tcgplayer) return; 
 
-                // Otherwise, fetch JUST this one card's price
                 this.isLoadingPrice = true;
                 try {
-                    const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
+                    const apiKey = "d09c0059-cc17-4241-ace5-481ffd8cec35"; // <--- YOUR NEW KEY
                     const res = await fetch(
                         `https://api.pokemontcg.io/v2/cards/${newId}?select=tcgplayer`,
                         { headers: { "X-Api-Key": apiKey } }
                     );
                     const data = await res.json();
                     
-                    // Save the price into our existing card object
                     if(data.data && data.data.tcgplayer) {
                         card.tcgplayer = data.data.tcgplayer;
                     }
@@ -617,9 +612,8 @@
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             
-            async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
+            async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = 'd09c0059-cc17-4241-ace5-481ffd8cec35'; /* <--- YOUR NEW KEY */ if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
             
-            // Helper for retry
             retryLoad() {
                 if (this.fetchError) this.loadCardsInSet();
             },
@@ -628,7 +622,6 @@
             async loadCardsInSet() {
                 if (!this.selectedSet) return;
 
-                // 1. Abort previous requests if they are still running
                 if (this.abortController) this.abortController.abort();
                 this.abortController = new AbortController();
                 const signal = this.abortController.signal;
@@ -650,7 +643,7 @@
 
                 // 3. Network Fetch
                 try {
-                    const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
+                    const apiKey = "d09c0059-cc17-4241-ace5-481ffd8cec35"; // <--- YOUR NEW KEY
                     const res = await fetch(
                         `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&select=id,name,number,images&pageSize=250`,
                         { headers: { "X-Api-Key": apiKey }, signal }
@@ -660,7 +653,6 @@
 
                     const data = await res.json();
                     
-                    // Only update if not aborted
                     if (!signal.aborted) {
                         this.cardsInSet = data.data || [];
                         if (this.cardsInSet.length > 0) {
