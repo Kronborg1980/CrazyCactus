@@ -355,8 +355,8 @@
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
-                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
-                searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
+                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, // CHANGED TO 60
+                searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], // CHANGED TO 60
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
             }
         },
@@ -374,14 +374,14 @@
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             
-            // --- NEW: Dynamic Pagination Logic for Search ---
+            // --- NEW: Dynamic Pagination Logic for Search (60 PER PAGE) ---
             // If we are viewing a Set (Full Set mode), we paginate client-side.
             // If we are searching by name, we use the server's pagination.
             paginatedSearchResults() { 
                 const isSetMode = this.selectedSet && !this.query;
                 if (isSetMode) {
-                    const start = (this.searchPage - 1) * 18;
-                    return this.searchResults.slice(start, start + 18);
+                    const start = (this.searchPage - 1) * 60; // Use 60
+                    return this.searchResults.slice(start, start + 60);
                 }
                 return this.searchResults; 
             }, 
@@ -400,8 +400,6 @@
                 if(this.currentView === 'calculator') {
                      if(this.currentPage < this.totalPages) this.currentPage++;
                 } else {
-                     // If we are in "Full Set Mode" (Client Side), just increase the page number var
-                     // If we are in "Search Mode" (Server Side), we must fetch the next page from API
                      if(this.searchPage < this.totalSearchPagesCount) {
                         const isSetMode = this.selectedSet && !this.query;
                         if(isSetMode) {
@@ -462,12 +460,8 @@
             async fetchCards(page=1) {
                 if(!this.selectedSet && !this.query) return;
 
-                // DETECT MODE: Are we viewing a Whole Set? OR Searching specifically?
-                // If just Set selected (and no text query), we want "Set Mode" (fetch all 250, sort locally)
                 const isSetMode = this.selectedSet && !this.query;
 
-                // In "Set Mode", we only fetch ONCE (Page 1) but we ask for 250 cards.
-                // If we are already on page 2, 3, etc. in Set Mode, we don't need to fetch again (data is already in searchResults).
                 if(isSetMode && page > 1 && this.searchResults.length > 0) {
                     this.searchPage = page;
                     return;
@@ -494,9 +488,9 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
-                // If "Set Mode": Get 250 items. If "Search Mode": Get 18 items.
-                const limit = isSetMode ? 250 : 18;
-                const orderBy = 'number'; // Server always sorts by number to avoid crashing
+                // If "Set Mode": Get 250 items. If "Search Mode": Get 60 items.
+                const limit = isSetMode ? 250 : 60; // CHANGED FROM 18 TO 60
+                const orderBy = 'number'; 
 
                 try { 
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
@@ -509,7 +503,6 @@
                     let results = data.data || [];
 
                     // --- CLIENT SIDE SORTING ---
-                    // Now that we have the data (18 items OR 250 items), we sort them in browser
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
@@ -518,14 +511,12 @@
                         results.sort((a, b) => a.name.localeCompare(b.name));
                     }
                     
-                    // CALCULATE PAGES
-                    // If Set Mode: Total Pages = Total Cards / 18
-                    // If Search Mode: Total Pages = Total from API / 18
+                    // CALCULATE PAGES (Using 60)
                     let totalPagesCalc = 1;
                     if(isSetMode) {
-                        totalPagesCalc = Math.ceil(results.length / 18);
+                        totalPagesCalc = Math.ceil(results.length / 60);
                     } else {
-                        totalPagesCalc = Math.ceil((data.totalCount || 0) / 18);
+                        totalPagesCalc = Math.ceil((data.totalCount || 0) / 60);
                     }
 
                     this.searchCache[cacheKey] = { 
