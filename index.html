@@ -226,6 +226,12 @@
         </div>
     </main>
 
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+        <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Home</span></button>
+        <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Calc</span></button>
+        <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Binders</span></button>
+    </div>
+
     <Transition name="fade">
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div class="glass-panel w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
@@ -233,7 +239,7 @@
                 <div v-if="isSearching" class="scan-overlay">
                     <div class="scanner-beam"></div>
                     <div class="radar-ping"></div>
-                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING FOR CARDS...</p>
+                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING...</p>
                 </div>
 
                 <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
@@ -383,40 +389,7 @@
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            
-            // --- ADD CARD FETCHES IMAGE ON DEMAND ---
-            async addCard(c) { 
-                // Fetch image if not present (because search result is text-only or lazy)
-                let image = c.images?.small;
-                if (!image) {
-                    try {
-                        const res = await fetch(`${WORKER_URL}/?endpoint=cards/${c.id}&select=images`);
-                        const data = await res.json();
-                        image = data.data?.images?.small;
-                    } catch(e) { console.error("Image fetch failed", e); }
-                }
-                
-                const market = this.getCardPrice(c); 
-                const cardData = { 
-                    id: c.id, 
-                    name: c.name, 
-                    set: this.allSets.find(s=>s.id === this.selectedSet)?.name || (c.set.name || 'Set'), 
-                    image: image || 'https://via.placeholder.com/200x280?text=No+Image', 
-                    number: c.number, 
-                    market: market, 
-                    rawCost: market, 
-                    fee: 15, 
-                    targetGrade: 10, 
-                    binderId: this.targetBinder === 'master' ? null : this.targetBinder 
-                }; 
-                
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); 
-                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } 
-                
-                this.addedIds.push(c.id); 
-                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); 
-            },
-
+            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
             deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
@@ -442,7 +415,7 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- UPDATED: FETCH VIA PROXY (WITH SORTING) ---
+            // --- OPTIMIZED FAST SEARCH WITH PROXY ---
             async fetchCards(page=1) {
                 // UNLOCKED: Search even if no set is selected!
                 if(!this.selectedSet && !this.query) return;
@@ -464,7 +437,7 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
                 
-                // SPEED FIX: Use "Starts With" (text*) instead of "Contains" (*text*)
+                // SPEED FIX: Use "Starts With" (text*)
                 let q = [];
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
@@ -475,7 +448,7 @@
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try { 
-                    // RESTORED IMAGES (With lazy loading in HTML)
+                    // FETCHING VIA WORKER_URL
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
