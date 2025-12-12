@@ -190,7 +190,7 @@
 
 <div id="app" v-cloak class="min-h-screen flex flex-col relative z-10">
 
-    <nav class="sticky top-4 mx-4 z-40 glass-panel mt-4 mb-6">
+    <nav class="relative mx-4 z-40 glass-panel mt-4 mb-6">
         <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
             <div class="flex items-center gap-5 group cursor-pointer">
                 <div class="relative">
@@ -524,25 +524,26 @@
             openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
-            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); },
+            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 300); },
             
+            // --- UPDATED: FETCH VIA PROXY ---
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
+                const cacheKey = 'cactus_sets_v8_worker'; 
                 if (!force) { 
-                    const c = localStorage.getItem(this.cacheKey); 
+                    const c = localStorage.getItem(cacheKey); 
                     if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } 
                 } 
                 try { 
                     const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
-                    if (!res.ok) throw new Error(`API Error: ${res.status}`); 
+                    if (!res.ok) throw new Error(`API Error`); 
                     const data = await res.json(); 
                     const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; 
-                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
-                } catch(e) { 
-                    console.error("Set Sync Failed", e); 
-                } finally { this.setsLoading = false; } 
+                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
+                } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
+            // --- UPDATED: FETCH VIA PROXY ---
             async fetchCards(page=1) {
                 if(!this.selectedSet) return;
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
@@ -571,6 +572,7 @@
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try { 
+                    // Using encodeURIComponent to ensure query parameters travel safely through the proxy
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q)}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
