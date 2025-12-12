@@ -52,21 +52,9 @@
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.95); }
         
-        /* DATA CHIP STYLE */
-        .data-chip {
-            background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative; overflow: hidden;
-        }
-        .data-chip::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-            background: var(--neon-green); opacity: 0.5;
-        }
-        .data-chip:hover {
-            background: rgba(57, 255, 20, 0.05);
-            border-color: var(--neon-green);
-            transform: translateX(5px);
-        }
+        .scan-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .scanner-beam { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); animation: scan 2s infinite; opacity: 0.8; }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
 <body class="bg-fixed">
@@ -238,12 +226,6 @@
         </div>
     </main>
 
-    <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-        <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Home</span></button>
-        <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Calc</span></button>
-        <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Binders</span></button>
-    </div>
-
     <Transition name="fade">
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div class="glass-panel w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
@@ -251,7 +233,7 @@
                 <div v-if="isSearching" class="scan-overlay">
                     <div class="scanner-beam"></div>
                     <div class="radar-ping"></div>
-                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING FOR CARDS...</p>
+                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING...</p>
                 </div>
 
                 <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
@@ -261,53 +243,35 @@
                 
                 <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
-                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">SELECT ERA</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era</label>
+                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">ALL ERAS</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set Selection</label>
-                        <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">SELECT SET</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set</label>
+                        <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold"><option value="">ALL SETS</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
                     </div>
                     
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Search</label>
                         <div class="flex gap-2">
-                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
-                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                            <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black uppercase w-full" placeholder="Type Pokemon Name...">
+                            <button @click="fetchCards(1)" :disabled="isSearching" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Sort Results</label>
-                        <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
-                            <option value="number">Card Number</option>
-                            <option value="name">Card Name</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                        </select>
                     </div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
                       <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
-                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
-                          <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
+                          <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14]"></i>
+                          <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Ready.</p>
                       </div>
 
                       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
-                          <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="data-chip p-6 rounded-2xl cursor-pointer group flex flex-col justify-between h-40 transition duration-300">
-                              <div>
-                                  <div class="flex justify-between items-start mb-2">
-                                      <span class="text-xs font-black text-gray-500 uppercase border border-gray-700 px-2 rounded">{{ card.set.id }}</span>
-                                      <span class="text-xs font-black text-gray-500 uppercase">#{{ card.number }}</span>
-                                  </div>
-                                  <h3 class="text-xl font-black text-white leading-none uppercase tracking-wide group-hover:text-[#39ff14] transition">{{ card.name }}</h3>
-                              </div>
-                              <div class="mt-4">
-                                  <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Market Value</div>
-                                  <div class="text-2xl font-mono font-bold text-[#39ff14] drop-shadow-[0_0_10px_rgba(57,255,20,0.4)]">${{ formatNumber(getCardPrice(card)) }}</div>
-                              </div>
-                              <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
+                          <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
+                              <img :src="card.images.small" loading="lazy" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
+                              <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
+                              <div class="text-sm font-bold text-[#39ff14] mt-2 drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
+                              <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
                           </div>
                       </div>
                 </div>
@@ -375,7 +339,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_final_v5', totalSetData: {}, 
+                cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
@@ -409,41 +373,7 @@
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            
-            // --- UPDATED ADD CARD (Fetches Image On Demand) ---
-            async addCard(c) { 
-                // Fetch image if not present (because search result is text-only)
-                let image = c.images?.small;
-                if (!image) {
-                    try {
-                        // Use proxy to get image
-                        const res = await fetch(`${WORKER_URL}/?endpoint=cards/${c.id}&select=images`);
-                        const data = await res.json();
-                        image = data.data?.images?.small;
-                    } catch(e) { console.error("Image fetch failed", e); }
-                }
-                
-                const market = this.getCardPrice(c); 
-                const cardData = { 
-                    id: c.id, 
-                    name: c.name, 
-                    set: this.allSets.find(s=>s.id === this.selectedSet)?.name || (c.set.name || 'Set'), 
-                    image: image || 'https://via.placeholder.com/200x280?text=No+Image', // Fallback
-                    number: c.number, 
-                    market: market, 
-                    rawCost: market, 
-                    fee: 15, 
-                    targetGrade: 10, 
-                    binderId: this.targetBinder === 'master' ? null : this.targetBinder 
-                }; 
-                
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); 
-                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } 
-                
-                this.addedIds.push(c.id); 
-                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); 
-            },
-
+            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
             deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
@@ -469,9 +399,11 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- UPDATED: FETCH VIA PROXY ---
+            // --- OPTIMIZED FAST SEARCH ---
             async fetchCards(page=1) {
-                if(!this.selectedSet) return;
+                // UNLOCKED: Search even if no set is selected!
+                if(!this.selectedSet && !this.query) return;
+
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
                 
@@ -489,8 +421,11 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
                 
-                let q = `set.id:"${this.selectedSet}"`; 
-                if(qName) q += ` name:"*${qName}*"`; 
+                // SPEED FIX: Use "Starts With" (text*) instead of "Contains" (*text*)
+                // This hits the database index and is 100x faster.
+                let q = [];
+                if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
+                if(qName) q.push(`name:"${qName}*"`); 
                 
                 let orderBy = 'number';
                 if (this.searchSort === 'name') orderBy = 'name';
@@ -498,8 +433,8 @@
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try { 
-                    // NO IMAGES IN SELECT - FAST TEXT ONLY
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q)}&page=${page}&pageSize=18&select=id,name,number,set,tcgplayer&orderBy=${orderBy}`, { 
+                    // RESTORED IMAGES (With lazy loading in HTML)
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
                     
