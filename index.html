@@ -355,13 +355,18 @@
                         <div class="flex gap-2">
                             <select v-model="selectedCardId"
                                     class="glass-input text-sm h-14 font-bold disabled:opacity-50"
+                                    :class="{'border-red-500 text-red-500': fetchError}"
                                     :disabled="!selectedSet || isLoadingSet">
+                                
                                 <option value="" disabled selected>
-                                    {{ isLoadingSet ? 'DOWNLOADING CARDS...' : (cardsInSet.length === 0 ? 'NO CARDS FOUND' : 'SELECT CARD') }}
+                                    {{ 
+                                       isLoadingSet ? 'DOWNLOADING...' : 
+                                       fetchError ? 'CONNECTION FAILED (Try Again)' : 
+                                       (cardsInSet.length === 0 ? 'NO CARDS FOUND' : 'SELECT CARD') 
+                                    }}
                                 </option>
-                                <option v-for="c in cardsInSetSorted"
-                                        :key="c.id"
-                                        :value="c.id">
+
+                                <option v-for="c in cardsInSetSorted" :key="c.id" :value="c.id">
                                     #{{ c.number }} — {{ c.name }}
                                 </option>
                             </select>
@@ -476,7 +481,8 @@
                 selectedCardId: "", 
                 setCardCache: {},
                 isLoadingSet: false,    // Loading flag for the set list
-                isLoadingPrice: false   // Loading flag for single card price
+                isLoadingPrice: false,   // Loading flag for single card price
+                fetchError: false       // Error flag for connection issues
             }
         },
         watch: {
@@ -611,41 +617,45 @@
             
             async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
             
-            // "LITE" VERSION - INSTANT LOAD
+            // ERROR-HANDLING LITE LOAD
             async loadCardsInSet() {
                 if (!this.selectedSet) return;
 
                 this.isLoadingSet = true;
+                this.fetchError = false; 
                 this.selectedCardId = "";
                 this.cardsInSet = [];
                 
-                // Use a separate cache key for this "lite" version
                 const cacheKey = "setCache_Lite_" + this.selectedSet;
 
-                // Try Local Storage
+                // 1. Try Cache
                 const cached = localStorage.getItem(cacheKey);
                 if (cached) {
-                    try {
-                        this.cardsInSet = JSON.parse(cached);
-                        this.isLoadingSet = false;
-                        return;
-                    } catch(e) { localStorage.removeItem(cacheKey); }
+                    this.cardsInSet = JSON.parse(cached);
+                    this.isLoadingSet = false;
+                    return;
                 }
 
+                // 2. Network Fetch
                 try {
                     const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
-                    // REMOVED 'tcgplayer' from select to make it fast
                     const res = await fetch(
                         `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&select=id,name,number,images&pageSize=250`,
                         { headers: { "X-Api-Key": apiKey } }
                     );
 
+                    if (!res.ok) throw new Error("API Error"); 
+
                     const data = await res.json();
                     this.cardsInSet = data.data || [];
-                    localStorage.setItem(cacheKey, JSON.stringify(this.cardsInSet));
+                    
+                    if (this.cardsInSet.length > 0) {
+                        localStorage.setItem(cacheKey, JSON.stringify(this.cardsInSet));
+                    }
                     
                 } catch (e) {
                     console.error("List error", e);
+                    this.fetchError = true;
                 } finally {
                     this.isLoadingSet = false;
                 }
