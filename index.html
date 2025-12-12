@@ -367,7 +367,7 @@
                                 <option value="" disabled selected>
                                     {{ 
                                        isLoadingSet ? 'SEARCHING...' : 
-                                       fetchError ? 'ERROR - TRY AGAIN' : 
+                                       fetchError ? (errorMessage || 'ERROR - TRY AGAIN') : 
                                        (cardsInSet.length === 0 ? 'NO CARDS FOUND' : 'SELECT CARD (' + cardsInSet.length + ')') 
                                     }}
                                 </option>
@@ -459,7 +459,7 @@
 
 <script>
     // --- API CONFIGURATION ---
-    const POKEMON_TCG_API_KEY = "7f0faa6e-d36b-4f9f-a02d-709e15f1cfce";
+    const POKEMON_TCG_API_KEY = "7f0faa6e-d36b-4f9f-a02d-709e15f1cfce"; // Key Included as requested
 
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -486,20 +486,21 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", targetBinder: 'master',
-                cacheKey: 'cactus_final_v5', totalSetData: {}, 
+                cacheKey: 'cactus_final_v6', totalSetData: {}, 
                 
                 // SORTING
                 sortBy: null, sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 addedIds: [], selectedIds: [],
                 
                 // SEARCH FIELDS
-                searchQuery: "", // NEW TEXT SEARCH
+                searchQuery: "", 
                 cardsInSet: [], 
                 selectedCardId: "", 
                 isLoadingSet: false,      
                 isLoadingPrice: false,   
                 fetchError: false,
-                searchPage: 1, // PAGINATION FOR SEARCH
+                errorMessage: "", // NEW: Holds specific error text
+                searchPage: 1, 
                 abortController: null,
                 debounceTimer: null
             }
@@ -508,41 +509,37 @@
             selectedEra(n, o) { 
                 if(n!==o) { 
                     this.selectedSet=""; 
-                    // Don't clear results if user is typing a name
-                    if (!this.searchQuery) {
-                        this.cardsInSet=[]; 
-                        this.selectedCardId=""; 
-                    }
+                    if (!this.searchQuery) { this.cardsInSet=[]; this.selectedCardId=""; }
                 } 
             },
             selectedSet(n, o) {
                 if (n !== o) {
                     this.selectedCardId = "";
                     this.searchPage = 1;
-                    this.searchCards(true); // Reset list
+                    this.searchCards(true); 
                 }
             },
             async selectedCardId(newId) {
                 if (!newId) return;
-                
                 const card = this.cardsInSet.find(c => c.id === newId);
-                if (!card) return;
-
-                if (card.tcgplayer) return; 
+                if (!card || card.tcgplayer) return; 
 
                 this.isLoadingPrice = true;
                 try {
+                    const headers = {};
+                    // Only attach header if key exists
+                    if(POKEMON_TCG_API_KEY) headers["X-Api-Key"] = POKEMON_TCG_API_KEY;
+
                     const res = await fetch(
                         `https://api.pokemontcg.io/v2/cards/${newId}?select=tcgplayer`,
-                        { headers: { "X-Api-Key": POKEMON_TCG_API_KEY } }
+                        { headers }
                     );
                     const data = await res.json();
-                    
                     if(data.data && data.data.tcgplayer) {
                         card.tcgplayer = data.data.tcgplayer;
                     }
                 } catch(e) {
-                    console.log("Price fetch error", e);
+                    console.error("Price fetch error:", e);
                 } finally {
                     this.isLoadingPrice = false;
                 }
@@ -573,15 +570,7 @@
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             filteredSets() { return this.allSets.filter(s => !this.selectedEra || s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
-            
-            cardsInSetSorted() {
-                return [...this.cardsInSet].sort((a, b) => {
-                    const an = parseInt(a.number);
-                    const bn = parseInt(b.number);
-                    if (!isNaN(an) && !isNaN(bn)) return an - bn;
-                    return a.number.localeCompare(b.number);
-                });
-            },
+            cardsInSetSorted() { return [...this.cardsInSet].sort((a, b) => { const an = parseInt(a.number); const bn = parseInt(b.number); if (!isNaN(an) && !isNaN(bn)) return an - bn; return a.number.localeCompare(b.number); }); },
         },
         methods: {
             switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, logout() { if(auth) auth.signOut(); },
@@ -596,9 +585,7 @@
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
             
             getSetName(c) {
-                // Handle case where set might be just an ID string or an object
                 if (c.set && c.set.name) return c.set.name;
-                // If it's just an ID search result, we might need to look it up in allSets
                 if (c.set && c.set.id) return c.set.id.toUpperCase();
                 return "Unknown Set";
             },
@@ -610,7 +597,7 @@
                 const cardData = {
                     id: card.id,
                     name: card.name,
-                    set: card.set.name || this.allSets.find(s => s.id === this.selectedSet)?.name || "Unknown Set", // Better Set Name resolution
+                    set: card.set.name || this.allSets.find(s => s.id === this.selectedSet)?.name || "Unknown Set", 
                     image: card.images.small,
                     number: card.number,
                     market: market,
@@ -633,7 +620,6 @@
                 this.showSearch = true; 
                 this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; 
                 this.selectedCardId = "";
-                // Do not clear sets/results if they are already loaded, just open the modal
             },
             
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
@@ -641,9 +627,24 @@
             
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
-                const cacheKey = 'cactus_sets_v3_final'; 
+                const cacheKey = 'cactus_sets_v6'; 
+                
+                // CORS FIX: Use key conditionally for headers
+                const options = {};
+                if(POKEMON_TCG_API_KEY) {
+                    options.headers = { 'X-Api-Key': POKEMON_TCG_API_KEY };
+                }
+
                 if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } 
-                try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': POKEMON_TCG_API_KEY } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
+                try { 
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', options); 
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`); 
+                    const data = await res.json(); 
+                    const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; 
+                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
+                } catch(e) { 
+                    console.error("Set Sync Failed", e); 
+                } finally { this.setsLoading = false; } 
             },
             
             retryLoad() { if (this.fetchError) this.searchCards(); },
@@ -652,17 +653,17 @@
                 if(this.debounceTimer) clearTimeout(this.debounceTimer);
                 this.debounceTimer = setTimeout(() => {
                     this.searchPage = 1;
-                    this.searchCards(true); // Reset list on new typing
-                }, 600); // 600ms delay
+                    this.searchCards(true); 
+                }, 600); 
             },
             
             loadMore() {
                 this.searchPage++;
-                this.searchCards(false); // Append results
+                this.searchCards(false); 
             },
 
             async searchCards(reset = false) {
-                if (!this.selectedSet && !this.searchQuery) return; // Don't search empty
+                if (!this.selectedSet && !this.searchQuery) return; 
 
                 if (this.abortController) this.abortController.abort();
                 this.abortController = new AbortController();
@@ -670,26 +671,32 @@
 
                 this.isLoadingSet = true;
                 this.fetchError = false; 
+                this.errorMessage = "";
                 this.selectedCardId = "";
                 if(reset) this.cardsInSet = [];
                 
-                // --- SMART QUERY BUILDER ---
                 let queries = [];
-                // 1. Set ID (Wrap in quotes to be safe)
                 if(this.selectedSet) queries.push(`set.id:"${this.selectedSet}"`);
-                // 2. Name search (Wildcards)
                 if(this.searchQuery) queries.push(`name:"*${this.searchQuery}*"`);
                 
-                // Join with space (Implied AND)
                 const finalQuery = queries.join(" ");
+
+                // CORS FIX: Use key conditionally for headers
+                const requestOptions = { signal };
+                if (POKEMON_TCG_API_KEY) {
+                    requestOptions.headers = { 'X-Api-Key': POKEMON_TCG_API_KEY };
+                }
 
                 try {
                     const res = await fetch(
                         `https://api.pokemontcg.io/v2/cards?q=${finalQuery}&select=id,name,number,images,set&pageSize=250&page=${this.searchPage}`,
-                        { headers: { "X-Api-Key": POKEMON_TCG_API_KEY }, signal }
+                        requestOptions
                     );
 
-                    if (!res.ok) throw new Error("API Error"); 
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.error?.message || `Status: ${res.status}`);
+                    }
 
                     const data = await res.json();
                     
@@ -698,7 +705,6 @@
                         if (reset) {
                             this.cardsInSet = newCards;
                         } else {
-                            // Deduplicate when adding more
                             const existingIds = new Set(this.cardsInSet.map(c => c.id));
                             this.cardsInSet = [...this.cardsInSet, ...newCards.filter(c => !existingIds.has(c.id))];
                         }
@@ -706,8 +712,9 @@
                     
                 } catch (e) {
                     if (e.name !== 'AbortError') {
-                        console.error("List error", e);
+                        console.error("Search error details:", e);
                         this.fetchError = true;
+                        this.errorMessage = e.message;
                     }
                 } finally {
                     if (!signal.aborted) this.isLoadingSet = false;
