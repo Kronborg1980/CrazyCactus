@@ -52,6 +52,55 @@
             transform: translateY(-2px);
         }
 
+        /* --- SCENERY --- */
+        .bg-watermark {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80vw; height: 80vh; 
+            opacity: 0.08; 
+            pointer-events: none; z-index: -2;
+            background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            filter: grayscale(1) contrast(1.5);
+        }
+        .bg-scenery { position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
+        .heat-haze {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 20vh;
+            background: linear-gradient(to top, rgba(57, 255, 20, 0.05), transparent);
+            filter: blur(10px); animation: haze 5s infinite linear; opacity: 0.5;
+        }
+        @keyframes haze { 0% { transform: skewX(0deg) translateY(0); } 50% { transform: skewX(2deg) translateY(-5px); } 100% { transform: skewX(0deg) translateY(0); } }
+        
+        /* TUMBLEWEEDS */
+        .tumbleweed-container { position: absolute; z-index: 1; }
+        .tumbleweed-graphic {
+            width: 100%; height: 100%;
+            border-radius: 43% 57% 50% 50% / 57% 44% 56% 43%;
+            border: 3px solid var(--tw-c1);
+            box-shadow: inset 0 0 0 4px var(--tw-c2), 3px 5px 0 0 var(--tw-c3), -2px -3px 0 0 var(--tw-c1);
+            position: relative; opacity: 0.9;
+        }
+        .tumbleweed-graphic::before, .tumbleweed-graphic::after { content: ''; position: absolute; border-radius: 50%; border: 2px solid rgba(139, 90, 43, 0.6); }
+        .tumbleweed-graphic::before { top: 15%; left: 25%; width: 60%; height: 60%; transform: rotate(35deg); border-radius: 50% 40% 60% 50%; border-color: var(--tw-c2); }
+        .tumbleweed-graphic::after { bottom: 15%; right: 20%; width: 50%; height: 50%; transform: rotate(-20deg); border-radius: 60% 50% 40% 50%; border-color: var(--tw-c3); }
+
+        .tw-1 { bottom: 15%; width: 70px; height: 70px; animation: moveRight 25s linear infinite; }
+        .tw-1 .tumbleweed-graphic { animation: rollBounce1 25s linear infinite; }
+        .tw-2 { bottom: 22%; width: 40px; height: 40px; animation: moveRight 18s linear infinite; animation-delay: 7s; opacity: 0; }
+        .tw-2 .tumbleweed-graphic { animation: rollBounce2 18s linear infinite; animation-delay: 7s; }
+        .tw-3 { bottom: 10%; width: 55px; height: 55px; animation: moveRight 30s linear infinite; animation-delay: 15s; opacity: 0; }
+        .tw-3 .tumbleweed-graphic { animation: rollBounce3 30s linear infinite; animation-delay: 15s; }
+
+        @keyframes moveRight { 0% { left: -150px; opacity: 1; } 95% { opacity: 1; } 100% { left: 100vw; opacity: 0; } }
+        @keyframes rollBounce1 { 0% { transform: rotate(0deg) translateY(0); } 20% { transform: rotate(360deg) translateY(-30px); } 40% { transform: rotate(720deg) translateY(0); } 50% { transform: rotate(900deg) translateY(-15px); } 60% { transform: rotate(1080deg) translateY(0); } 80% { transform: rotate(1440deg) translateY(-25px); } 100% { transform: rotate(1800deg) translateY(0); } }
+        @keyframes rollBounce2 { 0% { transform: rotate(0deg) translateY(0); } 15% { transform: rotate(360deg) translateY(-15px); } 30% { transform: rotate(720deg) translateY(0); } 45% { transform: rotate(1080deg) translateY(-20px); } 60% { transform: rotate(1440deg) translateY(0); } 100% { transform: rotate(2400deg) translateY(0); } }
+        @keyframes rollBounce3 { 0% { transform: rotate(0deg) translateY(0); } 25% { transform: rotate(360deg) translateY(-40px); } 50% { transform: rotate(720deg) translateY(0); } 75% { transform: rotate(1080deg) translateY(-30px); } 100% { transform: rotate(1440deg) translateY(0); } }
+
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 50px 50px; opacity: 0.1; z-index: -3;
+        }
+
         /* --- SEARCH SCANNER ANIMATIONS --- */
         .scan-overlay {
             position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50;
@@ -134,7 +183,10 @@
 <div class="bg-watermark"></div>
 <div class="bg-scenery">
     <div class="heat-haze"></div>
-    </div>
+    <div class="tumbleweed-container tw-1"><div class="tumbleweed-graphic"></div></div>
+    <div class="tumbleweed-container tw-2"><div class="tumbleweed-graphic"></div></div>
+    <div class="tumbleweed-container tw-3"><div class="tumbleweed-graphic"></div></div>
+</div>
 
 <div id="app" v-cloak class="min-h-screen flex flex-col relative z-10">
 
@@ -402,7 +454,9 @@
 </div>
 
 <script>
-    // CORRECTED KEYS FOR CRAZYCACTUS PROJECT
+    // --- CONNECTED TO YOUR CLOUDFLARE WORKER ---
+    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
+
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -428,7 +482,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_final_v5', totalSetData: {}, 
+                cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
@@ -471,23 +525,73 @@
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 600); },
-            async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
+            
+            async loadSetsAPI(force=false) { 
+                this.setsLoading = true; 
+                if (!force) { 
+                    const c = localStorage.getItem(this.cacheKey); 
+                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } 
+                } 
+                try { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`); 
+                    const data = await res.json(); 
+                    const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; 
+                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
+                } catch(e) { 
+                    console.error("Set Sync Failed", e); 
+                } finally { this.setsLoading = false; } 
+            },
+
             async fetchCards(page=1) {
                 if(!this.selectedSet) return;
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
-                if (this.searchCache[cacheKey]) { this.searchResults=this.searchCache[cacheKey].data; this.totalSearchPagesCount=this.searchCache[cacheKey].total; this.searchPage=page; this.isSearching=false; return; }
-                if (searchController) searchController.abort(); searchController = new AbortController();
-                this.isSearching = true; this.searchPage = page; 
-                const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-                let q = `set.id:${this.selectedSet}`; if(qName) q += ` name:"${qName}*"`; 
+                
+                if (this.searchCache[cacheKey]) { 
+                    this.searchResults=this.searchCache[cacheKey].data; 
+                    this.totalSearchPagesCount=this.searchCache[cacheKey].total; 
+                    this.searchPage=page; 
+                    this.isSearching=false; 
+                    return; 
+                }
+
+                if (searchController) searchController.abort(); 
+                searchController = new AbortController();
+                
+                this.isSearching = true; 
+                this.searchPage = page; 
+                
+                let q = `set.id:"${this.selectedSet}"`; 
+                if(qName) q += ` name:"*${qName}*"`; 
                 
                 let orderBy = 'number';
                 if (this.searchSort === 'name') orderBy = 'name';
                 if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
-                try { const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { headers: { 'X-Api-Key': apiKey }, signal: searchController.signal }); if (!res.ok) throw new Error(`Err`); const data = await res.json(); this.searchCache[cacheKey] = { data: data.data || [], total: Math.ceil((data.totalCount || 0) / 18) }; this.searchResults = this.searchCache[cacheKey].data; this.totalSearchPagesCount = this.searchCache[cacheKey].total; } catch(e) { if (e.name !== 'AbortError') this.searchResults=[]; } finally { if (!searchController.signal.aborted) this.isSearching = false; }
+                try { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q)}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { 
+                        signal: searchController.signal 
+                    }); 
+                    
+                    if (!res.ok) throw new Error(`Err`); 
+                    const data = await res.json(); 
+                    
+                    this.searchCache[cacheKey] = { 
+                        data: data.data || [], 
+                        total: Math.ceil((data.totalCount || 0) / 18) 
+                    }; 
+                    this.searchResults = this.searchCache[cacheKey].data; 
+                    this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
+                } catch(e) { 
+                    if (e.name !== 'AbortError') {
+                        console.error(e);
+                        this.searchResults=[]; 
+                    }
+                } finally { 
+                    if (!searchController.signal.aborted) this.isSearching = false; 
+                }
             }
         }
     }).mount('#app');
