@@ -188,19 +188,19 @@
                             <tr class="bg-black/40">
                                 <th class="w-12 text-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="accent-[#39ff14] w-5 h-5 cursor-pointer"></th>
                                 <th class="w-24 text-center">Visual</th>
-                                <th @click="setSort('name')" class="cursor-pointer hover:text-white text-sm">Card Identity <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th @click="manualSort('name')" class="cursor-pointer hover:text-white text-sm">Card Identity <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
                                 <th class="text-sm">Binder Location</th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="setSort('rawCost')">Raw Cost <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('rawCost')">Raw Cost <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
                                 <th class="text-right text-sm">Fees</th>
                                 <th class="text-center text-sm">Target Grade</th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="setSort('market')">Est. Value <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="setSort('profit')">Net Profit <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('market')">Est. Value <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('profit')">Net Profit <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
                                 <th class="text-center text-sm">Ops</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-if="paginatedCards.length === 0"><td colspan="10" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No cards buried here...</td></tr>
-                            <tr v-for="c in paginatedCards" :key="c.uid" :class="{'bg-[#39ff14]/10': selectedIds.includes(c.uid)}" class="transition duration-200 hover:bg-white/5">
+                            <tr v-if="displayList.length === 0"><td colspan="10" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No cards buried here...</td></tr>
+                            <tr v-for="c in paginatedList" :key="c.uid" :class="{'bg-[#39ff14]/10': selectedIds.includes(c.uid)}" class="transition duration-200 hover:bg-white/5">
                                 <td class="text-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="accent-[#39ff14] w-5 h-5 cursor-pointer"></td>
                                 <td class="text-center py-3"><div class="w-12 h-16 bg-gray-900 rounded-lg overflow-hidden border-2 border-white/10 mx-auto cursor-pointer hover:scale-110 hover:border-[#39ff14] transition shadow-lg hover:shadow-[0_0_15px_rgba(57,255,20,0.3)]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></td>
                                 <td><div class="font-black text-white text-base cursor-pointer hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">{{ c.set }} #{{ c.number }}</div></td>
@@ -216,7 +216,7 @@
                     </table>
                 </div>
                 <div class="p-6 border-t border-white/10 flex justify-between items-center bg-black/30">
-                    <span class="text-sm font-bold text-gray-400 tracking-wider">{{ paginatedCards.length }} items visible</span>
+                    <span class="text-sm font-bold text-gray-400 tracking-wider">{{ displayList.length }} items visible</span>
                     <div class="flex gap-4">
                         <button @click="prevPage" :disabled="currentPage===1" class="px-6 py-3 bg-black/50 border-2 border-white/20 rounded-xl text-xs font-bold hover:bg-[#39ff14] hover:text-black transition disabled:opacity-30 hover:border-[#39ff14] uppercase tracking-widest">PREV</button>
                         <button @click="nextPage" :disabled="currentPage===totalPages" class="px-6 py-3 bg-black/50 border-2 border-white/20 rounded-xl text-xs font-bold hover:bg-[#39ff14] hover:text-black transition disabled:opacity-30 hover:border-[#39ff14] uppercase tracking-widest">NEXT</button>
@@ -355,58 +355,149 @@
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
-                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, // CHANGED TO 60
-                searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], // CHANGED TO 60
-                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
+                // Sorting Vars
+                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
+                // Search Vars
+                searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], 
+                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                
+                // NEW: Static display list for calculator to prevent jumping
+                displayList: [] 
             }
         },
         watch: {
             selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
             selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            searchSort() { this.fetchCards(1); }
+            searchSort() { this.fetchCards(1, true); },
+            
+            // Watchers to update our static list when data changes
+            cards: {
+                handler() { this.refreshDisplayList(); },
+                deep: true // Watch for deep changes (like grade updates)
+            },
+            currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
         mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
         computed: {
             binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
-            displayCards() { let list = this.cards; if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id); return list; },
-            isAllSelected() { return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length; },
-            sortedCards() { let list = [...this.displayCards]; return list.sort((a, b) => { let valA, valB; if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } else { valA = a.id; valB = b.id; } if(valA < valB) return this.sortDesc ? 1 : -1; if(valA > valB) return this.sortDesc ? -1 : 1; return 0; }); },
-            totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); }, paginatedCards() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.sortedCards.slice(start, start + this.itemsPerPage); },
+            isAllSelected() { return this.displayList.length > 0 && this.selectedIds.length === this.displayList.length; },
+            
+            // PAGINATION IS NOW BASED ON displayList (which is static sorted)
+            totalPages() { return Math.ceil(this.displayList.length / this.itemsPerPage); }, 
+            paginatedList() { 
+                const start = (this.currentPage - 1) * this.itemsPerPage; 
+                return this.displayList.slice(start, start + this.itemsPerPage); 
+            },
+
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             
-            // --- NEW: Dynamic Pagination Logic for Search (60 PER PAGE) ---
-            // If we are viewing a Set (Full Set mode), we paginate client-side.
-            // If we are searching by name, we use the server's pagination.
             paginatedSearchResults() { 
                 const isSetMode = this.selectedSet && !this.query;
                 if (isSetMode) {
-                    const start = (this.searchPage - 1) * 60; // Use 60
+                    const start = (this.searchPage - 1) * 60;
                     return this.searchResults.slice(start, start + 60);
                 }
                 return this.searchResults; 
             }, 
             totalSearchPages() { return this.totalSearchPagesCount; },
-            
-            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, 
+            totalValue() { return this.cards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
             switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, logout() { if(auth) auth.signOut(); },
-            getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayCards.map(c => c.uid); },
+            getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, 
+            toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayList.map(c => c.uid); },
             deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
-            setSort(key) { if(this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; },
             
-            // --- Navigation Logic ---
+            // --- NEW: Refresh Display List Logic ---
+            refreshDisplayList() {
+                // 1. Filter by binder
+                let list = this.cards;
+                if (this.currentBinder) {
+                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
+                }
+                
+                // 2. We do NOT sort here automatically unless it's the first load or binder switch.
+                // However, we need to map the CURRENT view to the new data if data updated.
+                // Simplified: We just grab the filtered list.
+                
+                // If we want to keep order, we should try to match the order of the previous displayList if possible,
+                // but strictly speaking, if we just set it, it will default to creation order (or ID order).
+                // To keep the user's manual sort, we check if we have a sort active.
+                
+                // Let's create a new array copy
+                let newList = [...list];
+
+                // If we have a sort applied, re-apply it ONLY if it's not a value-based sort that causes jumping?
+                // NO, user wants NO jumping.
+                
+                // Actually, if I just update the list, Vue updates the DOM.
+                // The issue was the Computed Property re-evaluating the sort function on every keypress.
+                // By making this a method called 'refreshDisplayList', it only runs when `cards` changes (add/delete) or binder changes.
+                // It DOES run when a grade changes because of 'deep: true' watcher.
+                
+                // FIX: If the trigger was a deep change (grade change), we should NOT re-sort.
+                // How do we know?
+                // We can't easily.
+                
+                // BETTER FIX: We only sort when `manualSort` is called.
+                // Here in refresh, we just sync the list.
+                
+                // If displayList is empty (first load), we sort by default.
+                if (this.displayList.length === 0) {
+                     this.performSort(newList);
+                } else {
+                     // If list exists, we try to maintain the current order of UIDs if possible.
+                     // But if cards were added, they go to the end.
+                     // The simplest way to "not jump" is to not call sort.
+                     // BUT, if we just assign `newList`, it will result in the order from `this.cards` (which is likely creation order).
+                     // We want to keep the visual order the user has on screen.
+                     
+                     // Create a map of UID -> Index from old list
+                     const indexMap = new Map();
+                     this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
+                     
+                     newList.sort((a, b) => {
+                         const idxA = indexMap.has(a.uid) ? indexMap.get(a.uid) : 999999;
+                         const idxB = indexMap.has(b.uid) ? indexMap.get(b.uid) : 999999;
+                         return idxA - idxB;
+                     });
+                }
+
+                this.displayList = newList;
+            },
+
+            // --- NEW: Manual Sort Trigger ---
+            manualSort(key) {
+                if(this.sortBy === key) this.sortDesc = !this.sortDesc;
+                else { this.sortBy = key; this.sortDesc = true; }
+                this.currentPage = 1;
+                this.performSort(this.displayList);
+            },
+
+            performSort(list) {
+                list.sort((a, b) => { 
+                    let valA, valB; 
+                    if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
+                    else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
+                    else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
+                    else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
+                    else { valA = a.id; valB = b.id; } 
+                    
+                    if(valA < valB) return this.sortDesc ? 1 : -1; 
+                    if(valA > valB) return this.sortDesc ? -1 : 1; 
+                    return 0; 
+                });
+            },
+
             nextPage() { 
                 if(this.currentView === 'calculator') {
                      if(this.currentPage < this.totalPages) this.currentPage++;
                 } else {
                      if(this.searchPage < this.totalSearchPagesCount) {
                         const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) {
-                            this.searchPage++;
-                        } else {
-                            this.fetchCards(this.searchPage + 1);
-                        }
+                        if(isSetMode) this.searchPage++;
+                        else this.fetchCards(this.searchPage + 1);
                      }
                 }
             },
@@ -416,11 +507,8 @@
                 } else {
                      if(this.searchPage > 1) {
                         const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) {
-                            this.searchPage--;
-                        } else {
-                            this.fetchCards(this.searchPage - 1);
-                        }
+                        if(isSetMode) this.searchPage--;
+                        else this.fetchCards(this.searchPage - 1);
                      }
                 }
             },
@@ -438,7 +526,7 @@
             openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
-            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 300); },
+            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); },
             
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
@@ -456,13 +544,12 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- HYBRID FETCH STRATEGY ---
-            async fetchCards(page=1) {
+            async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
 
                 const isSetMode = this.selectedSet && !this.query;
 
-                if(isSetMode && page > 1 && this.searchResults.length > 0) {
+                if(isSetMode && page > 1 && this.searchResults.length > 0 && !force) {
                     this.searchPage = page;
                     return;
                 }
@@ -470,7 +557,7 @@
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
                 
-                if (this.searchCache[cacheKey]) { 
+                if (!force && this.searchCache[cacheKey]) { 
                     this.searchResults=this.searchCache[cacheKey].data; 
                     this.totalSearchPagesCount=this.searchCache[cacheKey].total; 
                     this.searchPage=page; 
@@ -488,8 +575,7 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
-                // If "Set Mode": Get 250 items. If "Search Mode": Get 60 items.
-                const limit = isSetMode ? 250 : 60; // CHANGED FROM 18 TO 60
+                const limit = isSetMode ? 250 : 60; 
                 const orderBy = 'number'; 
 
                 try { 
@@ -502,7 +588,6 @@
                     
                     let results = data.data || [];
 
-                    // --- CLIENT SIDE SORTING ---
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
@@ -511,7 +596,6 @@
                         results.sort((a, b) => a.name.localeCompare(b.name));
                     }
                     
-                    // CALCULATE PAGES (Using 60)
                     let totalPagesCalc = 1;
                     if(isSetMode) {
                         totalPagesCalc = Math.ceil(results.length / 60);
@@ -519,12 +603,15 @@
                         totalPagesCalc = Math.ceil((data.totalCount || 0) / 60);
                     }
 
-                    this.searchCache[cacheKey] = { 
-                        data: results, 
-                        total: totalPagesCalc
-                    }; 
-                    this.searchResults = this.searchCache[cacheKey].data; 
-                    this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
+                    if (results.length > 0) {
+                        this.searchCache[cacheKey] = { 
+                            data: results, 
+                            total: totalPagesCalc
+                        }; 
+                    }
+
+                    this.searchResults = results; 
+                    this.totalSearchPagesCount = totalPagesCalc; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
                         console.error(e);
