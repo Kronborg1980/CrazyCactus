@@ -16,177 +16,62 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root {
-            --neon-green: #39ff14;
-            --neon-glow: rgba(57, 255, 20, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-surface: rgba(15, 12, 41, 0.85);
-            --tw-c1: #8b5a2b; --tw-c2: #a0522d; --tw-c3: #6b4226;
-        }
-
+        :root { --neon-green: #39ff14; --glass-surface: rgba(15, 12, 41, 0.85); }
         body {
             font-family: 'Outfit', sans-serif;
             background: linear-gradient(to bottom, #302b63, #0f0c29);
             color: #e2e8f0;
             min-height: 100vh;
-            overflow-x: hidden;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"), linear-gradient(to bottom, #302b63, #0f0c29);
         }
-
         [v-cloak] { display: none; }
-
-        /* --- GLASSMORPHISM --- */
         .glass-panel {
-            background: var(--glass-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-top: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            border-radius: 20px;
-            transition: all 0.3s ease;
+            background: var(--glass-surface); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); border-radius: 20px; transition: all 0.3s ease;
         }
-        .glass-panel:hover {
-            box-shadow: 0 10px 40px 0 rgba(57, 255, 20, 0.15);
-            border-color: rgba(57, 255, 20, 0.3);
-            transform: translateY(-2px);
-        }
-
-        /* --- SCENERY --- */
-        .bg-watermark {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 80vw; height: 80vh; 
-            opacity: 0.08; 
-            pointer-events: none; z-index: -2;
-            background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            filter: grayscale(1) contrast(1.5);
-        }
-        .bg-scenery { position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
-        .heat-haze {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 20vh;
-            background: linear-gradient(to top, rgba(57, 255, 20, 0.05), transparent);
-            filter: blur(10px); animation: haze 5s infinite linear; opacity: 0.5;
-        }
-        @keyframes haze { 0% { transform: skewX(0deg) translateY(0); } 50% { transform: skewX(2deg) translateY(-5px); } 100% { transform: skewX(0deg) translateY(0); } }
-        
-        /* TUMBLEWEEDS */
-        .tumbleweed-container { position: absolute; z-index: 1; }
-        .tumbleweed-graphic {
-            width: 100%; height: 100%;
-            border-radius: 43% 57% 50% 50% / 57% 44% 56% 43%;
-            border: 3px solid var(--tw-c1);
-            box-shadow: inset 0 0 0 4px var(--tw-c2), 3px 5px 0 0 var(--tw-c3), -2px -3px 0 0 var(--tw-c1);
-            position: relative; opacity: 0.9;
-        }
-        .tumbleweed-graphic::before, .tumbleweed-graphic::after { content: ''; position: absolute; border-radius: 50%; border: 2px solid rgba(139, 90, 43, 0.6); }
-        .tumbleweed-graphic::before { top: 15%; left: 25%; width: 60%; height: 60%; transform: rotate(35deg); border-radius: 50% 40% 60% 50%; border-color: var(--tw-c2); }
-        .tumbleweed-graphic::after { bottom: 15%; right: 20%; width: 50%; height: 50%; transform: rotate(-20deg); border-radius: 60% 50% 40% 50%; border-color: var(--tw-c3); }
-
-        .tw-1 { bottom: 15%; width: 70px; height: 70px; animation: moveRight 25s linear infinite; }
-        .tw-1 .tumbleweed-graphic { animation: rollBounce1 25s linear infinite; }
-        .tw-2 { bottom: 22%; width: 40px; height: 40px; animation: moveRight 18s linear infinite; animation-delay: 7s; opacity: 0; }
-        .tw-2 .tumbleweed-graphic { animation: rollBounce2 18s linear infinite; animation-delay: 7s; }
-        .tw-3 { bottom: 10%; width: 55px; height: 55px; animation: moveRight 30s linear infinite; animation-delay: 15s; opacity: 0; }
-        .tw-3 .tumbleweed-graphic { animation: rollBounce3 30s linear infinite; animation-delay: 15s; }
-
-        @keyframes moveRight { 0% { left: -150px; opacity: 1; } 95% { opacity: 1; } 100% { left: 100vw; opacity: 0; } }
-        @keyframes rollBounce1 { 0% { transform: rotate(0deg) translateY(0); } 20% { transform: rotate(360deg) translateY(-30px); } 40% { transform: rotate(720deg) translateY(0); } 50% { transform: rotate(900deg) translateY(-15px); } 60% { transform: rotate(1080deg) translateY(0); } 80% { transform: rotate(1440deg) translateY(-25px); } 100% { transform: rotate(1800deg) translateY(0); } }
-        @keyframes rollBounce2 { 0% { transform: rotate(0deg) translateY(0); } 15% { transform: rotate(360deg) translateY(-15px); } 30% { transform: rotate(720deg) translateY(0); } 45% { transform: rotate(1080deg) translateY(-20px); } 60% { transform: rotate(1440deg) translateY(0); } 100% { transform: rotate(2400deg) translateY(0); } }
-        @keyframes rollBounce3 { 0% { transform: rotate(0deg) translateY(0); } 25% { transform: rotate(360deg) translateY(-40px); } 50% { transform: rotate(720deg) translateY(0); } 75% { transform: rotate(1080deg) translateY(-30px); } 100% { transform: rotate(1440deg) translateY(0); } }
-
-        .stars {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(white 1px, transparent 1px);
-            background-size: 50px 50px; opacity: 0.1; z-index: -3;
-        }
-
-        /* --- SEARCH SCANNER ANIMATIONS --- */
-        .scan-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-        .scanner-beam {
-            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--neon-green);
-            box-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-green);
-            animation: scan 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            z-index: 51; opacity: 0.8;
-        }
-        @keyframes scan {
-            0% { top: 0; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .radar-ping {
-            position: relative; width: 80px; height: 80px; border-radius: 50%;
-            border: 2px solid var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            animation: radar 1.5s ease-out infinite;
-        }
-        .radar-ping::before {
-            content: ''; position: absolute; inset: 0; border-radius: 50%;
-            background: var(--neon-green); opacity: 0.3;
-            animation: ping 1.5s ease-out infinite;
-        }
-        @keyframes radar { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-        @keyframes ping { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(1); opacity: 0; } }
-
-        /* --- UI COMPONENTS --- */
-        .btn-neon {
-            background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 24px; border-radius: 12px;
-            box-shadow: 0 0 15px var(--neon-glow); transition: all 0.3s; position: relative; overflow: hidden;
-        }
+        .glass-panel:hover { box-shadow: 0 10px 40px 0 rgba(57, 255, 20, 0.15); border-color: rgba(57, 255, 20, 0.3); transform: translateY(-2px); }
+        .bg-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vh; opacity: 0.08; pointer-events: none; z-index: -2; background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; filter: grayscale(1) contrast(1.5); }
+        .btn-neon { background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800; text-transform: uppercase; padding: 12px 24px; border-radius: 12px; box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); transition: all 0.3s; }
         .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--neon-green); }
         .btn-neon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .glass-input {
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;
-            padding: 12px; border-radius: 10px; width: 100%; transition: 0.3s;
-        }
-        .glass-input:focus {
-            border-color: var(--neon-green); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px var(--neon-glow); outline: none;
-        }
-
-        .nav-item {
-            color: #a0aec0; font-weight: 600; padding: 10px 16px; border-radius: 12px;
-            transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 8px;
-        }
+        .glass-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 10px; width: 100%; transition: 0.3s; }
+        .glass-input:focus { border-color: var(--neon-green); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); outline: none; }
+        .nav-item { color: #a0aec0; font-weight: 600; padding: 10px 16px; border-radius: 12px; transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.1); }
-        .nav-item.active {
-            background: rgba(57, 255, 20, 0.15); color: var(--neon-green);
-            text-shadow: 0 0 8px var(--neon-glow); border: 1px solid rgba(57, 255, 20, 0.3);
-        }
-
+        .nav-item.active { background: rgba(57, 255, 20, 0.15); color: var(--neon-green); text-shadow: 0 0 8px rgba(57, 255, 20, 0.6); border: 1px solid rgba(57, 255, 20, 0.3); }
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
         .data-table th { text-align: left; padding: 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--neon-green); letter-spacing: 1px; }
         .data-table td { padding: 12px 16px; background: rgba(0,0,0,0.4); }
         .data-table tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
         .data-table tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
         .data-table tr:hover td { background: rgba(57, 255, 20, 0.05); }
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
-
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.95); }
+        
+        /* DATA CHIP STYLE */
+        .data-chip {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
+        }
+        .data-chip::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--neon-green); opacity: 0.5;
+        }
+        .data-chip:hover {
+            background: rgba(57, 255, 20, 0.05);
+            border-color: var(--neon-green);
+            transform: translateX(5px);
+        }
     </style>
 </head>
 <body class="bg-fixed">
 
-<div class="stars"></div>
 <div class="bg-watermark"></div>
-<div class="bg-scenery">
-    <div class="heat-haze"></div>
-    <div class="tumbleweed-container tw-1"><div class="tumbleweed-graphic"></div></div>
-    <div class="tumbleweed-container tw-2"><div class="tumbleweed-graphic"></div></div>
-    <div class="tumbleweed-container tw-3"><div class="tumbleweed-graphic"></div></div>
-</div>
 
 <div id="app" v-cloak class="min-h-screen flex flex-col relative z-10">
 
@@ -410,11 +295,19 @@
                       </div>
 
                       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
-                          <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
-                              <img :src="card.images.small" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
-                              <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
-                              <div class="text-sm font-bold text-[#39ff14] mt-2 drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
-                              <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
+                          <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="data-chip p-6 rounded-2xl cursor-pointer group flex flex-col justify-between h-40 transition duration-300">
+                              <div>
+                                  <div class="flex justify-between items-start mb-2">
+                                      <span class="text-xs font-black text-gray-500 uppercase border border-gray-700 px-2 rounded">{{ card.set.id }}</span>
+                                      <span class="text-xs font-black text-gray-500 uppercase">#{{ card.number }}</span>
+                                  </div>
+                                  <h3 class="text-xl font-black text-white leading-none uppercase tracking-wide group-hover:text-[#39ff14] transition">{{ card.name }}</h3>
+                              </div>
+                              <div class="mt-4">
+                                  <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Market Value</div>
+                                  <div class="text-2xl font-mono font-bold text-[#39ff14] drop-shadow-[0_0_10px_rgba(57,255,20,0.4)]">${{ formatNumber(getCardPrice(card)) }}</div>
+                              </div>
+                              <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
                           </div>
                       </div>
                 </div>
@@ -482,7 +375,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
+                cacheKey: 'cactus_final_v5', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 searchPage: 1, searchPerPage: 18, addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null
@@ -516,7 +409,41 @@
             createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
+            
+            // --- UPDATED ADD CARD (Fetches Image On Demand) ---
+            async addCard(c) { 
+                // Fetch image if not present (because search result is text-only)
+                let image = c.images?.small;
+                if (!image) {
+                    try {
+                        // Use proxy to get image
+                        const res = await fetch(`${WORKER_URL}/?endpoint=cards/${c.id}&select=images`);
+                        const data = await res.json();
+                        image = data.data?.images?.small;
+                    } catch(e) { console.error("Image fetch failed", e); }
+                }
+                
+                const market = this.getCardPrice(c); 
+                const cardData = { 
+                    id: c.id, 
+                    name: c.name, 
+                    set: this.allSets.find(s=>s.id === this.selectedSet)?.name || (c.set.name || 'Set'), 
+                    image: image || 'https://via.placeholder.com/200x280?text=No+Image', // Fallback
+                    number: c.number, 
+                    market: market, 
+                    rawCost: market, 
+                    fee: 15, 
+                    targetGrade: 10, 
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder 
+                }; 
+                
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); 
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } 
+                
+                this.addedIds.push(c.id); 
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); 
+            },
+
             deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
@@ -526,7 +453,6 @@
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1); }, 300); },
             
-            // --- UPDATED: FETCH VIA PROXY ---
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
                 const cacheKey = 'cactus_sets_v8_worker'; 
@@ -572,8 +498,8 @@
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try { 
-                    // Using encodeURIComponent to ensure query parameters travel safely through the proxy
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q)}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`, { 
+                    // NO IMAGES IN SELECT - FAST TEXT ONLY
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q)}&page=${page}&pageSize=18&select=id,name,number,set,tcgplayer&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
                     
