@@ -7,8 +7,7 @@
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -415,9 +414,8 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
-            // --- OPTIMIZED FAST SEARCH WITH PROXY ---
+            // --- FIXED SEARCH FUNCTION ---
             async fetchCards(page=1) {
-                // UNLOCKED: Search even if no set is selected!
                 if(!this.selectedSet && !this.query) return;
 
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
@@ -437,18 +435,15 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
                 
-                // SPEED FIX: Use "Starts With" (text*)
                 let q = [];
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
+                // IMPORTANT FIX: We ALWAYS sort by number on the server to prevent 504 Timeouts.
+                // The price sorting is done inside the browser (below).
                 let orderBy = 'number';
-                if (this.searchSort === 'name') orderBy = 'name';
-                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
-                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try { 
-                    // FETCHING VIA WORKER_URL
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
@@ -456,8 +451,20 @@
                     if (!res.ok) throw new Error(`Err`); 
                     const data = await res.json(); 
                     
+                    let results = data.data || [];
+
+                    // --- CLIENT SIDE SORTING (Fixes 504) ---
+                    if (this.searchSort === 'price-desc') {
+                        results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
+                    } else if (this.searchSort === 'price-asc') {
+                        results.sort((a, b) => this.getCardPrice(a) - this.getCardPrice(b));
+                    } else if (this.searchSort === 'name') {
+                        results.sort((a, b) => a.name.localeCompare(b.name));
+                    }
+                    // ----------------------------------------
+
                     this.searchCache[cacheKey] = { 
-                        data: data.data || [], 
+                        data: results, 
                         total: Math.ceil((data.totalCount || 0) / 18) 
                     }; 
                     this.searchResults = this.searchCache[cacheKey].data; 
