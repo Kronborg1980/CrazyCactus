@@ -355,15 +355,23 @@
                         <div class="flex gap-2">
                             <select v-model="selectedCardId"
                                     class="glass-input text-sm h-14 font-bold disabled:opacity-50"
-                                    :disabled="!selectedSet || cardsInSet.length === 0">
-                                <option value="">SELECT CARD</option>
+                                    :disabled="!selectedSet || isLoadingSet">
+                                <option value="" disabled selected>
+                                    {{ isLoadingSet ? 'DOWNLOADING CARDS...' : (cardsInSet.length === 0 ? 'NO CARDS FOUND' : 'SELECT CARD') }}
+                                </option>
                                 <option v-for="c in cardsInSetSorted"
                                         :key="c.id"
                                         :value="c.id">
                                     #{{ c.number }} — {{ c.name }}
                                 </option>
                             </select>
-                            <button @click="addCard" :disabled="!selectedCardId" class="btn-neon w-20 flex items-center justify-center rounded-xl"><i class="fa-solid fa-plus text-xl"></i></button>
+                            
+                            <button @click="addCard" 
+                                    :disabled="!selectedCardId || isLoadingSet" 
+                                    class="btn-neon w-20 flex items-center justify-center rounded-xl transition-all duration-300">
+                                <i v-if="isLoadingSet" class="fa-solid fa-circle-notch fa-spin text-xl"></i>
+                                <i v-else class="fa-solid fa-plus text-xl"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -388,10 +396,17 @@
                                 <h3 class="text-4xl font-black text-white uppercase italic">{{ cardsInSet.find(c => c.id === selectedCardId).name }}</h3>
                                 <p class="text-[#39ff14] font-bold tracking-widest uppercase mt-2 text-xl">{{ allSets.find(s => s.id === selectedSet)?.name }}</p>
                             </div>
+                            
                             <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
                                 <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Market Price</div>
-                                <div class="text-3xl font-mono font-black text-white">${{ formatNumber(getCardPrice(cardsInSet.find(c => c.id === selectedCardId))) }}</div>
+                                <div v-if="isLoadingPrice" class="text-xl font-bold text-[#39ff14] animate-pulse py-2">
+                                    <i class="fa-solid fa-satellite-dish fa-spin mr-2"></i> CHECKING...
+                                </div>
+                                <div v-else class="text-3xl font-mono font-black text-white">
+                                    ${{ formatNumber(getCardPrice(cardsInSet.find(c => c.id === selectedCardId))) }}
+                                </div>
                             </div>
+                            
                             <button @click="addCard" class="btn-neon text-lg py-4 shadow-[0_0_30px_rgba(57,255,20,0.4)]">ADD TO BINDER</button>
                          </div>
                      </div>
@@ -456,8 +471,12 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 addedIds: [], selectedIds: [],
                 
-                // NEW DATA FIELDS
-                cardsInSet: [], selectedCardId: "", setCardCache: {}
+                // NEW INSTANT LOAD FIELDS
+                cardsInSet: [], 
+                selectedCardId: "", 
+                setCardCache: {},
+                isLoadingSet: false,    // Loading flag for the set list
+                isLoadingPrice: false   // Loading flag for single card price
             }
         },
         watch: {
@@ -468,7 +487,6 @@
                     this.selectedCardId=""; 
                 } 
             },
-            // NEW WATCHER FOR SET SELECTION
             selectedSet(n, o) {
                 if (n !== o) {
                     this.selectedCardId = "";
@@ -476,6 +494,37 @@
                     this.loadCardsInSet();
                 }
             },
+            // PRICE WATCHER: Fetches price only when a card is picked
+            async selectedCardId(newId) {
+                if (!newId) return;
+                
+                // Find the card in our list
+                const card = this.cardsInSet.find(c => c.id === newId);
+                if (!card) return;
+
+                // If we already have the price, stop.
+                if (card.tcgplayer) return; 
+
+                // Otherwise, fetch JUST this one card's price
+                this.isLoadingPrice = true;
+                try {
+                    const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
+                    const res = await fetch(
+                        `https://api.pokemontcg.io/v2/cards/${newId}?select=tcgplayer`,
+                        { headers: { "X-Api-Key": apiKey } }
+                    );
+                    const data = await res.json();
+                    
+                    // Save the price into our existing card object
+                    if(data.data && data.data.tcgplayer) {
+                        card.tcgplayer = data.data.tcgplayer;
+                    }
+                } catch(e) {
+                    console.log("Price fetch error", e);
+                } finally {
+                    this.isLoadingPrice = false;
+                }
+            }
         },
         mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
         computed: {
@@ -487,7 +536,6 @@
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
             
-            // NEW SORTED COMPUTED PROP
             cardsInSetSorted() {
                 return [...this.cardsInSet].sort((a, b) => {
                     const an = parseInt(a.number);
@@ -509,7 +557,6 @@
             renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
             deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
             
-            // REPLACED ADDCARD METHOD
             addCard() {
                 const card = this.cardsInSet.find(c => c.id === this.selectedCardId);
                 if (!card) return;
@@ -551,7 +598,6 @@
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             
-            // UPDATED OPEN SEARCH
             openSearch() { 
                 this.showSearch = true; 
                 this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; 
@@ -565,36 +611,43 @@
             
             async loadSetsAPI(force=false) { this.setsLoading = true; const cacheKey = 'cactus_sets_v3_final'; const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; if (!force) { const c = localStorage.getItem(cacheKey); if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } } try { const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: { 'X-Api-Key': apiKey } }); if (!res.ok) throw new Error(`API Error`); const data = await res.json(); const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } },
             
-            // NEW METHOD TO LOAD ALL CARDS IN SET
+            // "LITE" VERSION - INSTANT LOAD
             async loadCardsInSet() {
                 if (!this.selectedSet) return;
 
-                const cacheKey = "setCache_" + this.selectedSet;
+                this.isLoadingSet = true;
+                this.selectedCardId = "";
+                this.cardsInSet = [];
+                
+                // Use a separate cache key for this "lite" version
+                const cacheKey = "setCache_Lite_" + this.selectedSet;
 
-                // Load from localStorage
+                // Try Local Storage
                 const cached = localStorage.getItem(cacheKey);
                 if (cached) {
                     try {
                         this.cardsInSet = JSON.parse(cached);
+                        this.isLoadingSet = false;
                         return;
-                    } catch (e) {}
+                    } catch(e) { localStorage.removeItem(cacheKey); }
                 }
 
-                // Otherwise fetch
                 try {
                     const apiKey = "6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149";
+                    // REMOVED 'tcgplayer' from select to make it fast
                     const res = await fetch(
-                        `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&select=id,name,number,images,tcgplayer&pageSize=250`,
+                        `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&select=id,name,number,images&pageSize=250`,
                         { headers: { "X-Api-Key": apiKey } }
                     );
 
                     const data = await res.json();
                     this.cardsInSet = data.data || [];
-
                     localStorage.setItem(cacheKey, JSON.stringify(this.cardsInSet));
+                    
                 } catch (e) {
-                    console.error("Failed loading set cards", e);
-                    this.cardsInSet = [];
+                    console.error("List error", e);
+                } finally {
+                    this.isLoadingSet = false;
                 }
             },
         }
