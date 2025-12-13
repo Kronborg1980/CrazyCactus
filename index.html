@@ -599,8 +599,10 @@
                 const orderBy = 'number'; 
 
                 try { 
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
-                        signal: searchController.signal 
+                    // FIXED: Added cache: 'no-cache' and timestamp `_t` to force Chrome to fetch new data
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, { 
+                        signal: searchController.signal,
+                        cache: 'no-cache'
                     }); 
                     
                     if (!res.ok) throw new Error(`Err`); 
