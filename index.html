@@ -277,7 +277,13 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
-                      <div v-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
+                      <div v-if="searchError" class="flex flex-col items-center justify-center h-full opacity-80">
+                          <i class="fa-solid fa-triangle-exclamation text-8xl mb-6 text-red-500 animate-pulse"></i>
+                          <p class="font-black uppercase tracking-[0.3em] text-xl text-red-400">Connection Interrupted</p>
+                          <button @click="fetchCards(searchPage, true)" class="mt-6 px-8 py-3 bg-red-500/20 border border-red-500 text-red-400 font-bold rounded-xl hover:bg-red-500 hover:text-white transition uppercase tracking-widest">RETRY SIGNAL</button>
+                      </div>
+
+                      <div v-else-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
                           <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
                           <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
                       </div>
@@ -352,7 +358,7 @@
         data() {
             return {
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 cacheKey: 'cactus_sets_v8_worker', totalSetData: {}, 
                 // Sorting Vars
@@ -360,6 +366,7 @@
                 // Search Vars
                 searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                currentRequestId: 0, // NEW: Prevent race conditions
                 
                 // NEW: Static display list for calculator to prevent jumping
                 displayList: [] 
@@ -371,29 +378,29 @@
                     this.selectedSet=""; 
                     this.searchResults=[]; 
                     this.searchPage=1; 
-                    this.totalSearchPagesCount = 1; // RESET PAGE COUNT
+                    this.totalSearchPagesCount = 1;
                     this.query=""; 
-                    // NO CACHE CLEARING
+                    this.searchError = false;
                 } 
             },
             selectedSet(n, o) { 
                 if(n!==o) { 
                     this.searchResults=[]; 
                     this.searchPage=1; 
-                    this.totalSearchPagesCount = 1; // RESET PAGE COUNT
+                    this.totalSearchPagesCount = 1;
                     this.query=""; 
-                    // NO CACHE CLEARING
+                    this.searchError = false;
+                    
                     if(this.selectedSet) {
-                        this.fetchCards(1); // AUTO SEARCH
+                        this.fetchCards(1); 
                     }
                 } 
             },
             searchSort() { this.fetchCards(1, true); },
             
-            // Watchers to update our static list when data changes
             cards: {
                 handler() { this.refreshDisplayList(); },
-                deep: true // Watch for deep changes (like grade updates)
+                deep: true 
             },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
@@ -402,7 +409,6 @@
             binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
             isAllSelected() { return this.displayList.length > 0 && this.selectedIds.length === this.displayList.length; },
             
-            // PAGINATION IS NOW BASED ON displayList (which is static sorted)
             totalPages() { return Math.ceil(this.displayList.length / this.itemsPerPage); }, 
             paginatedList() { 
                 const start = (this.currentPage - 1) * this.itemsPerPage; 
@@ -429,51 +435,17 @@
             toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayList.map(c => c.uid); },
             deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
             
-            // --- NEW: Refresh Display List Logic ---
             refreshDisplayList() {
-                // 1. Filter by binder
                 let list = this.cards;
                 if (this.currentBinder) {
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
                 
-                // 2. We do NOT sort here automatically unless it's the first load or binder switch.
-                // However, we need to map the CURRENT view to the new data if data updated.
-                // Simplified: We just grab the filtered list.
-                
-                // If we want to keep order, we should try to match the order of the previous displayList if possible,
-                // but strictly speaking, if we just set it, it will default to creation order (or ID order).
-                // To keep the user's manual sort, we check if we have a sort active.
-                
-                // Let's create a new array copy
                 let newList = [...list];
 
-                // If we have a sort applied, re-apply it ONLY if it's not a value-based sort that causes jumping?
-                // NO, user wants NO jumping.
-                
-                // Actually, if I just update the list, Vue updates the DOM.
-                // The issue was the Computed Property re-evaluating the sort function on every keypress.
-                // By making this a method called 'refreshDisplayList', it only runs when `cards` changes (add/delete) or binder changes.
-                // It DOES run when a grade changes because of 'deep: true' watcher.
-                
-                // FIX: If the trigger was a deep change (grade change), we should NOT re-sort.
-                // How do we know?
-                // We can't easily.
-                
-                // BETTER FIX: We only sort when `manualSort` is called.
-                // Here in refresh, we just sync the list.
-                
-                // If displayList is empty (first load), we sort by default.
                 if (this.displayList.length === 0) {
                      this.performSort(newList);
                 } else {
-                     // If list exists, we try to maintain the current order of UIDs if possible.
-                     // But if cards were added, they go to the end.
-                     // The simplest way to "not jump" is to not call sort.
-                     // BUT, if we just assign `newList`, it will result in the order from `this.cards` (which is likely creation order).
-                     // We want to keep the visual order the user has on screen.
-                     
-                     // Create a map of UID -> Index from old list
                      const indexMap = new Map();
                      this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
                      
@@ -487,7 +459,6 @@
                 this.displayList = newList;
             },
 
-            // --- NEW: Manual Sort Trigger ---
             manualSort(key) {
                 if(this.sortBy === key) this.sortDesc = !this.sortDesc;
                 else { this.sortBy = key; this.sortDesc = true; }
@@ -543,7 +514,7 @@
             updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
             getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
+            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.searchError = false; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
             openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); },
@@ -577,19 +548,28 @@
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
                 
-                // FIX: Only verify cache if it actually contains data (length > 0)
-                if (!force && this.searchCache[cacheKey] && this.searchCache[cacheKey].data.length > 0) { 
-                    this.searchResults=this.searchCache[cacheKey].data; 
-                    this.totalSearchPagesCount=this.searchCache[cacheKey].total; 
-                    this.searchPage=page; 
-                    this.isSearching=false; 
-                    return; 
+                // --- FIXED CACHE LOGIC: Never cache empty results ---
+                if (!force && this.searchCache[cacheKey]) {
+                    // Only use cache if it HAS data. If it's empty, we refetch to be safe.
+                    if (this.searchCache[cacheKey].data && this.searchCache[cacheKey].data.length > 0) {
+                        this.searchResults = this.searchCache[cacheKey].data; 
+                        this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
+                        this.searchPage = page; 
+                        this.isSearching = false; 
+                        this.searchError = false;
+                        return; 
+                    }
                 }
 
                 if (searchController) searchController.abort(); 
                 searchController = new AbortController();
                 
+                // --- RACE CONDITION FIX ---
+                this.currentRequestId++;
+                const requestId = this.currentRequestId;
+
                 this.isSearching = true; 
+                this.searchError = false;
                 this.searchPage = page; 
                 
                 let q = [];
@@ -600,7 +580,7 @@
                 const orderBy = 'number'; 
 
                 try { 
-                    // FIXED: cache: 'no-store' is safer than no-cache for this specific issue
+                    // FIXED: cache 'no-store' to kill browser aggression
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, { 
                         signal: searchController.signal,
                         cache: 'no-store'
@@ -609,6 +589,9 @@
                     if (!res.ok) throw new Error(`Err`); 
                     const data = await res.json(); 
                     
+                    // --- RACE CONDITION CHECK ---
+                    if (requestId !== this.currentRequestId) return;
+
                     let results = data.data || [];
 
                     if (this.searchSort === 'price-desc') {
@@ -626,6 +609,7 @@
                         totalPagesCalc = Math.ceil((data.totalCount || 0) / 60);
                     }
 
+                    // --- CACHE STRATEGY: Only cache SUCCESSFUL, NON-EMPTY results ---
                     if (results.length > 0) {
                         this.searchCache[cacheKey] = { 
                             data: results, 
@@ -637,11 +621,15 @@
                     this.totalSearchPagesCount = totalPagesCalc; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
+                        // Show error UI if it's a real network error
                         console.error(e);
-                        this.searchResults=[]; 
+                        this.searchResults = []; 
+                        this.searchError = true;
                     }
                 } finally { 
-                    if (!searchController.signal.aborted) this.isSearching = false; 
+                    if (requestId === this.currentRequestId) {
+                         this.isSearching = false; 
+                    }
                 }
             }
         }
