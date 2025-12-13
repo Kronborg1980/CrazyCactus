@@ -366,8 +366,28 @@
             }
         },
         watch: {
-            selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
+            selectedEra(n, o) { 
+                if(n!==o) { 
+                    this.selectedSet=""; 
+                    this.searchResults=[]; 
+                    this.searchPage=1; 
+                    this.totalSearchPagesCount = 1; // RESET PAGE COUNT
+                    this.query=""; 
+                    // NO CACHE CLEARING
+                } 
+            },
+            selectedSet(n, o) { 
+                if(n!==o) { 
+                    this.searchResults=[]; 
+                    this.searchPage=1; 
+                    this.totalSearchPagesCount = 1; // RESET PAGE COUNT
+                    this.query=""; 
+                    // NO CACHE CLEARING
+                    if(this.selectedSet) {
+                        this.fetchCards(1); // AUTO SEARCH
+                    }
+                } 
+            },
             searchSort() { this.fetchCards(1, true); },
             
             // Watchers to update our static list when data changes
