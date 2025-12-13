@@ -359,7 +359,7 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
                 // Search Vars
                 searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], 
-                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                searchSort: 'number', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
                 
                 // NEW: Static display list for calculator to prevent jumping
                 displayList: [] 
@@ -367,7 +367,16 @@
         },
         watch: {
             selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
-            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.query=""; this.searchCache={}; } },
+            selectedSet(n, o) { 
+                if(n!==o) { 
+                    this.searchResults=[]; 
+                    this.searchPage=1; 
+                    this.query=""; 
+                    this.searchCache={};
+                    // When a set is selected, fetch the first page immediately
+                    if(n) this.fetchCards(1, true); 
+                } 
+            },
             searchSort() { this.fetchCards(1, true); },
             
             // Watchers to update our static list when data changes
@@ -391,12 +400,8 @@
 
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             
+            // --- FIXED: PAGINATION IS SERVER SIDE NOW, JUST RETURN RESULTS ---
             paginatedSearchResults() { 
-                const isSetMode = this.selectedSet && !this.query;
-                if (isSetMode) {
-                    const start = (this.searchPage - 1) * 60;
-                    return this.searchResults.slice(start, start + 60);
-                }
                 return this.searchResults; 
             }, 
             totalSearchPages() { return this.totalSearchPagesCount; },
@@ -428,21 +433,6 @@
                 // Let's create a new array copy
                 let newList = [...list];
 
-                // If we have a sort applied, re-apply it ONLY if it's not a value-based sort that causes jumping?
-                // NO, user wants NO jumping.
-                
-                // Actually, if I just update the list, Vue updates the DOM.
-                // The issue was the Computed Property re-evaluating the sort function on every keypress.
-                // By making this a method called 'refreshDisplayList', it only runs when `cards` changes (add/delete) or binder changes.
-                // It DOES run when a grade changes because of 'deep: true' watcher.
-                
-                // FIX: If the trigger was a deep change (grade change), we should NOT re-sort.
-                // How do we know?
-                // We can't easily.
-                
-                // BETTER FIX: We only sort when `manualSort` is called.
-                // Here in refresh, we just sync the list.
-                
                 // If displayList is empty (first load), we sort by default.
                 if (this.displayList.length === 0) {
                      this.performSort(newList);
@@ -495,9 +485,8 @@
                      if(this.currentPage < this.totalPages) this.currentPage++;
                 } else {
                      if(this.searchPage < this.totalSearchPagesCount) {
-                        const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) this.searchPage++;
-                        else this.fetchCards(this.searchPage + 1);
+                        // --- FIXED: Always fetch for sets too ---
+                        this.fetchCards(this.searchPage + 1);
                      }
                 }
             },
@@ -506,9 +495,8 @@
                      if(this.currentPage > 1) this.currentPage--;
                 } else {
                      if(this.searchPage > 1) {
-                        const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) this.searchPage--;
-                        else this.fetchCards(this.searchPage - 1);
+                        // --- FIXED: Always fetch for sets too ---
+                        this.fetchCards(this.searchPage - 1);
                      }
                 }
             },
@@ -549,11 +537,6 @@
 
                 const isSetMode = this.selectedSet && !this.query;
 
-                if(isSetMode && page > 1 && this.searchResults.length > 0 && !force) {
-                    this.searchPage = page;
-                    return;
-                }
-
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
                 
@@ -575,11 +558,18 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
-                const limit = isSetMode ? 250 : 60; 
-                const orderBy = 'number'; 
+                // --- FIX: ALWAYS USE 60 LIMIT TO PREVENT TIMEOUTS ON S&V SETS ---
+                const limit = 60; 
+                
+                // Sorting strategy
+                let orderBy = 'number';
+                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market'; // Approximate cloud sort if possible, otherwise we client sort
+                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
+                // For set mode, stick to number to keep the list clean, but rely on small page size
+                if (isSetMode) orderBy = 'number';
 
                 try { 
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, { 
                         signal: searchController.signal 
                     }); 
                     
@@ -588,6 +578,7 @@
                     
                     let results = data.data || [];
 
+                    // Client-side sort fallback if needed (for price)
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
@@ -596,12 +587,8 @@
                         results.sort((a, b) => a.name.localeCompare(b.name));
                     }
                     
-                    let totalPagesCalc = 1;
-                    if(isSetMode) {
-                        totalPagesCalc = Math.ceil(results.length / 60);
-                    } else {
-                        totalPagesCalc = Math.ceil((data.totalCount || 0) / 60);
-                    }
+                    // --- FIX: USE API TOTAL COUNT FOR PAGINATION ---
+                    let totalPagesCalc = Math.ceil((data.totalCount || 0) / limit);
 
                     if (results.length > 0) {
                         this.searchCache[cacheKey] = { 
