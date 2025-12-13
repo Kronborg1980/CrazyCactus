@@ -261,7 +261,7 @@
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Pokemon Name</label>
                         <div class="flex gap-2">
                             <input v-model="query" @input="debouncedSearch" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
-                            <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-search"></i></button>
+                            <button @click="fetchCards(1, true)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl border border-[#39ff14]/30 hover:bg-[#39ff14]/20"><i class="fa-solid fa-rotate-right" :class="{'fa-spin': isSearching}"></i></button>
                         </div>
                     </div>
 
@@ -577,7 +577,8 @@
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
                 
-                if (!force && this.searchCache[cacheKey]) { 
+                // FIX: Only verify cache if it actually contains data (length > 0)
+                if (!force && this.searchCache[cacheKey] && this.searchCache[cacheKey].data.length > 0) { 
                     this.searchResults=this.searchCache[cacheKey].data; 
                     this.totalSearchPagesCount=this.searchCache[cacheKey].total; 
                     this.searchPage=page; 
@@ -599,10 +600,10 @@
                 const orderBy = 'number'; 
 
                 try { 
-                    // FIXED: Added cache: 'no-cache' and timestamp `_t` to force Chrome to fetch new data
+                    // FIXED: cache: 'no-store' is safer than no-cache for this specific issue
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, { 
                         signal: searchController.signal,
-                        cache: 'no-cache'
+                        cache: 'no-store'
                     }); 
                     
                     if (!res.ok) throw new Error(`Err`); 
