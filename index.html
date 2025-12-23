@@ -1,10 +1,3 @@
-Here is the full, working code. I have integrated the Server-Side Pagination fix into the JavaScript.
-This version changes the "Set" logic to load 60 cards at a time (instead of all 250+), which will fix the timeouts with your Cloudflare Worker.
-1. Key Changes Made
- * fetchCards: Now forces a limit of 60 for everything (Sets and Searches).
- * nextPage / prevPage: Updated to always trigger a new API fetch (instead of just slicing the array in memory).
- * paginatedSearchResults: Simplified to just pass through data, since the server now handles the slicing.
-2. The Full Code
 <!DOCTYPE html>
 <html lang="en">
 <head>
