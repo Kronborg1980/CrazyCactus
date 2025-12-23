@@ -234,7 +234,7 @@
 
     <Transition name="fade">
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-            <div class="glass-panel w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
+            <div class="glass-panel w-full max-w-6xl h-full md:h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
                 
                 <div v-if="isSearching" class="scan-overlay">
                     <div class="scanner-beam"></div>
@@ -247,7 +247,7 @@
                     <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90 hover:scale-125"><i class="fa-solid fa-xmark text-3xl"></i></button>
                 </div>
                 
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
+                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0 overflow-y-auto max-h-[35vh] md:max-h-none">
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
                         <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">SELECT ERA</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
@@ -276,7 +276,7 @@
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24">
+                <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24 min-h-0">
                       <div v-if="searchError" class="flex flex-col items-center justify-center h-full opacity-80">
                           <i class="fa-solid fa-triangle-exclamation text-8xl mb-6 text-red-500 animate-pulse"></i>
                           <p class="font-black uppercase tracking-[0.3em] text-xl text-red-400">Connection Interrupted</p>
@@ -288,7 +288,7 @@
                           <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
                       </div>
 
-                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
+                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-8 pb-10">
                           <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
                               <img :src="card.images.small" loading="lazy" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
                               <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
@@ -299,9 +299,9 @@
                 </div>
 
                 <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
-                    <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">PREVIOUS</button>
-                    <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-sm px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
-                    <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black/50 border-2 border-white/20 text-xs px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">NEXT</button>
+                    <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-4 md:px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">PREV</button>
+                    <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-xs md:text-sm px-4 md:px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
+                    <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="bg-black/50 border-2 border-white/20 text-xs px-4 md:px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">NEXT</button>
                 </div>
             </div>
         </div>
@@ -618,4 +618,3 @@
 
 </body>
 </html>
-
