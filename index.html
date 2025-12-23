@@ -1,3 +1,10 @@
+Here is the full, working code. I have integrated the Server-Side Pagination fix into the JavaScript.
+This version changes the "Set" logic to load 60 cards at a time (instead of all 250+), which will fix the timeouts with your Cloudflare Worker.
+1. Key Changes Made
+ * fetchCards: Now forces a limit of 60 for everything (Sets and Searches).
+ * nextPage / prevPage: Updated to always trigger a new API fetch (instead of just slicing the array in memory).
+ * paginatedSearchResults: Simplified to just pass through data, since the server now handles the slicing.
+2. The Full Code
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -364,11 +371,10 @@
                 // Sorting Vars
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
                 // Search Vars
-                searchPage: 1, searchPerPage: 60, addedIds: [], selectedIds: [], 
+                searchPage: 1, 
+                addedIds: [], selectedIds: [], 
                 searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
-                currentRequestId: 0, // NEW: Prevent race conditions
-                
-                // NEW: Static display list for calculator to prevent jumping
+                currentRequestId: 0, 
                 displayList: [] 
             }
         },
@@ -417,12 +423,8 @@
 
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
             
+            // UPDATED: Now simply returns the results, since server handles paging/limits
             paginatedSearchResults() { 
-                const isSetMode = this.selectedSet && !this.query;
-                if (isSetMode) {
-                    const start = (this.searchPage - 1) * 60;
-                    return this.searchResults.slice(start, start + 60);
-                }
                 return this.searchResults; 
             }, 
             totalSearchPages() { return this.totalSearchPagesCount; },
@@ -486,9 +488,8 @@
                      if(this.currentPage < this.totalPages) this.currentPage++;
                 } else {
                      if(this.searchPage < this.totalSearchPagesCount) {
-                        const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) this.searchPage++;
-                        else this.fetchCards(this.searchPage + 1);
+                        // UPDATED: Always fetch new data
+                        this.fetchCards(this.searchPage + 1);
                      }
                 }
             },
@@ -497,9 +498,8 @@
                      if(this.currentPage > 1) this.currentPage--;
                 } else {
                      if(this.searchPage > 1) {
-                        const isSetMode = this.selectedSet && !this.query;
-                        if(isSetMode) this.searchPage--;
-                        else this.fetchCards(this.searchPage - 1);
+                        // UPDATED: Always fetch new data
+                        this.fetchCards(this.searchPage - 1);
                      }
                 }
             },
@@ -535,22 +535,15 @@
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; } 
             },
 
+            // UPDATED: Now handles all logic (Sets and Searches) via server-side paging with fixed 60 limit
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
 
-                const isSetMode = this.selectedSet && !this.query;
-
-                if(isSetMode && page > 1 && this.searchResults.length > 0 && !force) {
-                    this.searchPage = page;
-                    return;
-                }
-
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}_${isSetMode}`;
+                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
                 
-                // --- FIXED CACHE LOGIC: Never cache empty results ---
+                // Check Cache (Only if it has data)
                 if (!force && this.searchCache[cacheKey]) {
-                    // Only use cache if it HAS data. If it's empty, we refetch to be safe.
                     if (this.searchCache[cacheKey].data && this.searchCache[cacheKey].data.length > 0) {
                         this.searchResults = this.searchCache[cacheKey].data; 
                         this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
@@ -564,7 +557,6 @@
                 if (searchController) searchController.abort(); 
                 searchController = new AbortController();
                 
-                // --- RACE CONDITION FIX ---
                 this.currentRequestId++;
                 const requestId = this.currentRequestId;
 
@@ -576,12 +568,15 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
                 
-                const limit = isSetMode ? 250 : 60; 
-                const orderBy = 'number'; 
+                // IMPORTANT FIX: Always limit to 60 to prevent timeouts
+                const limit = 60; 
+                
+                // Sorting strategy
+                let orderBy = 'number'; 
+                if(this.searchSort === 'name') orderBy = 'name';
 
                 try { 
-                    // FIXED: cache 'no-store' to kill browser aggression
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${isSetMode ? 1 : page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, { 
+                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, { 
                         signal: searchController.signal,
                         cache: 'no-store'
                     }); 
@@ -589,27 +584,20 @@
                     if (!res.ok) throw new Error(`Err`); 
                     const data = await res.json(); 
                     
-                    // --- RACE CONDITION CHECK ---
                     if (requestId !== this.currentRequestId) return;
 
                     let results = data.data || [];
 
+                    // Client-side sort for price (since API doesn't support complex price sort easily)
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
                         results.sort((a, b) => this.getCardPrice(a) - this.getCardPrice(b));
-                    } else if (this.searchSort === 'name') {
-                        results.sort((a, b) => a.name.localeCompare(b.name));
                     }
                     
-                    let totalPagesCalc = 1;
-                    if(isSetMode) {
-                        totalPagesCalc = Math.ceil(results.length / 60);
-                    } else {
-                        totalPagesCalc = Math.ceil((data.totalCount || 0) / 60);
-                    }
+                    // Calc total pages based on API's totalCount
+                    let totalPagesCalc = Math.ceil((data.totalCount || 0) / limit);
 
-                    // --- CACHE STRATEGY: Only cache SUCCESSFUL, NON-EMPTY results ---
                     if (results.length > 0) {
                         this.searchCache[cacheKey] = { 
                             data: results, 
@@ -621,7 +609,6 @@
                     this.totalSearchPagesCount = totalPagesCalc; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
-                        // Show error UI if it's a real network error
                         console.error(e);
                         this.searchResults = []; 
                         this.searchError = true;
@@ -638,3 +625,4 @@
 
 </body>
 </html>
+
