@@ -237,7 +237,12 @@
                 <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0 overflow-y-auto max-h-[35vh] md:max-h-none">
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
-                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold"><option value="">SELECT ERA</option><option v-for="e in eras" :value="e">{{ e }}</option></select>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-64">
+                            <div v-for="e in eras" :key="e" @click="selectedEra = e" class="cursor-pointer p-2 rounded-lg hover:bg-white/10" :class="{ 'bg-[#39ff14]/20 border border-[#39ff14]': selectedEra === e }">
+                                <img v-if="eraImages[e]" :src="eraImages[e]" class="w-full h-24 object-contain rounded-md bg-black/50">
+                                <div class="text-center text-sm font-bold mt-2">{{ e }}</div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set Selection</label>
@@ -335,7 +340,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_sets_v8_worker', totalSetData: {},
+                eraImages: {}, cacheKey: 'cactus_sets_v8_worker', totalSetData: {},
                 // Sorting Vars
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 // Search Vars
@@ -485,14 +490,24 @@
                 const cacheKey = 'cactus_sets_v8_worker';
                 if (!force) {
                     const c = localStorage.getItem(cacheKey);
-                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} }
+                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.eraImages = d.eraImages || {}; this.setsLoading=false; return; } } catch(e){} }
                 }
                 try {
-                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate&pageSize=250`);
+                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total,images&orderBy=-releaseDate&pageSize=250`);
                     if (!res.ok) throw new Error(`API Error`);
                     const data = await res.json();
-                    const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap;
-                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
+                    const setSizeMap = {}; 
+                    this.eraImages = {};
+                    data.data.forEach(s => { 
+                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; 
+                        if (!this.eraImages[s.series] && s.images && s.images.logo) {
+                            this.eraImages[s.series] = s.images.logo;
+                        }
+                    }); 
+                    this.allSets = data.data; 
+                    this.eras = [...new Set(data.data.map(s => s.series))]; 
+                    this.totalSetData = setSizeMap;
+                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
                 } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; }
             },
             // UPDATED: Now handles all logic (Sets and Searches) via server-side paging with fixed 60 limit
