@@ -17,59 +17,34 @@
 
     <style>
         :root { --neon-green: #39ff14; --glass-surface: rgba(15, 12, 41, 0.75); }
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: #e2e8f0;
-            min-height: 100vh;
-        }
-        
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
+        body { font-family: 'Outfit', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); background-size: 400% 400%; animation: gradientBG 15s ease infinite; color: #e2e8f0; min-height: 100vh; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         [v-cloak] { display: none; }
-        
-        .glass-panel {
-            background: var(--glass-surface); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); border-radius: 20px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        .glass-panel { background: var(--glass-surface); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); border-radius: 20px; transition: all 0.3s; }
         .glass-panel:hover { box-shadow: 0 15px 45px 0 rgba(57, 255, 20, 0.2); border-color: rgba(57, 255, 20, 0.4); transform: translateY(-4px); }
-        
         .bg-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vh; opacity: 0.05; pointer-events: none; z-index: -2; background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; filter: grayscale(1) contrast(2); }
-        
         .btn-neon { background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800; text-transform: uppercase; padding: 12px 24px; border-radius: 12px; box-shadow: 0 0 15px rgba(57, 255, 20, 0.4); transition: all 0.3s; }
         .btn-neon:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 0 30px var(--neon-green); }
         .btn-neon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        
         .glass-input { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 12px; border-radius: 12px; width: 100%; transition: 0.3s; }
         .glass-input:focus { border-color: var(--neon-green); background: rgba(0,0,0,0.9); box-shadow: 0 0 20px rgba(57, 255, 20, 0.4); outline: none; }
-        
         .nav-item { color: #a0aec0; font-weight: 600; padding: 10px 18px; border-radius: 12px; transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.1); transform: scale(1.05); }
         .nav-item.active { background: rgba(57, 255, 20, 0.15); color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.8); border: 1px solid rgba(57, 255, 20, 0.4); }
-        
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         .data-table th { text-align: left; padding: 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--neon-green); letter-spacing: 1px; }
         .data-table td { padding: 12px 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
         .data-table tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         .data-table tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
         .data-table tr:hover td { background: rgba(57, 255, 20, 0.1); }
-        
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 10px;}
         ::-webkit-scrollbar-thumb { background: rgba(57, 255, 20, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
-        
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.4s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.4s, transform 0.4s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.9); }
-        
         .scan-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .scanner-beam { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--neon-green); box-shadow: 0 0 30px var(--neon-green), 0 0 60px var(--neon-green); animation: scan 1.5s infinite linear; opacity: 0.9; }
+        .scanner-beam { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--neon-green); box-shadow: 0 0 30px var(--neon-green); animation: scan 1.5s infinite linear; opacity: 0.9; }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
@@ -78,6 +53,11 @@
 <div class="bg-watermark"></div>
 
 <div id="app" v-cloak class="min-h-screen flex flex-col relative z-10">
+
+    <div v-if="globalError" class="bg-red-600 text-white font-black text-center p-4 uppercase tracking-widest shadow-2xl relative z-50">
+        <i class="fa-solid fa-triangle-exclamation mr-2"></i> SYSTEM FAILURE: {{ globalError }}
+        <button @click="globalError = null" class="ml-4 underline text-sm hover:text-black">Dismiss</button>
+    </div>
 
     <nav class="relative mx-4 z-40 glass-panel mt-4 mb-6">
         <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
@@ -373,8 +353,9 @@
 </div>
 
 <script>
-    // Pointing directly to your newly upgraded Cloudflare Worker
-    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
+    // DIRECT API ONLY - WE ARE BYPASSING CLOUDFLARE COMPLETELY
+    const OFFICIAL_API = "https://api.pokemontcg.io/v2";
+    const API_KEY = "6480af36-4570-41bd-8f96-0e00952d1b57"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -402,10 +383,10 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_sets_v15_secure', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
-                currentRequestId: 0, displayList: [] 
+                currentRequestId: 0, displayList: [],
+                globalError: null // NEW: This will tell us exactly what is breaking
             }
         },
         watch: {
@@ -415,7 +396,19 @@
             cards: { handler() { this.refreshDisplayList(); }, deep: true },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
-        mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
+        mounted() { 
+            // NUCLEAR RESET: Clear all old, potentially corrupted memory keys immediately
+            localStorage.removeItem('cactus_sets_v8_worker');
+            localStorage.removeItem('cactus_sets_v9_official');
+            localStorage.removeItem('cactus_sets_v10_proxy');
+            localStorage.removeItem('cactus_sets_v11_failover');
+            localStorage.removeItem('cactus_sets_v12_direct');
+            localStorage.removeItem('cactus_sets_v15_secure');
+
+            this.loadLocalData(); 
+            this.loadSetsAPI(); 
+            if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); 
+        },
         computed: {
             binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
             isAllSelected() { return this.displayList.length > 0 && this.selectedIds.length === this.displayList.length; },
@@ -452,52 +445,40 @@
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 500); },
             
-            // ==========================================
-            // PROXY ENGINE: SETS
-            // ==========================================
-            async loadSetsAPI(force=false) { 
+            async loadSetsAPI() { 
                 this.setsLoading = true; 
-                if (!force) { 
-                    const c = localStorage.getItem(this.cacheKey); 
-                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } 
-                } 
+                this.globalError = null; // Clear old errors
+                
                 try { 
-                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
-                    if (!res.ok) throw new Error(`Proxy Error: ${res.status}`); 
+                    const res = await fetch(`${OFFICIAL_API}/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`, {
+                        headers: { "X-Api-Key": API_KEY }
+                    }); 
+                    
+                    if (!res.ok) throw new Error(`Pokémon API blocked the request (Status ${res.status})`); 
                     
                     const data = await res.json();
+                    
+                    if (!data || !data.data) {
+                        throw new Error("Pokémon API responded, but the data was empty or corrupted.");
+                    }
+
                     const setSizeMap = {}; 
                     data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); 
+                    
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap; 
-                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
+                    
                 } catch(e) { 
-                    console.error("Critical Sync Failed", e); 
+                    console.error("FATAL SETS ERROR:", e);
+                    this.globalError = `Could not load sets: ${e.message}`; 
                 } finally { 
                     this.setsLoading = false; 
                 } 
             },
 
-            // ==========================================
-            // PROXY ENGINE: CARDS
-            // ==========================================
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
-
-                let qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
-                
-                if (!force && this.searchCache[cacheKey]) {
-                    if (this.searchCache[cacheKey].data && this.searchCache[cacheKey].data.length > 0) {
-                        this.searchResults = this.searchCache[cacheKey].data; 
-                        this.totalSearchPagesCount = this.searchCache[cacheKey].total; 
-                        this.searchPage = page; 
-                        this.isSearching = false; 
-                        this.searchError = false;
-                        return; 
-                    }
-                }
 
                 if (searchController) searchController.abort(); 
                 searchController = new AbortController();
@@ -509,6 +490,7 @@
                 this.searchError = false;
                 this.searchPage = page; 
                 
+                let qName = this.query ? this.query.trim().toLowerCase() : '';
                 let q = [];
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`); 
@@ -518,10 +500,13 @@
                 if(this.searchSort === 'name') orderBy = 'name';
 
                 try { 
-                    const fetchUrl = `${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
-                    const res = await fetch(fetchUrl, { signal: searchController.signal }); 
+                    const url = `${OFFICIAL_API}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
+                    const res = await fetch(url, { 
+                        signal: searchController.signal,
+                        headers: { "X-Api-Key": API_KEY } 
+                    }); 
                     
-                    if (!res.ok) throw new Error(`Proxy Err: ${res.status}`); 
+                    if (!res.ok) throw new Error(`API returned Status ${res.status}`); 
                     let payload = await res.json();
                     
                     if (requestId !== this.currentRequestId) return;
@@ -534,19 +519,14 @@
                         results.sort((a, b) => this.getCardPrice(a) - this.getCardPrice(b));
                     }
                     
-                    let totalPagesCalc = Math.ceil((payload.totalCount || 0) / limit);
-
-                    if (results.length > 0) {
-                        this.searchCache[cacheKey] = { data: results, total: totalPagesCalc }; 
-                    }
-
                     this.searchResults = results; 
-                    this.totalSearchPagesCount = totalPagesCalc; 
+                    this.totalSearchPagesCount = Math.ceil((payload.totalCount || 0) / limit) || 1; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
-                        console.error("Critical Proxy Call Failed: ", e);
+                        console.error("SEARCH ERROR:", e);
                         this.searchResults = []; 
                         this.searchError = true;
+                        this.globalError = `Card Search Failed: ${e.message}`;
                     }
                 } finally { 
                     if (requestId === this.currentRequestId) {
