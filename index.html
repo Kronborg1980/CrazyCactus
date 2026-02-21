@@ -317,7 +317,10 @@
     </Transition>
 </div>
 <script>
+    // === MAKE SURE THIS MATCHES YOUR ACTUAL DEPLOYED CLOUDFLARE WORKER URL ===
     const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev";
+    
+    // (Note: Your Firebase config is visible in your client-side code. While normal for Firebase, ensure your Firestore Security Rules are set up properly!)
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -326,14 +329,18 @@
       messagingSenderId: "1075800361912",
       appId: "1:1075800361912:web:e7285e3e74bce49b03dd4d"
     };
+    
     let auth, db, provider;
     try {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
         provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Guest Mode"); }
-    const { createApp } = Vue; let searchController = null;
+    } catch(e) { console.log("Guest Mode active"); }
+    
+    const { createApp } = Vue; 
+    let searchController = null;
+    
     createApp({
         data() {
             return {
@@ -341,87 +348,91 @@
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 eraImages: {}, cacheKey: 'cactus_sets_v8_worker', totalSetData: {},
-                // Sorting Vars
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
-                // Search Vars
-                searchPage: 1,
-                addedIds: [], selectedIds: [],
-                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
-                currentRequestId: 0,
-                displayList: []
+                searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                currentRequestId: 0, displayList: []
             }
         },
         watch: {
             selectedEra(n, o) {
                 if(n!==o) {
-                    this.selectedSet="";
-                    this.searchResults=[];
-                    this.searchPage=1;
-                    this.totalSearchPagesCount = 1;
-                    this.query="";
-                    this.searchError = false;
+                    this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false;
                 }
             },
             selectedSet(n, o) {
                 if(n!==o) {
-                    this.searchResults=[];
-                    this.searchPage=1;
-                    this.totalSearchPagesCount = 1;
-                    this.query="";
-                    this.searchError = false;
-                   
-                    if(this.selectedSet) {
-                        this.fetchCards(1);
-                    }
+                    this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false;
+                    if(this.selectedSet) this.fetchCards(1);
                 }
             },
             searchSort() { this.fetchCards(1, true); },
-           
-            cards: {
-                handler() { this.refreshDisplayList(); },
-                deep: true
-            },
+            cards: { handler() { this.refreshDisplayList(); }, deep: true },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
-        mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
+        mounted() { 
+            this.loadLocalData(); 
+            this.loadSetsAPI(); 
+            if(auth) auth.onAuthStateChanged(u => { 
+                if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } 
+            }); 
+        },
         computed: {
-            binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
+            binders() { return this.user ? this.cloudBinders : this.localBinders; }, 
+            cards() { return this.user ? this.cloudCards : this.localCards; },
             isAllSelected() { return this.displayList.length > 0 && this.selectedIds.length === this.displayList.length; },
-           
             totalPages() { return Math.ceil(this.displayList.length / this.itemsPerPage); },
             paginatedList() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
                 return this.displayList.slice(start, start + this.itemsPerPage);
             },
-            cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
-           
-            // UPDATED: Now simply returns the results, since server handles paging/limits
-            paginatedSearchResults() {
-                return this.searchResults;
+            cardsBySet() { 
+                const grouped = {}; 
+                this.cards.forEach(c => { 
+                    if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; 
+                    grouped[c.set].cards.push(c); 
+                    grouped[c.set].uniqueCardIds.add(c.id); 
+                    grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; 
+                }); 
+                for (const setName in grouped) { 
+                    grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; 
+                    grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); 
+                    const uniqueCards = []; 
+                    const seenIds = new Set(); 
+                    grouped[setName].cards.forEach(card => { 
+                        if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } 
+                    }); 
+                    grouped[setName].cards = uniqueCards; 
+                } 
+                return grouped; 
             },
+            paginatedSearchResults() { return this.searchResults; },
             totalSearchPages() { return this.totalSearchPagesCount; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             totalValue() { return this.cards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
-            switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, logout() { if(auth) auth.signOut(); },
+            switchView(view) { this.currentView = view; this.currentBinder = null; window.scrollTo(0,0); }, 
+            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); }, 
+            logout() { if(auth) auth.signOut(); },
             getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); },
             toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayList.map(c => c.uid); },
-            deleteSelected() { if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
-           
+            deleteSelected() { 
+                if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return; 
+                this.selectedIds.forEach(uid => { 
+                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); 
+                    else this.localCards = this.localCards.filter(c => c.uid !== uid); 
+                }); 
+                this.selectedIds = []; this.saveData(); 
+            },
             refreshDisplayList() {
                 let list = this.cards;
-                if (this.currentBinder) {
-                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                }
-               
+                if (this.currentBinder) { list = this.cards.filter(c => c.binderId === this.currentBinder.id); }
                 let newList = [...list];
                 if (this.displayList.length === 0) {
                      this.performSort(newList);
                 } else {
                      const indexMap = new Map();
                      this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
-                    
                      newList.sort((a, b) => {
                          const idxA = indexMap.has(a.uid) ? indexMap.get(a.uid) : 999999;
                          const idxB = indexMap.has(b.uid) ? indexMap.get(b.uid) : 999999;
@@ -444,7 +455,6 @@
                     else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); }
                     else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); }
                     else { valA = a.id; valB = b.id; }
-                   
                     if(valA < valB) return this.sortDesc ? 1 : -1;
                     if(valA > valB) return this.sortDesc ? -1 : 1;
                     return 0;
@@ -454,37 +464,87 @@
                 if(this.currentView === 'calculator') {
                      if(this.currentPage < this.totalPages) this.currentPage++;
                 } else {
-                     if(this.searchPage < this.totalSearchPagesCount) {
-                        // UPDATED: Always fetch new data
-                        this.fetchCards(this.searchPage + 1);
-                     }
+                     if(this.searchPage < this.totalSearchPagesCount) { this.fetchCards(this.searchPage + 1); }
                 }
             },
             prevPage() {
                 if(this.currentView === 'calculator') {
                      if(this.currentPage > 1) this.currentPage--;
                 } else {
-                     if(this.searchPage > 1) {
-                        // UPDATED: Always fetch new data
-                        this.fetchCards(this.searchPage - 1);
-                     }
+                     if(this.searchPage > 1) { this.fetchCards(this.searchPage - 1); }
                 }
             },
-            loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
-            initCloudData() { db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); },
-            createBinder() { const name = prompt("Name your new binder:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
-            renameBinder(b) { const newName = prompt("Rename binder:", b.name); if (!newName || newName === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } },
-            deleteBinder(id) { if(!confirm("Delete this binder? Cards remain in master.")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
-            addCard(c) { const market = this.getCardPrice(c); const cardData = { id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', image: c.images.small, number: c.number, market: market, rawCost: market, fee: 15, targetGrade: 10, binderId: this.targetBinder === 'master' ? null : this.targetBinder }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } this.addedIds.push(c.id); setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); },
-            deleteCard(uid) { if(!confirm("Remove card?")) return; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } this.detailCard = null; },
-            updateCardBinder(card) { const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); else this.saveData(); },
-            getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
-            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
+            loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, 
+            saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
+            initCloudData() { 
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); 
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); 
+            },
+            createBinder() { 
+                const name = prompt("Name your new binder:"); 
+                if(!name) return; 
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); 
+                else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } 
+            },
+            renameBinder(b) { 
+                const newName = prompt("Rename binder:", b.name); 
+                if (!newName || newName === b.name) return; 
+                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName }); 
+                else { const local = this.localBinders.find(x => x.id === b.id); if (local) { local.name = newName; this.saveData(); } } 
+            },
+            deleteBinder(id) { 
+                if(!confirm("Delete this binder? Cards remain in master.")) return; 
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); 
+                else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } 
+            },
+            addCard(c) { 
+                const market = this.getCardPrice(c); 
+                const cardData = { 
+                    id: c.id, 
+                    name: c.name, 
+                    set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
+                    image: c.images.small, 
+                    number: c.number, 
+                    market: market, 
+                    rawCost: market, 
+                    fee: 15, 
+                    targetGrade: 10, 
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder 
+                }; 
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData); 
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); } 
+                this.addedIds.push(c.id); 
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500); 
+            },
+            deleteCard(uid) { 
+                if(!confirm("Remove card?")) return; 
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); 
+                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); } 
+                this.detailCard = null; 
+            },
+            updateCardBinder(card) { 
+                const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId }; 
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate); 
+                else this.saveData(); 
+            },
+            getEstValue(c) { const raw = c.market || 0; if(c.targetGrade == 10) return raw * 3.2; if(c.targetGrade == 9) return raw * 1.1; return raw * 0.85; }, 
+            getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
+            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, 
+            getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.searchError = false; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
-            openCardDetail(c) { this.detailCard = c; }, formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
-            debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); },
-           
+            openCardDetail(c) { this.detailCard = c; }, 
+            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            getCardPrice(c) { 
+                const prices = c.tcgplayer?.prices; 
+                if (!prices) return 0; 
+                const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); 
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); 
+                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; 
+            },
+            debouncedSearch() { 
+                if(this.searchTimeout) clearTimeout(this.searchTimeout); 
+                this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); 
+            },
             async loadSetsAPI(force=false) {
                 this.setsLoading = true;
                 const cacheKey = 'cactus_sets_v8_worker';
@@ -508,15 +568,13 @@
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap;
                     localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
-                } catch(e) { console.error("Sync Failed"); } finally { this.setsLoading = false; }
+                } catch(e) { console.error("Sync Failed", e); } finally { this.setsLoading = false; }
             },
-            // UPDATED: Now handles all logic (Sets and Searches) via server-side paging with fixed 60 limit
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `search_${this.selectedSet}_${qName}_${this.searchSort}`;
                
-                // Check Cache (Only if it has data)
                 if (!force && this.searchCache[cacheKey]) {
                     if (this.searchCache[cacheKey].data && this.searchCache[cacheKey].data.length > 0) {
                         this.searchResults = this.searchCache[cacheKey].data;
@@ -540,12 +598,10 @@
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`);
                
-                // IMPORTANT FIX: Always limit to 60 to prevent timeouts
                 const limit = 250;
-               
-                // Sorting strategy
                 let orderBy = 'number';
                 if(this.searchSort === 'name') orderBy = 'name';
+                
                 try {
                     const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, {
                         signal: searchController.signal,
@@ -557,14 +613,13 @@
                    
                     if (requestId !== this.currentRequestId) return;
                     let results = data.data || [];
-                    // Client-side sort for price (since API doesn't support complex price sort easily)
+                    
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
                     } else if (this.searchSort === 'price-asc') {
                         results.sort((a, b) => this.getCardPrice(a) - this.getCardPrice(b));
                     }
                    
-                    // Calc total pages based on API's totalCount
                     let totalPagesCalc = Math.ceil((data.totalCount || 0) / limit);
                     if (results.length > 0) {
                         this.searchCache[cacheKey] = {
@@ -574,9 +629,6 @@
                     }
                     this.searchResults = results;
                     this.totalSearchPagesCount = totalPagesCalc;
-                    if (page * limit < data.totalCount) {
-                        console.warn('Set has more than 250 cards; implement multi-page fetch if needed.');
-                    }
                 } catch(e) {
                     if (e.name !== 'AbortError') {
                         console.error(e);
