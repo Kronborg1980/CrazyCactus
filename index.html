@@ -7,6 +7,8 @@
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { corePlugins: { preflight: true } }</script>
+    
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -234,15 +236,14 @@
                     <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90 hover:scale-125"><i class="fa-solid fa-xmark text-3xl"></i></button>
                 </div>
                
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0 overflow-y-auto max-h-[35vh] md:max-h-none">
+                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era Selection</label>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-64">
-                            <div v-for="e in eras" :key="e" @click="selectedEra = e" class="cursor-pointer p-2 rounded-lg hover:bg-white/10" :class="{ 'bg-[#39ff14]/20 border border-[#39ff14]': selectedEra === e }">
-                                <img v-if="eraImages[e]" :src="eraImages[e]" class="w-full h-24 object-contain rounded-md bg-black/50">
-                                <div class="text-center text-sm font-bold mt-2">{{ e }}</div>
-                            </div>
-                        </div>
+                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="setsLoading">
+                            <option value="">SELECT ERA</option>
+                            <option v-for="e in eras" :key="e" :value="e">{{ e }}</option>
+                        </select>
+                        <p v-if="setsLoading" class="text-xs text-[#39ff14] mt-2 animate-pulse font-bold">Loading Database...</p>
                     </div>
                     <div>
                         <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set Selection</label>
@@ -266,6 +267,7 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="flex-1 overflow-y-auto p-8 bg-black/40 custom-scrollbar pb-24 min-h-0">
                       <div v-if="searchError" class="flex flex-col items-center justify-center h-full opacity-80">
                           <i class="fa-solid fa-triangle-exclamation text-8xl mb-6 text-red-500 animate-pulse"></i>
@@ -317,10 +319,8 @@
     </Transition>
 </div>
 <script>
-    // === MAKE SURE THIS MATCHES YOUR ACTUAL DEPLOYED CLOUDFLARE WORKER URL ===
     const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev";
     
-    // (Note: Your Firebase config is visible in your client-side code. While normal for Firebase, ensure your Firestore Security Rules are set up properly!)
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -545,30 +545,43 @@
                 if(this.searchTimeout) clearTimeout(this.searchTimeout); 
                 this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); 
             },
-            async loadSetsAPI(force=false) {
+            async loadSetsAPI(force=false, retries=2) {
                 this.setsLoading = true;
                 const cacheKey = 'cactus_sets_v8_worker';
                 if (!force) {
                     const c = localStorage.getItem(cacheKey);
                     if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.eraImages = d.eraImages || {}; this.setsLoading=false; return; } } catch(e){} }
                 }
+                
                 try {
                     const res = await fetch(`${WORKER_URL}/?endpoint=sets&orderBy=-releaseDate&pageSize=250`);
-                    if (!res.ok) throw new Error(`API Error`);
+                    if (!res.ok) throw new Error(`API Error ${res.status}`);
+                    
                     const data = await res.json();
                     const setSizeMap = {}; 
                     this.eraImages = {};
+                    
                     data.data.forEach(s => { 
                         setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; 
                         if (!this.eraImages[s.series] && s.images && s.images.logo) {
                             this.eraImages[s.series] = s.images.logo;
                         }
                     }); 
+                    
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap;
                     localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
-                } catch(e) { console.error("Sync Failed", e); } finally { this.setsLoading = false; }
+                } catch(e) { 
+                    console.error("Sync Failed", e);
+                    if (retries > 0) {
+                        console.log(`Retrying set fetch... (${retries} retries left)`);
+                        setTimeout(() => this.loadSetsAPI(force, retries - 1), 2000);
+                        return; // Exit here so we don't clear loading state until retries finish
+                    }
+                } finally { 
+                    this.setsLoading = false; 
+                }
             },
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
