@@ -353,9 +353,8 @@
 </div>
 
 <script>
-    // DIRECT API ONLY - WE ARE BYPASSING CLOUDFLARE COMPLETELY
-    const OFFICIAL_API = "https://api.pokemontcg.io/v2";
-    const API_KEY = "6480af36-4570-41bd-8f96-0e00952d1b57"; 
+    // 100% WIRED TO YOUR SECURE CLOUDFLARE PROXY
+    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -386,7 +385,7 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: [],
-                globalError: null // NEW: This will tell us exactly what is breaking
+                globalError: null 
             }
         },
         watch: {
@@ -397,14 +396,8 @@
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
         mounted() { 
-            // NUCLEAR RESET: Clear all old, potentially corrupted memory keys immediately
-            localStorage.removeItem('cactus_sets_v8_worker');
-            localStorage.removeItem('cactus_sets_v9_official');
-            localStorage.removeItem('cactus_sets_v10_proxy');
-            localStorage.removeItem('cactus_sets_v11_failover');
-            localStorage.removeItem('cactus_sets_v12_direct');
-            localStorage.removeItem('cactus_sets_v15_secure');
-
+            // Clear cache to ensure fresh proxy load
+            localStorage.removeItem('cactus_sets_v18_proxy');
             this.loadLocalData(); 
             this.loadSetsAPI(); 
             if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); 
@@ -447,19 +440,18 @@
             
             async loadSetsAPI() { 
                 this.setsLoading = true; 
-                this.globalError = null; // Clear old errors
+                this.globalError = null; 
                 
                 try { 
-                    const res = await fetch(`${OFFICIAL_API}/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`, {
-                        headers: { "X-Api-Key": API_KEY }
-                    }); 
+                    // ROUTED THROUGH PROXY TO AVOID CORS ERRORS
+                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
                     
-                    if (!res.ok) throw new Error(`Pokémon API blocked the request (Status ${res.status})`); 
+                    if (!res.ok) throw new Error(`Proxy Blocked - Status ${res.status}`); 
                     
                     const data = await res.json();
                     
                     if (!data || !data.data) {
-                        throw new Error("Pokémon API responded, but the data was empty or corrupted.");
+                        throw new Error("Proxy connected, but returned invalid data.");
                     }
 
                     const setSizeMap = {}; 
@@ -469,6 +461,8 @@
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap; 
                     
+                    localStorage.setItem('cactus_sets_v18_proxy', JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
+
                 } catch(e) { 
                     console.error("FATAL SETS ERROR:", e);
                     this.globalError = `Could not load sets: ${e.message}`; 
@@ -500,13 +494,12 @@
                 if(this.searchSort === 'name') orderBy = 'name';
 
                 try { 
-                    const url = `${OFFICIAL_API}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
-                    const res = await fetch(url, { 
-                        signal: searchController.signal,
-                        headers: { "X-Api-Key": API_KEY } 
-                    }); 
+                    // ROUTED THROUGH PROXY TO AVOID CORS ERRORS
+                    const url = `${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
                     
-                    if (!res.ok) throw new Error(`API returned Status ${res.status}`); 
+                    const res = await fetch(url, { signal: searchController.signal }); 
+                    
+                    if (!res.ok) throw new Error(`Proxy Blocked - Status ${res.status}`); 
                     let payload = await res.json();
                     
                     if (requestId !== this.currentRequestId) return;
