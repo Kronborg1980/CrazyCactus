@@ -354,9 +354,10 @@
     </Transition>
 </div>
 <script>
-    // OUTSIDE THE BOX: Using AllOrigins to completely bypass the Cloudflare CORS trap.
-    const PROXY_URL = "https://api.allorigins.win/raw?url=";
+    // OUTSIDE THE BOX: Switching to CorsProxy.io to bypass Cloudflare block entirely AND pass API Key.
+    const PROXY_URL = "https://corsproxy.io/?";
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
+    const POKEMON_API_KEY = "9a645813-18af-4138-82d6-1820558a93b3";
     
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -384,7 +385,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                eraImages: {}, cacheKey: 'cactus_sets_allorigins_v1', totalSetData: {},
+                eraImages: {}, cacheKey: 'cactus_sets_corsproxy_v1', totalSetData: {},
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null
@@ -591,8 +592,11 @@
                 }
                 
                 try {
+                    // SECURE PROXY: Using CorsProxy.io and sending your API key!
                     const targetUrl = `${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250`;
-                    const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`);
+                    const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`, {
+                        headers: { "X-Api-Key": POKEMON_API_KEY }
+                    });
                     
                     if (!res.ok) throw new Error(`API Error ${res.status}`);
                     
@@ -657,9 +661,11 @@
                 if(this.searchSort === 'name') orderBy = 'name';
                 
                 try {
+                    // SECURE PROXY: Sending the request WITH the API Key to ensure max speed
                     const targetUrl = `${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
                     const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`, {
-                        signal: searchController.signal
+                        signal: searchController.signal,
+                        headers: { "X-Api-Key": POKEMON_API_KEY }
                     });
                    
                     if (!res.ok) throw new Error(`Err`);
