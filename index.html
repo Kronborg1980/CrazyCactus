@@ -373,7 +373,7 @@
 </div>
 
 <script>
-    // CHANGED: We are back to using your Cloudflare Worker Proxy!
+    // Pointing directly to your newly upgraded Cloudflare Worker
     const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
 
     const firebaseConfig = {
@@ -402,65 +402,27 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'cactus_sets_v10_proxy', totalSetData: {}, 
-                // Sorting Vars
+                cacheKey: 'cactus_sets_v15_secure', totalSetData: {}, 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60, 
-                // Search Vars
-                searchPage: 1, 
-                addedIds: [], selectedIds: [], 
-                searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
-                currentRequestId: 0, 
-                displayList: [] 
+                searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                currentRequestId: 0, displayList: [] 
             }
         },
         watch: {
-            selectedEra(n, o) { 
-                if(n!==o) { 
-                    this.selectedSet=""; 
-                    this.searchResults=[]; 
-                    this.searchPage=1; 
-                    this.totalSearchPagesCount = 1;
-                    this.query=""; 
-                    this.searchError = false;
-                } 
-            },
-            selectedSet(n, o) { 
-                if(n!==o) { 
-                    this.searchResults=[]; 
-                    this.searchPage=1; 
-                    this.totalSearchPagesCount = 1;
-                    this.query=""; 
-                    this.searchError = false;
-                    
-                    if(this.selectedSet) {
-                        this.fetchCards(1); 
-                    }
-                } 
-            },
+            selectedEra(n, o) { if(n!==o) { this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false; } },
+            selectedSet(n, o) { if(n!==o) { this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false; if(this.selectedSet) this.fetchCards(1); } },
             searchSort() { this.fetchCards(1, true); },
-            
-            cards: {
-                handler() { this.refreshDisplayList(); },
-                deep: true 
-            },
+            cards: { handler() { this.refreshDisplayList(); }, deep: true },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
         mounted() { this.loadLocalData(); this.loadSetsAPI(); if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); },
         computed: {
             binders() { return this.user ? this.cloudBinders : this.localBinders; }, cards() { return this.user ? this.cloudCards : this.localCards; },
             isAllSelected() { return this.displayList.length > 0 && this.selectedIds.length === this.displayList.length; },
-            
             totalPages() { return Math.ceil(this.displayList.length / this.itemsPerPage) || 1; }, 
-            paginatedList() { 
-                const start = (this.currentPage - 1) * this.itemsPerPage; 
-                return this.displayList.slice(start, start + this.itemsPerPage); 
-            },
-
+            paginatedList() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.displayList.slice(start, start + this.itemsPerPage); },
             cardsBySet() { const grouped = {}; this.cards.forEach(c => { if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 }; grouped[c.set].cards.push(c); grouped[c.set].uniqueCardIds.add(c.id); grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1; }); for (const setName in grouped) { grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size; grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true})); const uniqueCards = []; const seenIds = new Set(); grouped[setName].cards.forEach(card => { if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); } }); grouped[setName].cards = uniqueCards; } return grouped; },
-            
-            paginatedSearchResults() { 
-                return this.searchResults; 
-            }, 
+            paginatedSearchResults() { return this.searchResults; }, 
             totalSearchPages() { return this.totalSearchPagesCount || 1; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); }, 
             totalValue() { return this.cards.reduce((sum, c) => sum + (c.market || 0), 0); },
@@ -470,72 +432,11 @@
             getSetTotal(setName) { const set = this.totalSetData[setName]; return (set?.total || set?.printedTotal || '?'); }, 
             toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.displayList.map(c => c.uid); },
             deleteSelected() { if(!confirm(`WARNING: Erase ${this.selectedIds.length} assets permanently?`)) return; this.selectedIds.forEach(uid => { if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); }); this.selectedIds = []; this.saveData(); },
-            
-            refreshDisplayList() {
-                let list = this.cards;
-                if (this.currentBinder) {
-                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                }
-                
-                let newList = [...list];
-
-                if (this.displayList.length === 0) {
-                     this.performSort(newList);
-                } else {
-                     const indexMap = new Map();
-                     this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
-                     
-                     newList.sort((a, b) => {
-                         const idxA = indexMap.has(a.uid) ? indexMap.get(a.uid) : 999999;
-                         const idxB = indexMap.has(b.uid) ? indexMap.get(b.uid) : 999999;
-                         return idxA - idxB;
-                     });
-                }
-
-                this.displayList = newList;
-            },
-
-            manualSort(key) {
-                if(this.sortBy === key) this.sortDesc = !this.sortDesc;
-                else { this.sortBy = key; this.sortDesc = true; }
-                this.currentPage = 1;
-                this.performSort(this.displayList);
-            },
-
-            performSort(list) {
-                list.sort((a, b) => { 
-                    let valA, valB; 
-                    if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
-                    else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
-                    else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
-                    else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
-                    else { valA = a.id; valB = b.id; } 
-                    
-                    if(valA < valB) return this.sortDesc ? 1 : -1; 
-                    if(valA > valB) return this.sortDesc ? -1 : 1; 
-                    return 0; 
-                });
-            },
-
-            nextPage() { 
-                if(this.currentView === 'calculator') {
-                     if(this.currentPage < this.totalPages) this.currentPage++;
-                } else {
-                     if(this.searchPage < this.totalSearchPagesCount) {
-                        this.fetchCards(this.searchPage + 1);
-                     }
-                }
-            },
-            prevPage() { 
-                if(this.currentView === 'calculator') {
-                     if(this.currentPage > 1) this.currentPage--;
-                } else {
-                     if(this.searchPage > 1) {
-                        this.fetchCards(this.searchPage - 1);
-                     }
-                }
-            },
-
+            refreshDisplayList() { let list = this.cards; if (this.currentBinder) { list = this.cards.filter(c => c.binderId === this.currentBinder.id); } let newList = [...list]; if (this.displayList.length === 0) { this.performSort(newList); } else { const indexMap = new Map(); this.displayList.forEach((c, i) => indexMap.set(c.uid, i)); newList.sort((a, b) => { const idxA = indexMap.has(a.uid) ? indexMap.get(a.uid) : 999999; const idxB = indexMap.has(b.uid) ? indexMap.get(b.uid) : 999999; return idxA - idxB; }); } this.displayList = newList; },
+            manualSort(key) { if(this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; this.performSort(this.displayList); },
+            performSort(list) { list.sort((a, b) => { let valA, valB; if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } else { valA = a.id; valB = b.id; } if(valA < valB) return this.sortDesc ? 1 : -1; if(valA > valB) return this.sortDesc ? -1 : 1; return 0; }); },
+            nextPage() { if(this.currentView === 'calculator') { if(this.currentPage < this.totalPages) this.currentPage++; } else { if(this.searchPage < this.totalSearchPagesCount) { this.fetchCards(this.searchPage + 1); } } },
+            prevPage() { if(this.currentView === 'calculator') { if(this.currentPage > 1) this.currentPage--; } else { if(this.searchPage > 1) { this.fetchCards(this.searchPage - 1); } } },
             loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
             initCloudData() { db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); },
             createBinder() { const name = prompt("Designate new vault name:"); if(!name) return; if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
@@ -551,6 +452,9 @@
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 500); },
             
+            // ==========================================
+            // PROXY ENGINE: SETS
+            // ==========================================
             async loadSetsAPI(force=false) { 
                 this.setsLoading = true; 
                 if (!force) { 
@@ -558,15 +462,26 @@
                     if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.setsLoading=false; return; } } catch(e){} } 
                 } 
                 try { 
-                    // CHANGED: Fixed the Fetch URL to correctly hit the worker endpoint. No Date timestamps.
                     const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
-                    if (!res.ok) throw new Error(`API Error`); 
-                    const data = await res.json(); 
-                    const setSizeMap = {}; data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))]; this.totalSetData = setSizeMap; 
+                    if (!res.ok) throw new Error(`Proxy Error: ${res.status}`); 
+                    
+                    const data = await res.json();
+                    const setSizeMap = {}; 
+                    data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); 
+                    this.allSets = data.data; 
+                    this.eras = [...new Set(data.data.map(s => s.series))]; 
+                    this.totalSetData = setSizeMap; 
                     localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); 
-                } catch(e) { console.error("Sync Failed", e); } finally { this.setsLoading = false; } 
+                } catch(e) { 
+                    console.error("Critical Sync Failed", e); 
+                } finally { 
+                    this.setsLoading = false; 
+                } 
             },
 
+            // ==========================================
+            // PROXY ENGINE: CARDS
+            // ==========================================
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
 
@@ -599,20 +514,15 @@
                 if(qName) q.push(`name:"${qName}*"`); 
                 
                 const limit = 60; 
-                
                 let orderBy = 'number'; 
                 if(this.searchSort === 'name') orderBy = 'name';
 
                 try { 
-                    // CHANGED: Re-wired to Worker Proxy. Removed `_t=${Date.now()}` and removed `cache: no-store` to allow caching to actually work.
                     const fetchUrl = `${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
+                    const res = await fetch(fetchUrl, { signal: searchController.signal }); 
                     
-                    const res = await fetch(fetchUrl, { 
-                        signal: searchController.signal
-                    }); 
-                    
-                    if (!res.ok) throw new Error(`Network Err`); 
-                    const payload = await res.json(); 
+                    if (!res.ok) throw new Error(`Proxy Err: ${res.status}`); 
+                    let payload = await res.json();
                     
                     if (requestId !== this.currentRequestId) return;
 
@@ -627,17 +537,14 @@
                     let totalPagesCalc = Math.ceil((payload.totalCount || 0) / limit);
 
                     if (results.length > 0) {
-                        this.searchCache[cacheKey] = { 
-                            data: results, 
-                            total: totalPagesCalc
-                        }; 
+                        this.searchCache[cacheKey] = { data: results, total: totalPagesCalc }; 
                     }
 
                     this.searchResults = results; 
                     this.totalSearchPagesCount = totalPagesCalc; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
-                        console.error("API Call Failed: ", e);
+                        console.error("Critical Proxy Call Failed: ", e);
                         this.searchResults = []; 
                         this.searchError = true;
                     }
@@ -650,6 +557,5 @@
         }
     }).mount('#app');
 </script>
-
 </body>
 </html>
