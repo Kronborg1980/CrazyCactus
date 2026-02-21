@@ -285,15 +285,43 @@
                           <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]"></i>
                           <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Awaiting Input Signal...</p>
                       </div>
-                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-8 pb-10">
-                          <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-black/40 p-4 rounded-2xl border-2 border-white/10 hover:border-[#39ff14] cursor-pointer group relative transition duration-300 hover:shadow-[0_0_40px_rgba(57,255,20,0.3)] hover:-translate-y-2">
-                              <img :src="card.images.small" loading="lazy" class="w-full rounded-xl mb-4 shadow-md group-hover:scale-105 transition duration-300">
-                              <div class="text-xs font-black text-white truncate uppercase tracking-wider">{{ card.name }}</div>
-                              <div class="text-sm font-bold text-[#39ff14] mt-2 drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
-                              <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#39ff14]/90 flex items-center justify-center rounded-2xl font-black text-black text-xl uppercase tracking-[0.2em] animate-pulse backdrop-blur-md z-20">ACQUIRED!</div>
+                      
+                      <div v-else class="space-y-2 pb-10">
+                          <div v-for="card in paginatedSearchResults" :key="card.id" class="bg-black/40 rounded-xl border transition-all duration-300 overflow-hidden" :class="selectedCardToAdd === card.id ? 'border-[#39ff14] shadow-[0_0_20px_rgba(57,255,20,0.15)]' : 'border-white/10 hover:border-white/30'">
+                              
+                              <div @click="selectedCardToAdd = selectedCardToAdd === card.id ? null : card.id" class="p-4 flex justify-between items-center cursor-pointer group">
+                                  <div class="flex items-center gap-4">
+                                      <span class="text-xs font-black text-gray-500 w-8 md:w-12 group-hover:text-white transition">#{{ card.number }}</span>
+                                      <span class="text-sm md:text-base font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition">{{ card.name }}</span>
+                                  </div>
+                                  <div class="flex items-center gap-4 md:gap-8">
+                                      <span class="text-sm font-bold text-[#39ff14] drop-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</span>
+                                      <i class="fa-solid fa-chevron-down text-gray-600 transition-transform duration-300" :class="{'rotate-180 text-[#39ff14]': selectedCardToAdd === card.id}"></i>
+                                  </div>
+                              </div>
+                              
+                              <div v-if="selectedCardToAdd === card.id" class="p-6 bg-black/60 border-t border-[#39ff14]/20 flex flex-col md:flex-row gap-8 items-center md:items-start">
+                                  <div class="relative group w-40 shrink-0">
+                                      <div class="absolute inset-0 bg-[#39ff14] blur-xl opacity-20 group-hover:opacity-40 transition duration-300"></div>
+                                      <img :src="card.images.small" class="w-full relative z-10 rounded-xl shadow-2xl border border-white/10">
+                                  </div>
+                                  <div class="flex-1 text-center md:text-left flex flex-col justify-center h-full pt-4">
+                                      <h4 class="text-2xl font-black text-white uppercase tracking-widest text-glow mb-1">{{ card.name }}</h4>
+                                      <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6"><i class="fa-solid fa-certificate text-[#ff9f43] mr-2"></i>{{ card.set.name }}</p>
+                                      <div class="flex flex-col md:flex-row items-center gap-4">
+                                          <button @click="addCard(card)" class="btn-neon w-full md:w-auto flex items-center justify-center gap-3">
+                                              <i class="fa-solid fa-plus"></i> ADD TO BINDER
+                                          </button>
+                                          <span v-if="addedIds.includes(card.id)" class="text-[#39ff14] font-black uppercase tracking-[0.2em] animate-pulse flex items-center gap-2">
+                                              <i class="fa-solid fa-check"></i> Acquired
+                                          </span>
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
                       </div>
                 </div>
+                
                 <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
                     <button @click="prevPage" :disabled="searchPage === 1" class="bg-black/50 border-2 border-white/20 text-xs px-4 md:px-8 py-3 text-white rounded-xl hover:border-[#39ff14] hover:bg-[#39ff14] hover:text-black transition uppercase tracking-widest font-bold disabled:opacity-30">PREV</button>
                     <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-xs md:text-sm px-4 md:px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center shadow-[0_0_15px_rgba(57,255,20,0.2)]">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
@@ -326,9 +354,9 @@
     </Transition>
 </div>
 <script>
-    // OUTSIDE THE BOX: We hit the API directly and bypass the Cloudflare Worker entirely.
+    // OUTSIDE THE BOX: Using AllOrigins to completely bypass the Cloudflare CORS trap.
+    const PROXY_URL = "https://api.allorigins.win/raw?url=";
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
-    const POKEMON_API_KEY = "9a645813-18af-4138-82d6-1820558a93b3";
     
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -356,21 +384,21 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                eraImages: {}, cacheKey: 'cactus_sets_direct_v1', totalSetData: {},
+                eraImages: {}, cacheKey: 'cactus_sets_allorigins_v1', totalSetData: {},
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
-                currentRequestId: 0, displayList: []
+                currentRequestId: 0, displayList: [], selectedCardToAdd: null
             }
         },
         watch: {
             selectedEra(n, o) {
                 if(n!==o) {
-                    this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false;
+                    this.selectedSet=""; this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false; this.selectedCardToAdd = null;
                 }
             },
             selectedSet(n, o) {
                 if(n!==o) {
-                    this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false;
+                    this.searchResults=[]; this.searchPage=1; this.totalSearchPagesCount = 1; this.query=""; this.searchError = false; this.selectedCardToAdd = null;
                     if(this.selectedSet) this.fetchCards(1);
                 }
             },
@@ -540,7 +568,7 @@
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; }, 
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.searchError = false; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
+            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; this.searchError = false; this.selectedCardToAdd = null; this.targetBinder = this.currentView === 'calculator' && this.currentBinder ? this.currentBinder.id : 'master'; },
             openCardDetail(c) { this.detailCard = c; }, 
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { 
@@ -554,6 +582,7 @@
                 if(this.searchTimeout) clearTimeout(this.searchTimeout); 
                 this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); 
             },
+            
             async loadSetsAPI(force=false, retries=2) {
                 this.setsLoading = true;
                 if (!force) {
@@ -562,10 +591,9 @@
                 }
                 
                 try {
-                    // OUTSIDE THE BOX: Hitting the Pokemon TCG API Directly
-                    const res = await fetch(`${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250`, {
-                        headers: { "X-Api-Key": POKEMON_API_KEY }
-                    });
+                    const targetUrl = `${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250`;
+                    const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`);
+                    
                     if (!res.ok) throw new Error(`API Error ${res.status}`);
                     
                     const data = await res.json();
@@ -586,7 +614,6 @@
                 } catch(e) { 
                     console.error("Sync Failed", e);
                     if (retries > 0) {
-                        console.log(`Retrying set fetch... (${retries} retries left)`);
                         setTimeout(() => this.loadSetsAPI(force, retries - 1), 2000);
                         return;
                     }
@@ -594,6 +621,7 @@
                     this.setsLoading = false; 
                 }
             },
+            
             async fetchCards(page=1, force=false) {
                 if(!this.selectedSet && !this.query) return;
                 let qName = this.query ? this.query.trim().toLowerCase() : '';
@@ -606,6 +634,7 @@
                         this.searchPage = page;
                         this.isSearching = false;
                         this.searchError = false;
+                        this.selectedCardToAdd = null;
                         return;
                     }
                 }
@@ -617,20 +646,20 @@
                 this.isSearching = true;
                 this.searchError = false;
                 this.searchPage = page;
+                this.selectedCardToAdd = null;
                
                 let q = [];
                 if(this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if(qName) q.push(`name:"${qName}*"`);
                
-                const limit = 250;
+                const limit = 50; 
                 let orderBy = 'number';
                 if(this.searchSort === 'name') orderBy = 'name';
                 
                 try {
-                    // OUTSIDE THE BOX: Hitting the Pokemon TCG API Directly
-                    const res = await fetch(`${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, {
-                        signal: searchController.signal,
-                        headers: { "X-Api-Key": POKEMON_API_KEY }
+                    const targetUrl = `${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
+                    const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`, {
+                        signal: searchController.signal
                     });
                    
                     if (!res.ok) throw new Error(`Err`);
