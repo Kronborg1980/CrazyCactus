@@ -6,6 +6,13 @@
     <title>Crazy Cactus | Binder Love</title>
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
    
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { corePlugins: { preflight: true } }</script>
     
@@ -319,7 +326,9 @@
     </Transition>
 </div>
 <script>
-    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev";
+    // OUTSIDE THE BOX: We hit the API directly and bypass the Cloudflare Worker entirely.
+    const API_BASE_URL = "https://api.pokemontcg.io/v2";
+    const POKEMON_API_KEY = "9a645813-18af-4138-82d6-1820558a93b3";
     
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -347,7 +356,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                eraImages: {}, cacheKey: 'cactus_sets_v8_worker', totalSetData: {},
+                eraImages: {}, cacheKey: 'cactus_sets_direct_v1', totalSetData: {},
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: []
@@ -547,14 +556,16 @@
             },
             async loadSetsAPI(force=false, retries=2) {
                 this.setsLoading = true;
-                const cacheKey = 'cactus_sets_v8_worker';
                 if (!force) {
-                    const c = localStorage.getItem(cacheKey);
+                    const c = localStorage.getItem(this.cacheKey);
                     if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.eraImages = d.eraImages || {}; this.setsLoading=false; return; } } catch(e){} }
                 }
                 
                 try {
-                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&orderBy=-releaseDate&pageSize=250`);
+                    // OUTSIDE THE BOX: Hitting the Pokemon TCG API Directly
+                    const res = await fetch(`${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250`, {
+                        headers: { "X-Api-Key": POKEMON_API_KEY }
+                    });
                     if (!res.ok) throw new Error(`API Error ${res.status}`);
                     
                     const data = await res.json();
@@ -571,13 +582,13 @@
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap;
-                    localStorage.setItem(cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
+                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
                 } catch(e) { 
                     console.error("Sync Failed", e);
                     if (retries > 0) {
                         console.log(`Retrying set fetch... (${retries} retries left)`);
                         setTimeout(() => this.loadSetsAPI(force, retries - 1), 2000);
-                        return; // Exit here so we don't clear loading state until retries finish
+                        return;
                     }
                 } finally { 
                     this.setsLoading = false; 
@@ -616,9 +627,10 @@
                 if(this.searchSort === 'name') orderBy = 'name';
                 
                 try {
-                    const res = await fetch(`${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}&_t=${Date.now()}`, {
+                    // OUTSIDE THE BOX: Hitting the Pokemon TCG API Directly
+                    const res = await fetch(`${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`, {
                         signal: searchController.signal,
-                        cache: 'no-store'
+                        headers: { "X-Api-Key": POKEMON_API_KEY }
                     });
                    
                     if (!res.ok) throw new Error(`Err`);
