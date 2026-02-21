@@ -353,9 +353,6 @@
 </div>
 
 <script>
-    // 100% WIRED TO YOUR SECURE CLOUDFLARE PROXY
-    const WORKER_URL = "https://cactus-proxy.kronborgnielsen.workers.dev"; 
-
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -396,8 +393,6 @@
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); }
         },
         mounted() { 
-            // Clear cache to ensure fresh proxy load
-            localStorage.removeItem('cactus_sets_v18_proxy');
             this.loadLocalData(); 
             this.loadSetsAPI(); 
             if(auth) auth.onAuthStateChanged(u => { if(u) { this.user=u; this.initCloudData(); } else { this.user=null; } }); 
@@ -438,34 +433,54 @@
             getCardPrice(c) { const prices = c.tcgplayer?.prices; if (!prices) return 0; const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market); return marketPrices.length > 0 ? Math.max(...marketPrices) : 0; },
             debouncedSearch() { if(this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 500); },
             
+            // ==========================================
+            // AUTO-ROUTING ENGINE 
+            // Guarantees data gets past browser blocks
+            // ==========================================
+            async networkRequest(endpoint, queryStr, signal = null) {
+                const targetUrl = `https://api.pokemontcg.io/v2/${endpoint}?${queryStr}`;
+                
+                // Route 1: Official API (Fastest)
+                // Route 2: Your Cloudflare Worker
+                // Route 3: Public CORS-Bypass Proxy (Bulletproof)
+                const routes = [
+                    targetUrl,
+                    `https://cactus-proxy.kronborgnielsen.workers.dev/?endpoint=${endpoint}&${queryStr}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+                ];
+
+                for (const url of routes) {
+                    try {
+                        const res = await fetch(url, { signal });
+                        if (res.ok) {
+                            const json = await res.json();
+                            if (json && json.data) return json;
+                        }
+                    } catch (e) {
+                        if (e.name === 'AbortError') throw e; 
+                        console.warn(`Route blocked/failed, trying next... (${url})`);
+                    }
+                }
+                throw new Error("All data routes blocked. Try turning off your adblocker/browser shields.");
+            },
+
             async loadSetsAPI() { 
                 this.setsLoading = true; 
                 this.globalError = null; 
                 
                 try { 
-                    // ROUTED THROUGH PROXY TO AVOID CORS ERRORS
-                    const res = await fetch(`${WORKER_URL}/?endpoint=sets&select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate`); 
+                    const data = await this.networkRequest('sets', 'select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
-                    if (!res.ok) throw new Error(`Proxy Blocked - Status ${res.status}`); 
-                    
-                    const data = await res.json();
-                    
-                    if (!data || !data.data) {
-                        throw new Error("Proxy connected, but returned invalid data.");
-                    }
-
                     const setSizeMap = {}; 
                     data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; }); 
                     
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap; 
-                    
-                    localStorage.setItem('cactus_sets_v18_proxy', JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
 
                 } catch(e) { 
                     console.error("FATAL SETS ERROR:", e);
-                    this.globalError = `Could not load sets: ${e.message}`; 
+                    this.globalError = e.message; 
                 } finally { 
                     this.setsLoading = false; 
                 } 
@@ -493,18 +508,14 @@
                 let orderBy = 'number'; 
                 if(this.searchSort === 'name') orderBy = 'name';
 
+                const queryStr = `q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
+
                 try { 
-                    // ROUTED THROUGH PROXY TO AVOID CORS ERRORS
-                    const url = `${WORKER_URL}/?endpoint=cards&q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
-                    
-                    const res = await fetch(url, { signal: searchController.signal }); 
-                    
-                    if (!res.ok) throw new Error(`Proxy Blocked - Status ${res.status}`); 
-                    let payload = await res.json();
+                    const data = await this.networkRequest('cards', queryStr, searchController.signal);
                     
                     if (requestId !== this.currentRequestId) return;
 
-                    let results = payload.data || [];
+                    let results = data.data || [];
 
                     if (this.searchSort === 'price-desc') {
                         results.sort((a, b) => this.getCardPrice(b) - this.getCardPrice(a));
@@ -513,13 +524,13 @@
                     }
                     
                     this.searchResults = results; 
-                    this.totalSearchPagesCount = Math.ceil((payload.totalCount || 0) / limit) || 1; 
+                    this.totalSearchPagesCount = Math.ceil((data.totalCount || 0) / limit) || 1; 
                 } catch(e) { 
                     if (e.name !== 'AbortError') {
                         console.error("SEARCH ERROR:", e);
                         this.searchResults = []; 
                         this.searchError = true;
-                        this.globalError = `Card Search Failed: ${e.message}`;
+                        this.globalError = e.message;
                     }
                 } finally { 
                     if (requestId === this.currentRequestId) {
