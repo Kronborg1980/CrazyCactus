@@ -16,13 +16,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { corePlugins: { preflight: true } }</script>
     
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <style>
         :root { --neon-green: #39ff14; --glass-surface: rgba(15, 12, 41, 0.85); }
         body {
@@ -113,6 +115,7 @@
                 <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-black text-3xl shadow-[0_0_30px_rgba(147,51,234,0.5)]"><i class="fa-solid fa-folder-open"></i></div>
             </div>
         </div>
+        
         <div v-if="currentView === 'collection'">
             <div v-if="cards.length === 0" class="text-center py-24 glass-panel border-dashed border-2 border-white/20">
                 <i class="fa-solid fa-wind text-7xl text-gray-500 mb-6 animate-pulse"></i>
@@ -142,6 +145,7 @@
                 </div>
             </div>
         </div>
+
         <div v-if="currentView === 'binders'">
             <div class="flex justify-between items-center mb-10">
                 <h2 class="text-4xl font-black text-white tracking-wide drop-shadow-lg text-glow">CARD VAULTS</h2>
@@ -170,6 +174,7 @@
                 </div>
             </div>
         </div>
+
         <div v-if="currentView === 'calculator'">
             <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 glass-panel p-8">
                 <div>
@@ -224,11 +229,13 @@
             </div>
         </div>
     </main>
+
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
         <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Home</span></button>
         <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Calc</span></button>
         <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Binders</span></button>
     </div>
+
     <Transition name="fade">
         <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div class="glass-panel w-full max-w-6xl h-full md:h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
@@ -330,6 +337,7 @@
             </div>
         </div>
     </Transition>
+    
     <Transition name="fade">
         <div v-if="detailCard" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative shadow-[0_0_150px_rgba(57,255,20,0.25)] rounded-3xl border-2 border-[#39ff14]/20">
@@ -353,12 +361,11 @@
         </div>
     </Transition>
 </div>
+
 <script>
-    // OUTSIDE THE BOX: THE RIGHT WAY.
-    // We are entirely removing ALL Proxies and the API Key header.
-    // The Pokemon TCG API allows free direct access without an API key. 
-    // By NOT sending the API key header, we stop the browser from sending an "OPTIONS Preflight" check.
-    // This allows the simple GET request to slip straight past Cloudflare's bot-protections.
+    // 100% PURE AND DIRECT.
+    // - NO API Key custom headers to trigger the CORS block.
+    // - NO Proxies to get blocked by Cloudflare.
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
     
     const firebaseConfig = {
@@ -387,7 +394,7 @@
                 user: null, currentView: 'collection', currentBinder: null, localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                eraImages: {}, cacheKey: 'cactus_sets_direct_unblocked_v1', totalSetData: {},
+                eraImages: {}, cacheKey: 'cactus_sets_clean_v1', totalSetData: {},
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc', totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null
@@ -514,8 +521,23 @@
                      if(this.searchPage > 1) { this.fetchCards(this.searchPage - 1); }
                 }
             },
-            loadLocalData() { const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); }, 
-            saveData() { if(!this.user) { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } },
+            
+            // Safe Storage handling for Strict Edge Users
+            loadLocalData() { 
+                try {
+                    const b = localStorage.getItem('cactus_binders'); if(b) this.localBinders = JSON.parse(b); 
+                    const c = localStorage.getItem('cactus_cards'); if(c) this.localCards = JSON.parse(c); 
+                } catch(e) { console.warn("Storage blocked by browser settings"); }
+            }, 
+            saveData() { 
+                if(!this.user) { 
+                    try {
+                        localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); 
+                        localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); 
+                    } catch(e) { console.warn("Storage blocked by browser settings"); }
+                } 
+            },
+            
             initCloudData() { 
                 db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}))); 
                 db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}))); 
@@ -586,19 +608,25 @@
                 this.searchTimeout = setTimeout(() => { this.fetchCards(1, false); }, 300); 
             },
 
-            // DIRECT FETCH: By totally omitting the API Key header, we trick the browser into 
-            // skipping the CORS 'Preflight' check, passing directly through Cloudflare's shields.
             async loadSetsAPI(force=false, retries=2) {
                 this.setsLoading = true;
                 if (!force) {
-                    const c = localStorage.getItem(this.cacheKey);
-                    if(c) { try { const d = JSON.parse(c); if(d.sets.length>0) { this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.eraImages = d.eraImages || {}; this.setsLoading=false; return; } } catch(e){} }
+                    try {
+                        const c = localStorage.getItem(this.cacheKey);
+                        if(c) { 
+                            const d = JSON.parse(c); 
+                            if(d.sets.length>0) { 
+                                this.allSets=d.sets; this.eras=d.eras; this.totalSetData=d.totalSetData; this.eraImages = d.eraImages || {}; this.setsLoading=false; 
+                                return; 
+                            } 
+                        }
+                    } catch(e) {}
                 }
                 
                 try {
+                    // PURE DIRECT FETCH: Absolutely NO API Key headers are sent here. 
+                    // This is treated as a simple request, which bypasses CORS preflight completely.
                     const targetUrl = `${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250`;
-                    
-                    // Simple GET request. No headers. No preflight. No Cloudflare blocking.
                     const res = await fetch(targetUrl);
                     if (!res.ok) throw new Error(`API Error ${res.status}`);
                     
@@ -617,7 +645,11 @@
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))]; 
                     this.totalSetData = setSizeMap;
-                    localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
+                    
+                    try {
+                        localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData, eraImages: this.eraImages }));
+                    } catch(e){}
+                    
                 } catch(e) { 
                     console.error("Sync Failed", e);
                     if (retries > 0) {
@@ -664,12 +696,11 @@
                 if(this.searchSort === 'name') orderBy = 'name';
                 
                 try {
+                    // PURE DIRECT FETCH: Absolutely NO API Key headers are sent here.
                     const targetUrl = `${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,set&orderBy=${orderBy}`;
-                    
-                    // Simple GET request. No headers. No preflight. No Cloudflare blocking.
                     const res = await fetch(targetUrl, { signal: searchController.signal });
-                    if (!res.ok) throw new Error(`Err`);
                     
+                    if (!res.ok) throw new Error(`Err`);
                     const data = await res.json();
                    
                     if (requestId !== this.currentRequestId) return;
