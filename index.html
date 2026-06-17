@@ -71,6 +71,25 @@
         .scanner-beam { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); animation: scan 2s infinite; opacity: 0.8; }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 80; background: rgba(0,0,0,0.92); border: 1px solid rgba(57,255,20,0.4); color: #fff; padding: 14px 26px; border-radius: 14px; font-weight: 700; box-shadow: 0 0 30px rgba(57,255,20,0.25); display:flex; align-items:center; gap:12px; }
+
+        /* ===== Hero / Vault dashboard ===== */
+        .vault-aurora { background: radial-gradient(60% 80% at 12% 8%, rgba(57,255,20,.20), transparent 60%), radial-gradient(55% 65% at 92% 25%, rgba(124,77,255,.30), transparent 62%), radial-gradient(80% 80% at 75% 110%, rgba(255,159,67,.14), transparent 60%); pointer-events:none; }
+        .vault-hero { border:1px solid rgba(57,255,20,.20); }
+        .vault-value { font-weight:800; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height:1; letter-spacing:-.02em; color:#fff; text-shadow:0 0 34px rgba(57,255,20,.5); font-variant-numeric:tabular-nums; }
+        .rank-badge { width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000;background:linear-gradient(135deg,var(--neon-green),#2ecc71);box-shadow:0 0 22px rgba(57,255,20,.55); }
+        .stat-chip { background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;text-align:center; }
+        .chip-num { font-size:1.2rem;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1; }
+        .chip-lbl { font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;margin-top:4px; }
+        .jewel-hero { border:1px solid rgba(255,159,67,.20); }
+        .holo-card { position:relative;transition:transform .55s cubic-bezier(.2,.8,.2,1); }
+        .holo-card::after { content:'';position:absolute;inset:0;border-radius:12px;z-index:20;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.4) 45%,rgba(57,255,20,.45) 52%,rgba(124,77,255,.35) 60%,transparent 78%);background-size:250% 250%;transition:opacity .4s;mix-blend-mode:screen; }
+        .jewel-hero:hover .holo-card { transform:rotateY(-8deg) rotateX(5deg) scale(1.05); }
+        .jewel-hero:hover .holo-card::after { opacity:1;animation:sheen 1.8s ease-in-out infinite; }
+        @keyframes sheen { 0%{background-position:0% 0%} 100%{background-position:140% 140%} }
+        .jewel-float { animation:floaty 5s ease-in-out infinite; }
+        @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        .empty-orb { width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#000;background:radial-gradient(circle at 35% 30%, #7dff63, #2ecc71);box-shadow:0 0 60px rgba(57,255,20,.6), inset 0 0 30px rgba(255,255,255,.3);animation:floaty 4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce){ .jewel-float,.empty-orb{animation:none} .jewel-hero:hover .holo-card::after{animation:none} .jewel-hero:hover .holo-card{transform:none} }
     </style>
 </head>
 <body class="bg-fixed">
@@ -109,55 +128,100 @@
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 pb-28">
 
-        <!-- ===== STAT HEADER (Dashboard + Binders) ===== -->
-        <div v-if="currentView !== 'calculator'" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div class="glass-panel p-8 group relative overflow-hidden">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Portfolio Value</div>
-                        <div class="text-5xl font-black text-white tracking-tight drop-shadow-lg group-hover:text-[#39ff14] transition">${{ formatNumber(totalValue) }}</div>
-                        <div class="text-xs font-bold mt-2" :class="dayChange >= 0 ? 'text-[#39ff14]' : 'text-red-400'">
-                            <i :class="dayChange >= 0 ? 'fa-solid fa-arrow-trend-up' : 'fa-solid fa-arrow-trend-down'"></i>
-                            {{ dayChange >= 0 ? '+' : '' }}${{ formatNumber(Math.abs(dayChange)) }} since last visit
-                        </div>
-                    </div>
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-black text-2xl shadow-[0_0_30px_rgba(57,255,20,0.5)] shrink-0"><i class="fa-solid fa-sack-dollar"></i></div>
-                </div>
-                <svg v-if="sparkPoints" viewBox="0 0 300 60" preserveAspectRatio="none" class="w-full h-12 mt-4 opacity-80">
-                    <polyline :points="sparkPoints" fill="none" stroke="#39ff14" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="filter: drop-shadow(0 0 4px rgba(57,255,20,.6))"/>
-                </svg>
-            </div>
-            <div class="glass-panel p-8 group">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Total Invested</div>
-                        <div class="text-5xl font-black text-white tracking-tight drop-shadow-lg">${{ formatNumber(totalInvested) }}</div>
-                        <div class="text-xs font-bold text-gray-500 mt-2">{{ cards.length }} cards &middot; {{ binders.length }} binders</div>
-                    </div>
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-black text-2xl shadow-[0_0_30px_rgba(59,130,246,0.5)] shrink-0"><i class="fa-solid fa-coins"></i></div>
-                </div>
-            </div>
-            <div class="glass-panel p-8 group">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="text-sm font-bold text-gray-400 uppercase mb-2 tracking-widest">Est. Graded Upside</div>
-                        <div class="text-5xl font-black tracking-tight drop-shadow-lg" :class="totalProfit >= 0 ? 'text-[#39ff14]' : 'text-red-400'">{{ totalProfit >= 0 ? '+' : '-' }}${{ formatNumber(Math.abs(totalProfit)) }}</div>
-                        <div class="text-xs font-bold text-gray-500 mt-2">Net of grading & selling fees</div>
-                    </div>
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-black text-2xl shadow-[0_0_30px_rgba(255,159,67,0.5)] shrink-0"><i class="fa-solid fa-chart-line"></i></div>
-                </div>
-            </div>
-        </div>
-
         <!-- ===== DASHBOARD / COLLECTION ===== -->
         <div v-if="currentView === 'collection'">
-            <div v-if="cards.length === 0" class="text-center py-24 glass-panel border-dashed border-2 border-white/20">
-                <i class="fa-solid fa-wind text-7xl text-gray-500 mb-6 animate-pulse"></i>
-                <h3 class="text-3xl font-black text-white mb-2 uppercase">This Desert is Empty</h3>
-                <p class="text-gray-400 mb-8 text-lg">Plant your first seed and watch it grow.</p>
-                <button @click="openSearch" class="btn-neon text-lg px-8 py-4">Find a Card</button>
+
+            <!-- EMPTY STATE -->
+            <div v-if="cards.length === 0" class="glass-panel relative overflow-hidden text-center py-20 px-8">
+                <div class="absolute inset-0 vault-aurora opacity-70"></div>
+                <div class="relative z-10">
+                    <div class="empty-orb mx-auto mb-8"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h3 class="text-4xl md:text-5xl font-black text-white mb-3 uppercase tracking-wide text-glow">Start your legend</h3>
+                    <p class="text-gray-300 mb-2 text-lg max-w-xl mx-auto">Every Champion started with a single card. Add yours and watch your vault &mdash; and your rank &mdash; climb.</p>
+                    <p class="text-sm text-gray-500 mb-8">Track real market value, plan your grades, and chase set completion.</p>
+                    <button @click="openSearch" class="btn-neon text-lg px-10 py-4"><i class="fa-solid fa-plus mr-2"></i>Add your first card</button>
+                </div>
             </div>
+
+            <!-- POPULATED -->
             <div v-else>
+                <!-- HERO -->
+                <div class="mb-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <!-- THE VAULT -->
+                        <div class="lg:col-span-3 glass-panel vault-hero p-8 md:p-10 relative overflow-hidden">
+                            <div class="absolute inset-0 vault-aurora"></div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3">
+                                    <span class="rank-badge"><i class="fa-solid" :class="rank.icon"></i></span>
+                                    <div>
+                                        <div class="text-[11px] font-black uppercase tracking-[0.32em] text-[#39ff14] text-glow">{{ rank.name }}</div>
+                                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Collector rank</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mb-1 mt-7">Your vault is worth</div>
+                                <div class="vault-value">${{ formatNumber(displayValue) }}</div>
+                                <div class="flex items-center gap-3 mt-3 mb-6">
+                                    <span class="px-3 py-1 rounded-lg text-sm font-black" :class="dayChange>=0?'bg-[#39ff14]/15 text-[#39ff14]':'bg-red-500/15 text-red-400'">
+                                        <i :class="dayChange>=0?'fa-solid fa-caret-up':'fa-solid fa-caret-down'"></i> {{ dayChange>=0?'+':'-' }}${{ formatNumber(Math.abs(dayChange)) }}
+                                    </span>
+                                    <span class="text-xs font-bold text-gray-500">since last visit</span>
+                                </div>
+                                <svg v-if="sparkPoints" viewBox="0 0 300 60" preserveAspectRatio="none" class="w-full h-14 mb-6">
+                                    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#39ff14" stop-opacity=".45"/><stop offset="100%" stop-color="#39ff14" stop-opacity="0"/></linearGradient></defs>
+                                    <polyline v-if="sparkArea" :points="sparkArea" fill="url(#sg)" stroke="none"/>
+                                    <polyline :points="sparkPoints" fill="none" stroke="#39ff14" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(57,255,20,.7))"/>
+                                </svg>
+                                <div v-if="rank.nextName" class="mb-6">
+                                    <div class="flex justify-between text-[11px] font-bold uppercase tracking-widest mb-2">
+                                        <span class="text-gray-400">Next: {{ rank.nextName }}</span>
+                                        <span class="text-[#39ff14]">${{ formatNumber(rank.remaining) }} to go</span>
+                                    </div>
+                                    <div class="progress-track"><div class="progress-fill" :style="{ width: rank.pct + '%' }"></div></div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div class="stat-chip"><div class="chip-num">{{ cards.length }}</div><div class="chip-lbl">Cards</div></div>
+                                    <div class="stat-chip"><div class="chip-num">{{ distinctSets }}</div><div class="chip-lbl">Sets</div></div>
+                                    <div class="stat-chip"><div class="chip-num" :class="totalProfit>=0?'text-[#39ff14]':'text-red-400'">{{ totalProfit>=0?'+':'-' }}${{ formatNumber(Math.abs(totalProfit)) }}</div><div class="chip-lbl">Graded upside</div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CROWN JEWEL -->
+                        <div v-if="mostValuable" @click="openCardDetail(mostValuable)" class="lg:col-span-2 glass-panel jewel-hero p-8 relative overflow-hidden flex flex-col cursor-pointer" style="perspective:1200px">
+                            <div class="text-[11px] font-black uppercase tracking-[0.32em] text-[#ff9f43] mb-1"><i class="fa-solid fa-crown mr-2"></i>Crown Jewel</div>
+                            <div class="text-xs font-bold text-gray-400 mb-4">Your most valuable card</div>
+                            <div class="flex-1 flex items-center justify-center py-2">
+                                <div class="holo-card jewel-float w-44 md:w-48">
+                                    <img :src="mostValuable.image.replace('small','large')" class="w-full rounded-xl border border-white/10 shadow-2xl relative z-10">
+                                </div>
+                            </div>
+                            <div class="mt-5 text-center">
+                                <div class="text-xl font-black text-white uppercase tracking-wide truncate text-glow">{{ mostValuable.name }}</div>
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{{ mostValuable.set }} #{{ mostValuable.number }}</div>
+                                <div class="text-3xl font-black text-[#39ff14] drop-shadow-[0_0_12px_rgba(57,255,20,.6)]">${{ formatNumber(mostValuable.market) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOP OF THE VAULT -->
+                    <div v-if="topCards.length > 1" class="glass-panel p-6 mt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-black uppercase tracking-[0.3em] text-white"><i class="fa-solid fa-fire text-[#ff9f43] mr-2"></i>Top of the Vault</h3>
+                            <button @click="switchView('calculator')" class="text-[11px] font-bold uppercase tracking-widest text-[#39ff14] hover:underline">View all &rarr;</button>
+                        </div>
+                        <div class="flex gap-4 overflow-x-auto pb-2">
+                            <div v-for="c in topCards" :key="c.uid" @click="openCardDetail(c)" class="shrink-0 w-28 cursor-pointer group">
+                                <div class="relative rounded-xl overflow-hidden border border-white/10 group-hover:border-[#39ff14]/60 group-hover:shadow-[0_0_25px_rgba(57,255,20,.35)] transition">
+                                    <img :src="c.image" loading="lazy" class="w-full">
+                                </div>
+                                <div class="text-center mt-2"><div class="text-[11px] font-bold text-white truncate">{{ c.name }}</div><div class="text-xs font-black text-[#39ff14]">${{ Math.round(c.market) }}</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILTER + ACTIONS -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div class="relative flex-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -169,6 +233,7 @@
                     </div>
                 </div>
 
+                <!-- SET GROUPS -->
                 <div class="space-y-10">
                     <div v-for="(setGroup, setName) in filteredCardsBySet" :key="setName" class="glass-panel overflow-hidden">
                         <div class="px-8 py-6 border-b border-white/10 bg-black/20">
@@ -199,7 +264,14 @@
         </div>
 
         <!-- ===== BINDERS ===== -->
+
         <div v-if="currentView === 'binders'">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="glass-panel p-5"><div class="chip-lbl">Portfolio</div><div class="text-2xl font-black text-white mt-1">${{ formatNumber(totalValue) }}</div></div>
+                <div class="glass-panel p-5"><div class="chip-lbl">Invested</div><div class="text-2xl font-black text-white mt-1">${{ formatNumber(totalInvested) }}</div></div>
+                <div class="glass-panel p-5"><div class="chip-lbl">Cards</div><div class="text-2xl font-black text-white mt-1">{{ cards.length }}</div></div>
+                <div class="glass-panel p-5"><div class="chip-lbl">Binders</div><div class="text-2xl font-black text-white mt-1">{{ binders.length }}</div></div>
+            </div>
             <div class="flex justify-between items-center mb-10">
                 <h2 class="text-4xl font-black text-white tracking-wide drop-shadow-lg text-glow">CARD VAULTS</h2>
                 <button @click="createBinder" class="text-sm font-bold text-[#39ff14] border-2 border-[#39ff14] px-6 py-3 rounded-xl hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_20px_rgba(57,255,20,0.3)]">+ NEW BINDER</button>
@@ -468,11 +540,10 @@
 <script>
     // ============================================================
     //  DATA SOURCE: api.pokemontcg.io (v2)
-    //  This is a free, community API. It is frequently SLOW and
-    //  sometimes DOWN. The robust fetch wrapper below adds timeouts,
-    //  automatic retries, and persistent caching so the app survives.
-    //  A free API key (dev.pokemontcg.io) greatly improves reliability
-    //  and rate limits — paste it under Settings.
+    //  Robust fetch wrapper (timeout + retries + caching) so the app
+    //  survives this often-slow public API. A key raises reliability.
+    //  Set browsing now fetches the WHOLE set, then sorts/paginates
+    //  client-side so "price high to low" is correct across all cards.
     // ============================================================
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
     // Baked-in key from dev.pokemontcg.io (raises rate limits / reliability).
@@ -509,31 +580,42 @@
                 showSearch: false, detailCard: null, showSettings: false,
                 setsLoading: false, setsError: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master',
-                searchResults: [], cacheKey: 'cactus_sets_clean_v2', totalSetData: {},
+                rawResults: [], cacheKey: 'cactus_sets_clean_v2', totalSetData: {},
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
-                searchPage: 1, addedIds: [], selectedIds: [], searchSort: 'price-desc',
-                totalSearchPagesCount: 1, searchCache: {}, searchTimeout: null,
+                searchPage: 1, searchPageSize: 24, addedIds: [], selectedIds: [], searchSort: 'price-desc',
+                searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null,
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
-                history: [], dayChange: 0, toast: "", toastTimer: null,
+                history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
                 apiKey: "",
-                settings: { sellFee: 13, m10: 3.2, m9: 1.4, m8: 0.9 }
+                settings: { sellFee: 13, m10: 3.2, m9: 1.4, m8: 0.9 },
+                rankTiers: [
+                    { min: 0,     name: 'Wandering Trainer', icon: 'fa-shoe-prints' },
+                    { min: 50,    name: 'Rookie Collector',  icon: 'fa-seedling' },
+                    { min: 250,   name: 'Ace Trainer',       icon: 'fa-star' },
+                    { min: 1000,  name: 'Gym Leader',        icon: 'fa-medal' },
+                    { min: 5000,  name: 'Elite Four',        icon: 'fa-crown' },
+                    { min: 15000, name: 'Champion',          icon: 'fa-trophy' },
+                    { min: 50000, name: 'Master Collector',  icon: 'fa-dragon' }
+                ]
             }
         },
         watch: {
-            selectedEra(n, o) { if (n !== o) { this.selectedSet=""; this.resetSearch(); } },
-            selectedSet(n, o) { if (n !== o) { this.resetSearch(); if (this.selectedSet) this.fetchCards(1); } },
-            searchSort() { if (this.selectedSet) this.fetchCards(1, true); },
+            selectedEra(n, o) { if (n !== o) { this.selectedSet = ""; this.resetSearch(); } },
+            selectedSet(n, o) { if (n !== o) { this.resetSearch(); if (this.selectedSet) this.fetchCards(); } },
+            searchSort() { this.searchPage = 1; }, // sorting is client-side now
             cards: { handler() { this.refreshDisplayList(); }, deep: true },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); },
-            tableFilter() { this.currentPage = 1; }
+            tableFilter() { this.currentPage = 1; },
+            totalValue(n) { this.animateValue(n); }
         },
         mounted() {
             this.loadSettings();
             this.loadLocalData();
             this.loadHistory();
             this.loadSetsAPI();
+            this.$nextTick(() => this.animateValue(this.totalValue));
             if (auth) {
                 auth.onAuthStateChanged(u => {
                     this.authReady = true;
@@ -547,6 +629,22 @@
             totalValue() { return this.cards.reduce((s, c) => s + (c.market || 0), 0); },
             totalInvested() { return this.cards.reduce((s, c) => s + (c.rawCost || 0) + (c.fee || 0), 0); },
             totalProfit() { return this.cards.reduce((s, c) => s + this.getProfit(c), 0); },
+            distinctSets() { return new Set(this.cards.map(c => c.set)).size; },
+            mostValuable() { if (!this.cards.length) return null; return this.cards.reduce((a, b) => (b.market || 0) > (a.market || 0) ? b : a); },
+            topCards() {
+                const seen = new Set();
+                return [...this.cards].sort((a, b) => (b.market || 0) - (a.market || 0))
+                    .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; }).slice(0, 8);
+            },
+            rank() {
+                const v = this.totalValue, tiers = this.rankTiers;
+                let cur = tiers[0];
+                for (let i = 0; i < tiers.length; i++) if (v >= tiers[i].min) cur = tiers[i];
+                const next = tiers[tiers.indexOf(cur) + 1] || null;
+                let pct = 100, remaining = 0, nextName = null;
+                if (next) { nextName = next.name; const span = next.min - cur.min; pct = Math.max(0, Math.min(100, Math.round((v - cur.min) / span * 100))); remaining = Math.max(0, next.min - v); }
+                return { name: cur.name, icon: cur.icon, pct, remaining, nextName };
+            },
             isAllSelected() { return this.filteredList.length > 0 && this.filteredList.every(c => this.selectedIds.includes(c.uid)); },
             totalPages() { return Math.ceil(this.filteredList.length / this.itemsPerPage); },
             filteredList() {
@@ -590,19 +688,32 @@
                 }
                 return out;
             },
-            totalSearchPages() { return this.totalSearchPagesCount; },
+            // ----- Search results: sort whole set, then paginate locally -----
+            sortedResults() {
+                const arr = [...this.rawResults];
+                if (this.searchSort === 'price-desc') arr.sort((a, b) => this.getMarketPrice(b) - this.getMarketPrice(a));
+                else if (this.searchSort === 'price-asc') arr.sort((a, b) => this.getMarketPrice(a) - this.getMarketPrice(b));
+                else if (this.searchSort === 'name') arr.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                else arr.sort((a, b) => String(a.number).localeCompare(String(b.number), undefined, { numeric: true }));
+                return arr;
+            },
+            totalSearchPages() { return Math.max(1, Math.ceil(this.sortedResults.length / this.searchPageSize)); },
+            searchResults() {
+                const start = (this.searchPage - 1) * this.searchPageSize;
+                return this.sortedResults.slice(start, start + this.searchPageSize);
+            },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             sparkPoints() {
                 if (this.history.length < 2) return null;
                 const vals = this.history.map(h => h.v);
-                const min = Math.min(...vals), max = Math.max(...vals);
-                const range = (max - min) || 1;
+                const min = Math.min(...vals), max = Math.max(...vals), range = (max - min) || 1;
                 const step = 300 / (this.history.length - 1);
                 return this.history.map((h, i) => `${(i * step).toFixed(1)},${(55 - ((h.v - min) / range) * 50).toFixed(1)}`).join(' ');
-            }
+            },
+            sparkArea() { const p = this.sparkPoints; return p ? `0,60 ${p} 300,60` : null; }
         },
         methods: {
-            // ---------- Robust API fetch: timeout + retry + key ----------
+            // ---------- Robust API fetch ----------
             async apiFetch(url, { timeout = 15000, retries = 3, signal = null } = {}) {
                 let attempt = 0, lastErr = null;
                 while (attempt <= retries) {
@@ -613,25 +724,21 @@
                         const headers = this.apiKey ? { 'X-Api-Key': this.apiKey } : {};
                         const res = await fetch(url, { headers, signal: ctrl.signal });
                         clearTimeout(timer);
-                        if (res.status === 429) { // rate limited — wait longer
-                            await this.sleep(2000 * (attempt + 1));
-                            attempt++; continue;
-                        }
+                        if (res.status === 429) { await this.sleep(2000 * (attempt + 1)); attempt++; continue; }
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         return await res.json();
                     } catch (e) {
                         clearTimeout(timer);
                         if (signal && signal.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
-                        lastErr = e;
-                        attempt++;
-                        if (attempt <= retries) await this.sleep(800 * Math.pow(2, attempt - 1)); // 0.8s, 1.6s, 3.2s
+                        lastErr = e; attempt++;
+                        if (attempt <= retries) await this.sleep(800 * Math.pow(2, attempt - 1));
                     }
                 }
                 throw lastErr || new Error('Request failed');
             },
             sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
 
-            // ---------- Price extraction (TCGplayer first, Cardmarket fallback) ----------
+            // ---------- Prices ----------
             getMarketPrice(card) {
                 const tp = card && card.tcgplayer && card.tcgplayer.prices;
                 if (tp) {
@@ -660,24 +767,35 @@
                 if (g === '8') return this.settings.m8 || 1;
                 return 1;
             },
-            getEstValue(c) { return (c.market || 0) * this.gradeMultiplier(c); }, // gross graded sale
+            getEstValue(c) { return (c.market || 0) * this.gradeMultiplier(c); },
             getNetSale(c) { return this.getEstValue(c) * (1 - (this.settings.sellFee || 0) / 100); },
             getInvested(c) { return (c.rawCost || 0) + (c.fee || 0); },
             getProfit(c) { return this.getNetSale(c) - this.getInvested(c); },
 
-            // ---------- Navigation / misc ----------
+            // ---------- Count-up animation ----------
+            animateValue(target) {
+                target = Math.round(target);
+                if (target === Math.round(this.displayValue)) { this.displayValue = target; return; }
+                const start = this.displayValue, dur = 900, t0 = performance.now();
+                const tick = now => {
+                    const p = Math.min(1, (now - t0) / dur);
+                    const eased = 1 - Math.pow(1 - p, 3);
+                    this.displayValue = start + (target - start) * eased;
+                    if (p < 1) requestAnimationFrame(tick); else this.displayValue = target;
+                };
+                requestAnimationFrame(tick);
+            },
+
+            // ---------- Navigation ----------
             switchView(view) { this.currentView = view; this.currentBinder = null; this.tableFilter = ""; window.scrollTo(0, 0); },
             loginWithGoogle() { if (auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if (auth) auth.signOut(); },
             getSetTotal(setName) { const s = this.totalSetData[setName]; return (s && (s.total || s.printedTotal)) || '?'; },
             setProgress(setName, unique) { const t = this.totalSetData[setName]; const total = t && (t.total || t.printedTotal); if (!total) return 0; return Math.min(100, Math.round(unique / total * 100)); },
-            resetSearch() { this.searchResults = []; this.searchPage = 1; this.totalSearchPagesCount = 1; this.query = ""; this.searchError = false; this.selectedCardToAdd = null; },
+            resetSearch() { this.rawResults = []; this.searchPage = 1; this.searchError = false; this.selectedCardToAdd = null; this.query = ""; },
             showToast(msg) { this.toast = msg; if (this.toastTimer) clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast = "", 2600); },
 
-            toggleSelectAll() {
-                if (this.isAllSelected) this.selectedIds = [];
-                else this.selectedIds = this.filteredList.map(c => c.uid);
-            },
+            toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.filteredList.map(c => c.uid); },
             deleteSelected() {
                 if (!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
                 this.selectedIds.forEach(uid => {
@@ -691,9 +809,8 @@
                 let list = this.cards;
                 if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 let newList = [...list];
-                if (this.displayList.length === 0) {
-                    this.performSort(newList);
-                } else {
+                if (this.displayList.length === 0) this.performSort(newList);
+                else {
                     const indexMap = new Map();
                     this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
                     newList.sort((a, b) => (indexMap.has(a.uid) ? indexMap.get(a.uid) : 1e9) - (indexMap.has(b.uid) ? indexMap.get(b.uid) : 1e9));
@@ -721,11 +838,11 @@
             },
             nextPage() {
                 if (this.currentView === 'calculator') { if (this.currentPage < this.totalPages) this.currentPage++; }
-                else { if (this.searchPage < this.totalSearchPagesCount) this.fetchCards(this.searchPage + 1); }
+                else { if (this.searchPage < this.totalSearchPages) this.searchPage++; }
             },
             prevPage() {
                 if (this.currentView === 'calculator') { if (this.currentPage > 1) this.currentPage--; }
-                else { if (this.searchPage > 1) this.fetchCards(this.searchPage - 1); }
+                else { if (this.searchPage > 1) this.searchPage--; }
             },
 
             // ---------- Local storage ----------
@@ -753,12 +870,7 @@
             saveSettings() { try { localStorage.setItem('cactus_settings', JSON.stringify(this.settings)); } catch (e) {} },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
 
-            loadHistory() {
-                try {
-                    const h = localStorage.getItem('cactus_history');
-                    this.history = h ? JSON.parse(h) : [];
-                } catch (e) { this.history = []; }
-            },
+            loadHistory() { try { const h = localStorage.getItem('cactus_history'); this.history = h ? JSON.parse(h) : []; } catch (e) { this.history = []; } },
             recordSnapshot() {
                 try {
                     const today = new Date().toISOString().slice(0, 10);
@@ -781,7 +893,6 @@
                     this.$nextTick(() => this.recordSnapshot());
                 });
             },
-
             createBinder() {
                 const name = prompt("Name your new binder:");
                 if (!name) return;
@@ -799,7 +910,6 @@
                 if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
-
             addCard(c) {
                 const market = this.getMarketPrice(c);
                 const setName = (c.set && c.set.name) ? c.set.name : ((this.allSets.find(s => s.id === this.selectedSet) || {}).name || 'Set');
@@ -824,7 +934,6 @@
                 if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(upd);
                 else this.saveData();
             },
-
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             getBinderValue(id) { return this.cards.filter(c => c.binderId === id).reduce((s, c) => s + (c.market || 0), 0); },
@@ -838,8 +947,7 @@
                 try {
                     const url = `${API_BASE_URL}/cards/${encodeURIComponent(card.id)}?select=id,tcgplayer,cardmarket`;
                     const data = await this.apiFetch(url, { retries: 2 });
-                    const price = this.getMarketPrice(data.data);
-                    this.applyPrice(card.id, price);
+                    this.applyPrice(card.id, this.getMarketPrice(data.data));
                     this.showToast('Price updated');
                 } catch (e) { this.showToast('Could not reach the price database'); }
                 finally { this.refreshing = false; }
@@ -850,7 +958,7 @@
                 const ids = [...new Set(this.cards.map(c => c.id))];
                 const chunks = [];
                 for (let i = 0; i < ids.length; i += 12) chunks.push(ids.slice(i, i + 12));
-                const priceMap = {}; let done = 0; let failed = 0;
+                const priceMap = {}; let done = 0, failed = 0;
                 for (const chunk of chunks) {
                     const q = chunk.map(id => `id:"${id}"`).join(' OR ');
                     try {
@@ -862,12 +970,9 @@
                     this.refreshProgress = Math.round(done / ids.length * 100);
                     await this.sleep(350);
                 }
-                // apply
                 if (this.user) {
                     const batch = db.batch();
-                    this.cloudCards.forEach(c => {
-                        if (priceMap[c.id] !== undefined) batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] });
-                    });
+                    this.cloudCards.forEach(c => { if (priceMap[c.id] !== undefined) batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] }); });
                     try { await batch.commit(); } catch (e) {}
                 } else {
                     this.localCards.forEach(c => { if (priceMap[c.id] !== undefined) c.market = priceMap[c.id]; });
@@ -878,12 +983,8 @@
                 this.showToast(failed ? `Updated, but ${failed} batch(es) failed — try again` : 'Prices refreshed');
             },
             applyPrice(cardId, price) {
-                if (this.user) {
-                    this.cloudCards.filter(c => c.id === cardId).forEach(c => db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update({ market: price }));
-                } else {
-                    this.localCards.filter(c => c.id === cardId).forEach(c => c.market = price);
-                    this.saveData();
-                }
+                if (this.user) this.cloudCards.filter(c => c.id === cardId).forEach(c => db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update({ market: price }));
+                else { this.localCards.filter(c => c.id === cardId).forEach(c => c.market = price); this.saveData(); }
             },
 
             // ---------- CSV export ----------
@@ -897,7 +998,7 @@
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `crazy-cactus-${new Date().toISOString().slice(0,10)}.csv`;
+                a.download = `crazy-cactus-${new Date().toISOString().slice(0, 10)}.csv`;
                 a.click();
                 URL.revokeObjectURL(a.href);
                 this.showToast('Collection exported');
@@ -909,13 +1010,7 @@
                 if (!force) {
                     try {
                         const c = localStorage.getItem(this.cacheKey);
-                        if (c) {
-                            const d = JSON.parse(c);
-                            if (d.sets && d.sets.length) {
-                                this.allSets = d.sets; this.eras = d.eras; this.totalSetData = d.totalSetData;
-                                this.setsLoading = false; return;
-                            }
-                        }
+                        if (c) { const d = JSON.parse(c); if (d.sets && d.sets.length) { this.allSets = d.sets; this.eras = d.eras; this.totalSetData = d.totalSetData; this.setsLoading = false; return; } }
                     } catch (e) {}
                 }
                 try {
@@ -927,60 +1022,63 @@
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = sizeMap;
                     try { localStorage.setItem(this.cacheKey, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData })); } catch (e) {}
-                } catch (e) {
-                    console.error("Set sync failed", e);
-                    this.setsError = true;
-                } finally { this.setsLoading = false; }
+                } catch (e) { console.error("Set sync failed", e); this.setsError = true; }
+                finally { this.setsLoading = false; }
             },
 
-            // ---------- Card search ----------
+            // ---------- Card search (whole set, sorted/paginated client-side) ----------
             debouncedSearch() {
                 if (this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => { if (this.selectedSet) this.fetchCards(1, false); }, 350);
+                this.searchTimeout = setTimeout(() => { if (this.selectedSet) this.fetchCards(); }, 350);
             },
-            async fetchCards(page = 1, force = false) {
+            async fetchCards(force = false) {
                 if (!this.selectedSet && !this.query) return;
                 const qName = this.query ? this.query.trim().toLowerCase() : '';
-                const cacheKey = `s_${this.selectedSet}_${qName}_${this.searchSort}_${page}`;
+                const cacheKey = `set_${this.selectedSet}_${qName}`;
 
                 if (!force && this.searchCache[cacheKey]) {
-                    const cached = this.searchCache[cacheKey];
-                    this.searchResults = cached.data; this.totalSearchPagesCount = cached.total;
-                    this.searchPage = page; this.isSearching = false; this.searchError = false; this.selectedCardToAdd = null;
+                    this.rawResults = this.searchCache[cacheKey];
+                    this.searchPage = 1; this.isSearching = false; this.searchError = false; this.selectedCardToAdd = null;
                     return;
                 }
                 if (searchController) searchController.abort();
                 searchController = new AbortController();
+                const sig = searchController.signal;
                 this.currentRequestId++; const requestId = this.currentRequestId;
-                this.isSearching = true; this.searchError = false; this.searchPage = page; this.selectedCardToAdd = null;
+                this.isSearching = true; this.searchError = false; this.searchPage = 1; this.selectedCardToAdd = null;
 
                 const q = [];
                 if (this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if (qName) q.push(`name:"${qName}*"`);
-                const limit = 50;
-                const orderBy = this.searchSort === 'name' ? 'name' : 'number';
+                const qStr = encodeURIComponent(q.join(' '));
+                const pageSize = 250, maxPages = 6;
 
                 try {
-                    const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(q.join(' '))}&page=${page}&pageSize=${limit}&select=id,name,number,images,tcgplayer,cardmarket,set&orderBy=${orderBy}`;
-                    const data = await this.apiFetch(url, { signal: searchController.signal, retries: 3, timeout: 16000 });
-                    if (requestId !== this.currentRequestId) return;
-                    let results = data.data || [];
-                    if (this.searchSort === 'price-desc') results.sort((a, b) => this.getMarketPrice(b) - this.getMarketPrice(a));
-                    else if (this.searchSort === 'price-asc') results.sort((a, b) => this.getMarketPrice(a) - this.getMarketPrice(b));
-                    const totalPagesCalc = Math.max(1, Math.ceil((data.totalCount || 0) / limit));
-                    if (results.length) this.searchCache[cacheKey] = { data: results, total: totalPagesCalc };
-                    this.searchResults = results;
-                    this.totalSearchPagesCount = totalPagesCalc;
-                } catch (e) {
-                    if (e.name !== 'AbortError') {
-                        if (requestId === this.currentRequestId) { this.searchResults = []; this.searchError = true; }
+                    let all = [], page = 1, total = Infinity;
+                    while (all.length < total && page <= maxPages) {
+                        const url = `${API_BASE_URL}/cards?q=${qStr}&page=${page}&pageSize=${pageSize}&select=id,name,number,images,tcgplayer,cardmarket,set&orderBy=number`;
+                        let data;
+                        try { data = await this.apiFetch(url, { signal: sig, retries: 3, timeout: 18000 }); }
+                        catch (e) { if (e.name === 'AbortError') return; if (all.length > 0) break; throw e; }
+                        if (requestId !== this.currentRequestId) return;
+                        const batch = data.data || [];
+                        all = all.concat(batch);
+                        total = data.totalCount || all.length;
+                        if (batch.length < pageSize) break;
+                        page++;
                     }
+                    if (requestId !== this.currentRequestId) return;
+                    this.rawResults = all;
+                    if (all.length) this.searchCache[cacheKey] = all;
+                } catch (e) {
+                    if (e.name !== 'AbortError' && requestId === this.currentRequestId) { this.rawResults = []; this.searchError = true; }
                 } finally {
                     if (requestId === this.currentRequestId) this.isSearching = false;
                 }
             }
         }
     }).mount('#app');
-</script>
+
+    </script>
 </body>
 </html>
