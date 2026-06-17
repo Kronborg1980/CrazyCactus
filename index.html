@@ -475,6 +475,10 @@
     //  and rate limits — paste it under Settings.
     // ============================================================
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
+    // Baked-in key from dev.pokemontcg.io (raises rate limits / reliability).
+    // Note: visible to anyone who can read this file. Regenerate at dev.pokemontcg.io if needed.
+    // A key entered in Settings will override this default.
+    const DEFAULT_API_KEY = "ed49e116-8d23-4f57-9c6e-d8900436cc21";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
@@ -744,6 +748,7 @@
                     const s = localStorage.getItem('cactus_settings'); if (s) this.settings = { ...this.settings, ...JSON.parse(s) };
                     const k = localStorage.getItem('cactus_apikey'); if (k) this.apiKey = k;
                 } catch (e) {}
+                if (!this.apiKey) this.apiKey = DEFAULT_API_KEY; // use baked-in key unless overridden in Settings
             },
             saveSettings() { try { localStorage.setItem('cactus_settings', JSON.stringify(this.settings)); } catch (e) {} },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
