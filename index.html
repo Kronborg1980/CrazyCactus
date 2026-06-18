@@ -606,9 +606,12 @@
                         <div class="p-4 bg-white/5 rounded-2xl border border-white/10"><div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Value</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(getCurrentValue(detailCard)) }}</div></div>
                         <div class="p-4 rounded-2xl border" :class="getPL(detailCard)>=0?'bg-[#39ff14]/5 border-[#39ff14]/20':'bg-red-500/5 border-red-500/20'"><div class="text-[10px] font-black uppercase tracking-widest" :class="getPL(detailCard)>=0?'text-[#39ff14]':'text-red-400'">Gain / Loss</div><div class="text-2xl font-mono font-black" :class="getPL(detailCard)>=0?'text-[#39ff14]':'text-red-400'">{{ getPL(detailCard)>=0?'':'-' }}${{ formatNumber(Math.abs(getPL(detailCard))) }}</div></div>
                     </div>
-                    <div class="mt-auto pt-2 flex gap-3">
-                        <button v-if="detailCard.type==='card'" @click="refreshOnePrice(detailCard)" :disabled="refreshing" class="btn-ghost flex-1 flex items-center justify-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> Refresh raw price</button>
-                        <button @click="deleteCard(detailCard.uid)" class="border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-widest py-3 px-5 rounded-xl hover:bg-red-600 hover:text-white transition flex-1">Remove</button>
+                    <div class="mt-auto pt-2 space-y-3">
+                        <button @click="fetchRealPrice(detailCard)" :disabled="refreshing" class="btn-neon w-full flex items-center justify-center gap-2"><i class="fa-solid fa-bolt" :class="{'fa-spin': refreshing}"></i> Fetch live price{{ detailCard.type==='card' && detailCard.condition==='graded' ? ' (' + detailCard.gradeCompany + ' ' + detailCard.grade + ')' : '' }}</button>
+                        <div class="flex gap-3">
+                            <button v-if="detailCard.type==='card'" @click="refreshOnePrice(detailCard)" :disabled="refreshing" class="btn-ghost flex-1 flex items-center justify-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> Refresh raw (free)</button>
+                            <button @click="deleteCard(detailCard.uid)" class="border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-widest py-3 px-5 rounded-xl hover:bg-red-600 hover:text-white transition flex-1">Remove</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -625,6 +628,9 @@
                 <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Pokémon TCG API key <span class="text-gray-500 normal-case font-bold">(optional)</span></label>
                 <input v-model="apiKey" @change="saveApiKey" placeholder="Paste key from dev.pokemontcg.io" class="glass-input text-sm mb-1">
                 <p class="text-[11px] text-gray-500 mb-6">Free key = higher rate limits & fewer timeouts. Get one at <span class="text-[#39ff14]">dev.pokemontcg.io</span>.</p>
+                <h3 class="text-xs font-black text-[#39ff14] uppercase tracking-widest mb-3"><i class="fa-solid fa-bolt mr-1"></i> Live price relay <span class="text-gray-500 normal-case font-bold">(real graded & sealed prices)</span></h3>
+                <input v-model="relayUrl" @change="saveRelay" placeholder="https://your-relay-url/..." class="glass-input text-sm mb-1">
+                <p class="text-[11px] text-gray-500 mb-6">Paste the URL of your deployed relay (Cloudflare Worker or Firebase Function). Your PokemonPriceTracker token lives in the relay, never here. Once set, cards and sealed items get a <span class="text-[#39ff14]">Fetch live price</span> button. Each lookup uses a few API credits.</p>
                 <h3 class="text-xs font-black text-[#39ff14] uppercase tracking-widest mb-3"><i class="fa-solid fa-medal mr-1"></i> Graded value estimates</h3>
                 <p class="text-[11px] text-gray-500 mb-4">No free API gives real PSA/BGS/CGC prices, so graded values are estimated as raw price &times; these multipliers. Override any card's value manually for accuracy.</p>
                 <div class="grid grid-cols-4 gap-3 mb-4">
@@ -698,7 +704,7 @@
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
-                apiKey: "", selectedTf: '1m',
+                apiKey: "", relayUrl: "", selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
                 sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
                 addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
@@ -974,11 +980,106 @@
                 try {
                     const s = localStorage.getItem('cactus_settings_v2'); if (s) { const p = JSON.parse(s); this.settings.base = { ...this.settings.base, ...(p.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(p.comp || {}) }; }
                     const k = localStorage.getItem('cactus_apikey'); if (k) this.apiKey = k;
+                    const r = localStorage.getItem('cactus_relay'); if (r) this.relayUrl = r;
                 } catch (e) {}
                 if (!this.apiKey) this.apiKey = DEFAULT_API_KEY;
             },
             saveSettings() { try { localStorage.setItem('cactus_settings_v2', JSON.stringify(this.settings)); } catch (e) {} },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
+            saveRelay() { try { localStorage.setItem('cactus_relay', (this.relayUrl || '').trim()); } catch (e) {} this.relayUrl = (this.relayUrl || '').trim(); this.showToast('Relay saved'); },
+
+            // ----- Live prices via PokemonPriceTracker (through the relay) -----
+            async relayGet(path, params = {}) {
+                if (!this.relayUrl) throw new Error('no-relay');
+                const u = new URL(this.relayUrl);
+                u.searchParams.set('path', path);
+                Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+                const res = await fetch(u.toString());
+                if (!res.ok) throw new Error('relay ' + res.status);
+                return res.json();
+            },
+            pptNum(v) { const n = typeof v === 'number' ? v : parseFloat(v); return (isFinite(n) && n > 0) ? n : 0; },
+            normNum(n) { return String(n == null ? '' : n).toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^0+/, ''); },
+            pptResults(data) { return (data && (data.data || data.cards || data.products || data.results)) || []; },
+            pptPickCard(results, card) {
+                const wantNum = this.normNum(card.number), wantSet = (card.set || '').toLowerCase();
+                let best = null, bestScore = -1;
+                for (const r of results) {
+                    const rn = this.normNum(r.number != null ? r.number : r.cardNumber);
+                    const rs = (r.setName || (r.set && r.set.name) || r.set || '').toString().toLowerCase();
+                    let score = 0;
+                    if (rn && rn === wantNum) score += 5;
+                    if (rs && wantSet && (rs.includes(wantSet) || wantSet.includes(rs))) score += 3;
+                    if ((r.name || '').toLowerCase() === (card.name || '').toLowerCase()) score += 1;
+                    if (score > bestScore) { bestScore = score; best = r; }
+                }
+                return { match: best, score: bestScore };
+            },
+            pptRaw(obj) {
+                if (!obj) return 0;
+                const p = obj.prices || {};
+                const cands = [p.market, p.marketPrice, obj.marketPrice, obj.market, (obj.tcgPlayer || {}).market_price, (obj.tcgplayer || {}).market, p.lowPrice];
+                for (const c of cands) { const n = this.pptNum(c); if (n) return n; }
+                return 0;
+            },
+            pptGraded(obj, company, grade) {
+                if (!obj) return 0;
+                const comp = String(company).toLowerCase(), gFlat = String(grade).replace('.', '_'), gNum = String(grade);
+                const conts = [obj.ebay, obj.ebay && obj.ebay.graded, obj.graded, obj.prices && obj.prices.ebay, obj.prices && obj.prices.graded].filter(Boolean);
+                const flatKeys = [comp + gFlat, comp + gNum, company + gFlat, String(company).toUpperCase() + gNum];
+                const fields = ['smartMarketPrice', 'medianPrice', 'median', 'averagePrice', 'avg', 'average', 'marketPrice7Day', 'marketPrice', 'price', 'value'];
+                const readVal = (v) => {
+                    if (v == null) return 0;
+                    if (typeof v === 'number') return this.pptNum(v);
+                    if (typeof v === 'object') { for (const f of fields) { const n = this.pptNum(v[f]); if (n) return n; } }
+                    return this.pptNum(v);
+                };
+                for (const cont of conts) {
+                    for (const k of flatKeys) { if (cont[k] != null) { const n = readVal(cont[k]); if (n) return n; } }
+                    const nest = cont[comp] || cont[company] || cont[String(company).toUpperCase()];
+                    if (nest && typeof nest === 'object') { const g = nest[gNum] != null ? nest[gNum] : (nest[gFlat] != null ? nest[gFlat] : nest['g' + gFlat]); const n = readVal(g); if (n) return n; }
+                }
+                return 0;
+            },
+            async fetchRealPrice(card) {
+                if (!this.relayUrl) { this.showSettings = true; this.showToast('Add your relay URL in Settings first'); return; }
+                if (card.type === 'sealed') return this.fetchSealedPrice(card);
+                this.refreshing = true;
+                try {
+                    const data = await this.relayGet('cards', { search: card.name, includeEbay: 'true', limit: 12 });
+                    const results = this.pptResults(data);
+                    if (!results.length) { this.showToast('No live match found — enter value manually'); return; }
+                    const { match, score } = this.pptPickCard(results, card);
+                    if (!match) { this.showToast('No live match found'); return; }
+                    let val = 0;
+                    if (card.condition === 'graded') { val = this.pptGraded(match, card.gradeCompany, card.grade); }
+                    if (!val) val = this.pptRaw(match);
+                    if (!val) { console.log('PPT matched card (no price field recognised):', match); this.showToast('Got the card but no price in response (see console)'); return; }
+                    card.valueOverride = Math.round(val * 100) / 100;
+                    if (!card.market) { const raw = this.pptRaw(match); if (raw) card.market = raw; }
+                    this.persist(card);
+                    this.showToast(score >= 5 ? 'Live price applied' : 'Applied best-guess match — verify it');
+                } catch (e) { console.log(e); this.showToast(e.message === 'no-relay' ? 'Set a relay URL in Settings' : 'Live lookup failed — check the relay'); }
+                finally { this.refreshing = false; }
+            },
+            async fetchSealedPrice(item) {
+                if (!this.relayUrl) { this.showSettings = true; this.showToast('Add your relay URL in Settings first'); return; }
+                this.refreshing = true;
+                try {
+                    const data = await this.relayGet('sealed-products', { search: item.name, limit: 10 });
+                    const results = this.pptResults(data);
+                    if (!results.length) { this.showToast('No sealed match found'); return; }
+                    const want = (item.name || '').toLowerCase().split(/\s+/).filter(Boolean);
+                    let best = null, bs = -1;
+                    for (const r of results) { const nm = (r.name || '').toLowerCase(); let sc = 0; want.forEach(w => { if (nm.includes(w)) sc++; }); if (sc > bs) { bs = sc; best = r; } }
+                    const val = this.pptRaw(best);
+                    if (!val) { console.log('Sealed match (no price field recognised):', best); this.showToast('Found product but no price in response (see console)'); return; }
+                    item.valueOverride = Math.round(val * 100) / 100;
+                    this.persist(item);
+                    this.showToast('Live sealed price applied');
+                } catch (e) { console.log(e); this.showToast(e.message === 'no-relay' ? 'Set a relay URL in Settings' : 'Live lookup failed — check the relay'); }
+                finally { this.refreshing = false; }
+            },
             loadHistory() { try { const h = localStorage.getItem('cactus_history'); this.history = h ? JSON.parse(h) : []; } catch (e) { this.history = []; } },
             recordSnapshot() {
                 try {
