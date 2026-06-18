@@ -336,6 +336,7 @@
                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); switchView('calculator')" class="glass-panel h-64 p-10 cursor-pointer relative overflow-hidden group border-2 border-transparent hover:border-[#39ff14]/50 transition-all duration-500">
                     <div class="absolute inset-0 bg-gradient-to-br from-[#302b63]/60 to-black/60 z-0"></div>
                     <div class="absolute top-6 right-6 flex gap-3 z-20 opacity-0 group-hover:opacity-100 transition duration-300">
+                        <button @click.stop="refreshBinderById(b.id)" :disabled="refreshing" class="w-10 h-10 rounded-full bg-black/50 text-[#39ff14] hover:bg-[#39ff14] hover:text-black flex items-center justify-center transition shadow-lg" title="Refresh prices"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i></button>
                         <button @click.stop="renameBinder(b)" class="w-10 h-10 rounded-full bg-black/50 text-white hover:bg-[#39ff14] hover:text-black flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-pen"></i></button>
                         <button @click.stop="deleteBinder(b.id)" class="w-10 h-10 rounded-full bg-black/50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -360,7 +361,7 @@
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
                         <input v-model="tableFilter" placeholder="Filter..." class="bg-black/50 border border-white/20 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:border-[#39ff14] outline-none w-40">
                     </div>
-                    <button @click="refreshAllPrices" :disabled="refreshing" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> {{ refreshing ? refreshProgress + '%' : 'Refresh' }}</button>
+                    <button @click="refreshScoped" :disabled="refreshing" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> {{ refreshing ? refreshProgress + '%' : (currentBinder ? 'Refresh binder' : 'Refresh') }}</button>
                     <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-600 text-white text-xs font-bold px-5 py-3 rounded-xl hover:bg-red-700 transition uppercase tracking-widest">DELETE {{ selectedIds.length }}</button>
                 </div>
             </div>
@@ -483,6 +484,10 @@
                             <p class="font-black uppercase tracking-[0.2em] text-lg">Pick an era & set to begin</p>
                         </div>
                         <div v-else class="space-y-2 pb-10">
+                            <div v-if="!isSearching && rawResults.length && pricedCount === 0" class="mb-3 text-xs font-bold text-[#ff9f43] bg-[#ff9f43]/10 border border-[#ff9f43]/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <span><i class="fa-solid fa-circle-info mr-2"></i>This set isn't priced in the free database yet. You can still add cards now and set values manually, or check again later.</span>
+                                <button @click="fetchCards(true)" class="btn-ghost shrink-0 self-start sm:self-auto"><i class="fa-solid fa-rotate mr-1" :class="{'fa-spin': isSearching}"></i> Check again</button>
+                            </div>
                             <div v-for="card in searchResults" :key="card.id" class="bg-black/40 rounded-xl border transition-all overflow-hidden" :class="selectedCardToAdd === card.id ? 'border-[#39ff14]' : 'border-white/10 hover:border-white/30'">
                                 <div @click="selectAddCard(card)" class="p-4 flex justify-between items-center cursor-pointer group">
                                     <div class="flex items-center gap-4 min-w-0">
@@ -684,7 +689,7 @@
                 addType: 'card', showFilters: true,
                 setsLoading: false, setsError: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master',
-                rawResults: [], cacheKey: 'cactus_sets_clean_v2', totalSetData: {},
+                rawResults: [], cacheKey: 'cactus_sets_clean_v2', totalSetData: {}, zeroRetryDone: false,
                 sortBy: 'pl', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, searchPageSize: 24, addedIds: [], selectedIds: [], searchSort: 'price-desc',
                 searchCache: {}, searchTimeout: null,
@@ -804,6 +809,7 @@
             },
             totalSearchPages() { return Math.max(1, Math.ceil(this.sortedResults.length / this.searchPageSize)); },
             searchResults() { const start = (this.searchPage - 1) * this.searchPageSize; return this.sortedResults.slice(start, start + this.searchPageSize); },
+            pricedCount() { return this.rawResults.filter(c => this.getMarketPrice(c) > 0).length; },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             sparkPoints() {
                 if (this.history.length < 2) return null;
@@ -922,7 +928,7 @@
             logout() { if (auth) auth.signOut(); },
             getSetTotal(setName) { const s = this.totalSetData[setName]; return (s && (s.total || s.printedTotal)) || '?'; },
             setProgress(setName, unique) { const t = this.totalSetData[setName]; const total = t && (t.total || t.printedTotal); if (!total) return 0; return Math.min(100, Math.round(unique / total * 100)); },
-            resetSearch() { this.rawResults = []; this.searchPage = 1; this.searchError = false; this.selectedCardToAdd = null; this.query = ""; },
+            resetSearch() { this.rawResults = []; this.searchPage = 1; this.searchError = false; this.selectedCardToAdd = null; this.query = ""; this.zeroRetryDone = false; },
             showToast(msg) { this.toast = msg; if (this.toastTimer) clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast = "", 2600); },
             fmtDate(t) { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } },
             toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.filteredList.map(c => c.uid); },
@@ -1068,11 +1074,17 @@
                 } catch (e) { this.showToast('Could not reach the price database'); }
                 finally { this.refreshing = false; }
             },
-            async refreshAllPrices() {
-                const cards = this.items.filter(c => c.type === 'card');
+            async refreshAllPrices() { return this.refreshPrices(this.items.filter(c => c.type === 'card')); },
+            async refreshScoped() {
+                const list = this.currentBinder ? this.items.filter(c => c.type === 'card' && c.binderId === this.currentBinder.id) : this.items.filter(c => c.type === 'card');
+                return this.refreshPrices(list);
+            },
+            async refreshBinderById(id) { return this.refreshPrices(this.items.filter(c => c.type === 'card' && c.binderId === id)); },
+            async refreshPrices(cards) {
                 if (!cards.length || this.refreshing) return;
                 this.refreshing = true; this.refreshProgress = 0;
                 const ids = [...new Set(cards.map(c => c.id))];
+                const wanted = new Set(ids);
                 const chunks = []; for (let i = 0; i < ids.length; i += 12) chunks.push(ids.slice(i, i + 12));
                 const priceMap = {}; let done = 0, failed = 0;
                 for (const chunk of chunks) {
@@ -1081,10 +1093,11 @@
                     catch (e) { failed++; }
                     done += chunk.length; this.refreshProgress = Math.round(done / ids.length * 100); await this.sleep(350);
                 }
-                if (this.user) { const batch = db.batch(); this.cloudCards.forEach(c => { if (priceMap[c.id] !== undefined) batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] }); }); try { await batch.commit(); } catch (e) {} }
-                else { this.localCards.forEach(c => { if (priceMap[c.id] !== undefined) c.market = priceMap[c.id]; }); this.saveData(); }
+                let updated = 0;
+                if (this.user) { const batch = db.batch(); this.cloudCards.forEach(c => { if (wanted.has(c.id) && priceMap[c.id] !== undefined) { batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] }); updated++; } }); try { await batch.commit(); } catch (e) {} }
+                else { this.localCards.forEach(c => { if (wanted.has(c.id) && priceMap[c.id] !== undefined) { c.market = priceMap[c.id]; updated++; } }); this.saveData(); }
                 this.refreshing = false; this.$nextTick(() => this.recordSnapshot());
-                this.showToast(failed ? `Updated, ${failed} batch(es) failed` : 'Raw prices refreshed');
+                this.showToast(failed ? `Updated, ${failed} batch(es) failed` : `Refreshed ${updated} card${updated === 1 ? '' : 's'}`);
             },
             exportCSV() {
                 if (!this.items.length) return;
@@ -1144,7 +1157,14 @@
                     }
                     if (requestId !== this.currentRequestId) return;
                     this.rawResults = all;
-                    if (all.length) this.searchCache[cacheKey] = all;
+                    const priced = all.filter(c => this.getMarketPrice(c) > 0).length;
+                    // Only cache once prices exist, so a "cold"/un-priced response isn't remembered.
+                    if (all.length && priced > 0) this.searchCache[cacheKey] = all;
+                    // New set or cold response with zero prices: auto-retry once before giving up.
+                    if (all.length && priced === 0 && !force && !this.zeroRetryDone) {
+                        this.zeroRetryDone = true;
+                        setTimeout(() => { if (requestId === this.currentRequestId) this.fetchCards(true); }, 1200);
+                    }
                     if (window.innerWidth < 768) this.showFilters = false;
                 } catch (e) {
                     if (e.name !== 'AbortError' && requestId === this.currentRequestId) { this.rawResults = []; this.searchError = true; }
