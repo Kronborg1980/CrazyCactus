@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crazy Cactus | Binder Love</title>
     <link rel="icon" href="https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg">
-
     <script>
         const originalWarn = console.warn;
         console.warn = function(...args) {
@@ -15,50 +14,38 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { corePlugins: { preflight: true } }</script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <style>
         :root { --neon-green: #39ff14; --amber: #ff9f43; --danger: #ff4757; --glass-surface: rgba(15, 12, 41, 0.85); }
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(to bottom, #302b63, #0f0c29);
-            color: #e2e8f0;
-            min-height: 100vh;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"), linear-gradient(to bottom, #302b63, #0f0c29);
-        }
+        body { font-family: 'Outfit', sans-serif; background: linear-gradient(to bottom, #302b63, #0f0c29); color: #e2e8f0; min-height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"), linear-gradient(to bottom, #302b63, #0f0c29); }
         [v-cloak] { display: none; }
         .text-glow { text-shadow: 0 0 8px rgba(57,255,20,0.4); }
-        .glass-panel {
-            background: var(--glass-surface); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); border-radius: 20px; transition: all 0.3s ease;
-        }
-        .glass-panel:hover { box-shadow: 0 10px 40px 0 rgba(57, 255, 20, 0.15); border-color: rgba(57, 255, 20, 0.3); }
+        .glass-panel { background: var(--glass-surface); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.5); border-radius: 20px; transition: all 0.3s ease; }
+        .glass-panel:hover { box-shadow: 0 10px 40px 0 rgba(57,255,20,0.15); border-color: rgba(57,255,20,0.3); }
         .bg-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vh; opacity: 0.08; pointer-events: none; z-index: -2; background-image: url('https://raw.githubusercontent.com/Kronborg1980/CrazyCactus/main/channels4_profile.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; filter: grayscale(1) contrast(1.5); }
-        .btn-neon { background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800; text-transform: uppercase; padding: 12px 24px; border-radius: 12px; box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); transition: all 0.3s; }
+        .btn-neon { background: linear-gradient(135deg, var(--neon-green), #2ecc71); color: #000; font-weight: 800; text-transform: uppercase; padding: 12px 24px; border-radius: 12px; box-shadow: 0 0 15px rgba(57,255,20,0.6); transition: all 0.3s; }
         .btn-neon:hover { transform: scale(1.03); box-shadow: 0 0 25px var(--neon-green); }
         .btn-neon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-ghost { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.18); color:#e2e8f0; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:10px 18px; border-radius:12px; transition:.25s; font-size:12px; }
         .btn-ghost:hover { border-color: var(--neon-green); color: var(--neon-green); box-shadow:0 0 12px rgba(57,255,20,.2); }
         .btn-ghost:disabled { opacity:.4; cursor:not-allowed; }
         .glass-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 10px; width: 100%; transition: 0.3s; }
-        .glass-input:focus { border-color: var(--neon-green); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); outline: none; }
+        .glass-input:focus { border-color: var(--neon-green); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px rgba(57,255,20,0.6); outline: none; }
         .nav-item { color: #a0aec0; font-weight: 600; padding: 10px 16px; border-radius: 12px; transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.1); }
-        .nav-item.active { background: rgba(57, 255, 20, 0.15); color: var(--neon-green); text-shadow: 0 0 8px rgba(57, 255, 20, 0.6); border: 1px solid rgba(57, 255, 20, 0.3); }
+        .nav-item.active { background: rgba(57,255,20,0.15); color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.6); border: 1px solid rgba(57,255,20,0.3); }
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
         .data-table th { text-align: left; padding: 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--neon-green); letter-spacing: 1px; }
         .data-table td { padding: 12px 16px; background: rgba(0,0,0,0.4); }
         .data-table tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
         .data-table tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
-        .data-table tr:hover td { background: rgba(57, 255, 20, 0.05); }
+        .data-table tr:hover td { background: rgba(57,255,20,0.05); }
         .progress-track { height: 8px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-green), #2ecc71); box-shadow: 0 0 10px rgba(57,255,20,0.5); border-radius: 999px; transition: width .6s ease; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -71,11 +58,9 @@
         .scanner-beam { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); animation: scan 2s infinite; opacity: 0.8; }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 80; background: rgba(0,0,0,0.92); border: 1px solid rgba(57,255,20,0.4); color: #fff; padding: 14px 26px; border-radius: 14px; font-weight: 700; box-shadow: 0 0 30px rgba(57,255,20,0.25); display:flex; align-items:center; gap:12px; }
-
-        /* ===== Hero / Vault dashboard ===== */
         .vault-aurora { background: radial-gradient(60% 80% at 12% 8%, rgba(57,255,20,.20), transparent 60%), radial-gradient(55% 65% at 92% 25%, rgba(124,77,255,.30), transparent 62%), radial-gradient(80% 80% at 75% 110%, rgba(255,159,67,.14), transparent 60%); pointer-events:none; }
         .vault-hero { border:1px solid rgba(57,255,20,.20); }
-        .vault-value { font-weight:800; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height:1; letter-spacing:-.02em; color:#fff; text-shadow:0 0 34px rgba(57,255,20,.5); font-variant-numeric:tabular-nums; }
+        .vault-value { font-weight:800; font-size: clamp(2.6rem, 7vw, 4.4rem); line-height:1; letter-spacing:-.02em; color:#fff; text-shadow:0 0 34px rgba(57,255,20,.5); font-variant-numeric:tabular-nums; }
         .rank-badge { width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000;background:linear-gradient(135deg,var(--neon-green),#2ecc71);box-shadow:0 0 22px rgba(57,255,20,.55); }
         .stat-chip { background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;text-align:center; }
         .chip-num { font-size:1.2rem;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1; }
@@ -89,6 +74,15 @@
         .jewel-float { animation:floaty 5s ease-in-out infinite; }
         @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         .empty-orb { width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#000;background:radial-gradient(circle at 35% 30%, #7dff63, #2ecc71);box-shadow:0 0 60px rgba(57,255,20,.6), inset 0 0 30px rgba(255,255,255,.3);animation:floaty 4s ease-in-out infinite; }
+        .seg { display:flex; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:4px; gap:4px; }
+        .seg button { flex:1; padding:10px; border-radius:9px; font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; transition:.25s; }
+        .seg button.on { background:linear-gradient(135deg,var(--neon-green),#2ecc71); color:#000; box-shadow:0 0 14px rgba(57,255,20,.4); }
+        .badge { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; padding:4px 9px; border-radius:999px; white-space:nowrap; }
+        .badge-raw { background:rgba(148,163,184,.15); color:#cbd5e1; border:1px solid rgba(148,163,184,.3); }
+        .badge-graded { background:rgba(57,255,20,.12); color:var(--neon-green); border:1px solid rgba(57,255,20,.4); }
+        .badge-sealed { background:rgba(255,159,67,.14); color:var(--amber); border:1px solid rgba(255,159,67,.4); }
+        .tf-btn { padding:8px 14px; border-radius:10px; font-weight:800; font-size:12px; letter-spacing:.05em; color:#94a3b8; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.35); transition:.2s; }
+        .tf-btn.on { color:#000; background:linear-gradient(135deg,var(--neon-green),#2ecc71); border-color:transparent; box-shadow:0 0 14px rgba(57,255,20,.4); }
         @media (prefers-reduced-motion: reduce){ .jewel-float,.empty-orb{animation:none} .jewel-hero:hover .holo-card::after{animation:none} .jewel-hero:hover .holo-card{transform:none} }
     </style>
 </head>
@@ -104,14 +98,13 @@
                 </div>
                 <div>
                     <h1 class="font-black text-3xl leading-none text-white tracking-wide drop-shadow-[0_0_10px_#39ff14]">CRAZY CACTUS</h1>
-                    <div class="text-xs font-bold text-[#39ff14] uppercase tracking-[0.4em] flex items-center gap-2 mt-1 text-glow">
-                        Binder Love <i class="fa-solid fa-heart animate-bounce"></i>
-                    </div>
+                    <div class="text-xs font-bold text-[#39ff14] uppercase tracking-[0.4em] flex items-center gap-2 mt-1 text-glow">Binder Love <i class="fa-solid fa-heart animate-bounce"></i></div>
                 </div>
             </div>
             <div class="hidden md:flex items-center gap-2 p-2 bg-black/30 rounded-2xl backdrop-blur-md border border-white/10 shadow-xl">
                 <div @click="switchView('collection')" class="nav-item" :class="{active: currentView==='collection'}"><i class="fa-solid fa-table-cells-large"></i> Dashboard</div>
-                <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}"><i class="fa-solid fa-calculator"></i> Profit Calc</div>
+                <div @click="switchView('trends')" class="nav-item" :class="{active: currentView==='trends'}"><i class="fa-solid fa-chart-line"></i> Trends</div>
+                <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}"><i class="fa-solid fa-calculator"></i> Manage</div>
                 <div @click="switchView('binders')" class="nav-item" :class="{active: currentView==='binders'}"><i class="fa-solid fa-book-journal-whills"></i> Binders</div>
             </div>
             <div class="flex items-center gap-3">
@@ -121,34 +114,26 @@
                     <button @click="logout" class="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Log Out</button>
                 </div>
                 <button v-else-if="authReady" @click="loginWithGoogle" class="hidden md:block text-xs font-bold text-[#39ff14] border border-[#39ff14] px-4 py-2 rounded-lg hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_10px_rgba(57,255,20,0.3)]">TRAINER LOGIN</button>
-                <button @click="openSearch" class="btn-neon text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Card</span></button>
+                <button @click="openSearch" class="btn-neon text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add</span></button>
             </div>
         </div>
     </nav>
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 pb-28">
-
-        <!-- ===== DASHBOARD / COLLECTION ===== -->
+        <!-- DASHBOARD -->
         <div v-if="currentView === 'collection'">
-
-            <!-- EMPTY STATE -->
-            <div v-if="cards.length === 0" class="glass-panel relative overflow-hidden text-center py-20 px-8">
+            <div v-if="items.length === 0" class="glass-panel relative overflow-hidden text-center py-20 px-8">
                 <div class="absolute inset-0 vault-aurora opacity-70"></div>
                 <div class="relative z-10">
                     <div class="empty-orb mx-auto mb-8"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                     <h3 class="text-4xl md:text-5xl font-black text-white mb-3 uppercase tracking-wide text-glow">Start your legend</h3>
                     <p class="text-gray-300 mb-2 text-lg max-w-xl mx-auto">Every Champion started with a single card. Add yours and watch your vault &mdash; and your rank &mdash; climb.</p>
-                    <p class="text-sm text-gray-500 mb-8">Track real market value, plan your grades, and chase set completion.</p>
-                    <button @click="openSearch" class="btn-neon text-lg px-10 py-4"><i class="fa-solid fa-plus mr-2"></i>Add your first card</button>
+                    <button @click="openSearch" class="btn-neon text-lg px-10 py-4 mt-6"><i class="fa-solid fa-plus mr-2"></i>Add your first card</button>
                 </div>
             </div>
-
-            <!-- POPULATED -->
             <div v-else>
-                <!-- HERO -->
                 <div class="mb-12">
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        <!-- THE VAULT -->
                         <div class="lg:col-span-3 glass-panel vault-hero p-8 md:p-10 relative overflow-hidden">
                             <div class="absolute inset-0 vault-aurora"></div>
                             <div class="relative z-10">
@@ -160,12 +145,12 @@
                                     </div>
                                 </div>
                                 <div class="text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mb-1 mt-7">Your vault is worth</div>
-                                <div class="vault-value">${{ formatNumber(displayValue) }}</div>
+                                <div class="vault-value cursor-pointer" @click="switchView('trends')">${{ formatNumber(displayValue) }}</div>
                                 <div class="flex items-center gap-3 mt-3 mb-6">
                                     <span class="px-3 py-1 rounded-lg text-sm font-black" :class="dayChange>=0?'bg-[#39ff14]/15 text-[#39ff14]':'bg-red-500/15 text-red-400'">
                                         <i :class="dayChange>=0?'fa-solid fa-caret-up':'fa-solid fa-caret-down'"></i> {{ dayChange>=0?'+':'-' }}${{ formatNumber(Math.abs(dayChange)) }}
                                     </span>
-                                    <span class="text-xs font-bold text-gray-500">since last visit</span>
+                                    <span class="text-xs font-bold text-gray-500">since last visit &middot; <button @click="switchView('trends')" class="text-[#39ff14] hover:underline">see trends</button></span>
                                 </div>
                                 <svg v-if="sparkPoints" viewBox="0 0 300 60" preserveAspectRatio="none" class="w-full h-14 mb-6">
                                     <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#39ff14" stop-opacity=".45"/><stop offset="100%" stop-color="#39ff14" stop-opacity="0"/></linearGradient></defs>
@@ -180,48 +165,44 @@
                                     <div class="progress-track"><div class="progress-fill" :style="{ width: rank.pct + '%' }"></div></div>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
-                                    <div class="stat-chip"><div class="chip-num">{{ cards.length }}</div><div class="chip-lbl">Cards</div></div>
-                                    <div class="stat-chip"><div class="chip-num">{{ distinctSets }}</div><div class="chip-lbl">Sets</div></div>
-                                    <div class="stat-chip"><div class="chip-num" :class="totalProfit>=0?'text-[#39ff14]':'text-red-400'">{{ totalProfit>=0?'+':'-' }}${{ formatNumber(Math.abs(totalProfit)) }}</div><div class="chip-lbl">Graded upside</div></div>
+                                    <div class="stat-chip"><div class="chip-num">{{ items.length }}</div><div class="chip-lbl">Items</div></div>
+                                    <div class="stat-chip"><div class="chip-num">${{ formatNumber(totalInvested) }}</div><div class="chip-lbl">Invested</div></div>
+                                    <div class="stat-chip"><div class="chip-num" :class="totalPL>=0?'text-[#39ff14]':'text-red-400'">{{ totalPL>=0?'+':'-' }}${{ formatNumber(Math.abs(totalPL)) }}</div><div class="chip-lbl">Gain / Loss</div></div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- CROWN JEWEL -->
                         <div v-if="mostValuable" @click="openCardDetail(mostValuable)" class="lg:col-span-2 glass-panel jewel-hero p-8 relative overflow-hidden flex flex-col cursor-pointer" style="perspective:1200px">
                             <div class="text-[11px] font-black uppercase tracking-[0.32em] text-[#ff9f43] mb-1"><i class="fa-solid fa-crown mr-2"></i>Crown Jewel</div>
-                            <div class="text-xs font-bold text-gray-400 mb-4">Your most valuable card</div>
+                            <div class="text-xs font-bold text-gray-400 mb-4">Your most valuable item</div>
                             <div class="flex-1 flex items-center justify-center py-2">
                                 <div class="holo-card jewel-float w-44 md:w-48">
-                                    <img :src="mostValuable.image.replace('small','large')" class="w-full rounded-xl border border-white/10 shadow-2xl relative z-10">
+                                    <img v-if="mostValuable.image" :src="(mostValuable.image||'').replace('small','large')" class="w-full rounded-xl border border-white/10 shadow-2xl relative z-10">
+                                    <div v-else class="w-full aspect-[3/4] rounded-xl border border-white/10 bg-black/50 flex items-center justify-center text-5xl text-[#ff9f43] relative z-10"><i class="fa-solid fa-box-open"></i></div>
                                 </div>
                             </div>
                             <div class="mt-5 text-center">
                                 <div class="text-xl font-black text-white uppercase tracking-wide truncate text-glow">{{ mostValuable.name }}</div>
-                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{{ mostValuable.set }} #{{ mostValuable.number }}</div>
-                                <div class="text-3xl font-black text-[#39ff14] drop-shadow-[0_0_12px_rgba(57,255,20,.6)]">${{ formatNumber(mostValuable.market) }}</div>
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{{ mostValuable.set || mostValuable.category }} <span v-if="mostValuable.number">#{{ mostValuable.number }}</span></div>
+                                <div class="text-3xl font-black text-[#39ff14] drop-shadow-[0_0_12px_rgba(57,255,20,.6)]">${{ formatNumber(getUnitValue(mostValuable)) }}</div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- TOP OF THE VAULT -->
-                    <div v-if="topCards.length > 1" class="glass-panel p-6 mt-6">
+                    <div v-if="topItems.length > 1" class="glass-panel p-6 mt-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-black uppercase tracking-[0.3em] text-white"><i class="fa-solid fa-fire text-[#ff9f43] mr-2"></i>Top of the Vault</h3>
-                            <button @click="switchView('calculator')" class="text-[11px] font-bold uppercase tracking-widest text-[#39ff14] hover:underline">View all &rarr;</button>
+                            <button @click="switchView('calculator')" class="text-[11px] font-bold uppercase tracking-widest text-[#39ff14] hover:underline">Manage all &rarr;</button>
                         </div>
                         <div class="flex gap-4 overflow-x-auto pb-2">
-                            <div v-for="c in topCards" :key="c.uid" @click="openCardDetail(c)" class="shrink-0 w-28 cursor-pointer group">
-                                <div class="relative rounded-xl overflow-hidden border border-white/10 group-hover:border-[#39ff14]/60 group-hover:shadow-[0_0_25px_rgba(57,255,20,.35)] transition">
-                                    <img :src="c.image" loading="lazy" class="w-full">
+                            <div v-for="c in topItems" :key="c.uid" @click="openCardDetail(c)" class="shrink-0 w-28 cursor-pointer group">
+                                <div class="relative rounded-xl overflow-hidden border border-white/10 group-hover:border-[#39ff14]/60 group-hover:shadow-[0_0_25px_rgba(57,255,20,.35)] transition aspect-[3/4] bg-black/50 flex items-center justify-center">
+                                    <img v-if="c.image" :src="c.image" loading="lazy" class="w-full h-full object-cover">
+                                    <i v-else class="fa-solid fa-box-open text-3xl text-[#ff9f43]"></i>
                                 </div>
-                                <div class="text-center mt-2"><div class="text-[11px] font-bold text-white truncate">{{ c.name }}</div><div class="text-xs font-black text-[#39ff14]">${{ Math.round(c.market) }}</div></div>
+                                <div class="text-center mt-2"><div class="text-[11px] font-bold text-white truncate">{{ c.name }}</div><div class="text-xs font-black text-[#39ff14]">${{ Math.round(getUnitValue(c)) }}</div></div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- FILTER + ACTIONS -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div class="relative flex-1 max-w-md">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -232,25 +213,22 @@
                         <button @click="exportCSV" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> Export</button>
                     </div>
                 </div>
-
-                <!-- SET GROUPS -->
                 <div class="space-y-10">
                     <div v-for="(setGroup, setName) in filteredCardsBySet" :key="setName" class="glass-panel overflow-hidden">
                         <div class="px-8 py-6 border-b border-white/10 bg-black/20">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="font-black text-2xl text-white uppercase tracking-wider flex items-center gap-3 text-glow"><i class="fa-solid fa-certificate text-[#ff9f43]"></i> {{ setName }}</h3>
-                                <span class="text-sm font-bold bg-[#39ff14]/20 text-[#39ff14] px-4 py-2 rounded-full border border-[#39ff14]/50 shadow-[0_0_15px_rgba(57,255,20,0.3)] shrink-0">{{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}</span>
+                                <span class="text-sm font-bold bg-[#39ff14]/20 text-[#39ff14] px-4 py-2 rounded-full border border-[#39ff14]/50 shrink-0">{{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}</span>
                             </div>
-                            <div class="progress-track">
-                                <div class="progress-fill" :style="{ width: setProgress(setName, setGroup.uniqueCount) + '%' }"></div>
-                            </div>
+                            <div class="progress-track"><div class="progress-fill" :style="{ width: setProgress(setName, setGroup.uniqueCount) + '%' }"></div></div>
                         </div>
                         <div class="p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-10">
                             <div v-for="card in setGroup.cards" :key="card.uid" @click="openCardDetail(card)" class="group cursor-pointer relative transition duration-300 hover:-translate-y-3 hover:rotate-1">
                                 <div class="relative rounded-2xl overflow-hidden shadow-2xl transition duration-300 group-hover:shadow-[0_0_40px_rgba(57,255,20,0.4)] border border-white/5 group-hover:border-[#39ff14]/50">
                                     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
                                     <img :src="card.image" loading="lazy" class="w-full object-cover">
-                                    <div class="absolute bottom-3 right-3 z-20 text-lg font-black drop-shadow-md bg-black/70 px-3 py-1 rounded-lg backdrop-blur-md border" :class="card.market > 0 ? 'text-[#39ff14] border-[#39ff14]/30' : 'text-gray-500 border-white/10'">${{ Math.round(card.market) }}</div>
+                                    <div v-if="card.condition==='graded'" class="absolute top-2 left-2 z-20 badge badge-graded">{{ card.gradeCompany }} {{ card.grade }}</div>
+                                    <div class="absolute bottom-3 right-3 z-20 text-lg font-black drop-shadow-md bg-black/70 px-3 py-1 rounded-lg backdrop-blur-md border" :class="getUnitValue(card) > 0 ? 'text-[#39ff14] border-[#39ff14]/30' : 'text-gray-500 border-white/10'">${{ Math.round(getUnitValue(card)) }}</div>
                                 </div>
                                 <div class="mt-4 text-center">
                                     <div class="text-sm font-bold text-white truncate group-hover:text-[#39ff14] transition text-glow">{{ card.name }}</div>
@@ -259,30 +237,100 @@
                             </div>
                         </div>
                     </div>
+                    <div v-if="filteredSealed.length" class="glass-panel overflow-hidden">
+                        <div class="px-8 py-6 border-b border-white/10 bg-black/20 flex justify-between items-center">
+                            <h3 class="font-black text-2xl text-white uppercase tracking-wider flex items-center gap-3 text-glow"><i class="fa-solid fa-box-open text-[#ff9f43]"></i> Sealed Products</h3>
+                            <span class="text-sm font-bold bg-[#ff9f43]/15 text-[#ff9f43] px-4 py-2 rounded-full border border-[#ff9f43]/40 shrink-0">{{ filteredSealed.length }} items</span>
+                        </div>
+                        <div class="p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                            <div v-for="s in filteredSealed" :key="s.uid" @click="openCardDetail(s)" class="group cursor-pointer">
+                                <div class="relative rounded-2xl overflow-hidden border border-white/10 group-hover:border-[#ff9f43]/50 transition aspect-[3/4] bg-black/50 flex items-center justify-center">
+                                    <img v-if="s.image" :src="s.image" loading="lazy" class="w-full h-full object-cover">
+                                    <i v-else class="fa-solid fa-box-open text-5xl text-[#ff9f43]/70"></i>
+                                    <div class="absolute top-2 left-2 badge badge-sealed">{{ s.category }}</div>
+                                    <div class="absolute bottom-2 right-2 text-base font-black text-[#39ff14] bg-black/70 px-2.5 py-1 rounded-lg border border-[#39ff14]/30">${{ Math.round(getUnitValue(s)) }}</div>
+                                </div>
+                                <div class="mt-3 text-center"><div class="text-sm font-bold text-white truncate">{{ s.name }}</div><div class="text-xs font-bold text-gray-500 mt-1">x{{ s.qty }}</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- TRENDS -->
+        <div v-if="currentView === 'trends'">
+            <h2 class="text-4xl font-black text-white tracking-wide drop-shadow-lg text-glow mb-2">PRICE TRENDS</h2>
+            <p class="text-sm font-bold text-gray-400 mb-8 tracking-wider">How your vault has moved over time</p>
+            <div class="flex flex-wrap gap-2 mb-8">
+                <button v-for="tf in timeframes" :key="tf.k" @click="selectedTf = tf.k" class="tf-btn" :class="{on: selectedTf===tf.k}">{{ tf.label }}</button>
+            </div>
+            <div v-if="!trend || !trend.enough" class="glass-panel p-12 text-center">
+                <i class="fa-solid fa-hourglass-half text-6xl text-[#39ff14]/60 mb-6"></i>
+                <h3 class="text-2xl font-black text-white uppercase mb-2">History is building</h3>
+                <p class="text-gray-400 max-w-lg mx-auto">Your trend data starts the day you begin using the app and grows from there. Check back tomorrow for your first day-over-day change &mdash; the longer timeframes fill in as the weeks pass.</p>
+            </div>
+            <div v-else>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="glass-panel p-8">
+                        <div class="chip-lbl mb-1">{{ currentTfLabel }} change</div>
+                        <div class="text-4xl font-black" :class="trend.change>=0?'text-[#39ff14]':'text-red-400'">{{ trend.change>=0?'+':'-' }}${{ formatNumber(Math.abs(trend.change)) }}</div>
+                        <div class="text-sm font-bold mt-1" :class="trend.change>=0?'text-[#39ff14]':'text-red-400'"><i :class="trend.change>=0?'fa-solid fa-arrow-trend-up':'fa-solid fa-arrow-trend-down'"></i> {{ trend.pct>=0?'+':'' }}{{ trend.pct.toFixed(1) }}%</div>
+                        <div class="text-[11px] text-gray-500 mt-3">{{ fmtDate(trend.base.t) }} &rarr; today</div>
+                    </div>
+                    <div class="glass-panel p-8 lg:col-span-2 flex flex-col justify-between">
+                        <div class="chip-lbl mb-3">Value over {{ currentTfLabel.toLowerCase() }}</div>
+                        <svg viewBox="0 0 600 150" preserveAspectRatio="none" class="w-full h-32">
+                            <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#39ff14" stop-opacity=".4"/><stop offset="100%" stop-color="#39ff14" stop-opacity="0"/></linearGradient></defs>
+                            <polyline v-if="chartArea" :points="chartArea" fill="url(#tg)" stroke="none"/>
+                            <polyline :points="chartLine" fill="none" stroke="#39ff14" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(57,255,20,.6))"/>
+                        </svg>
+                        <div class="flex justify-between text-[11px] font-bold text-gray-500 mt-2"><span>${{ formatNumber(trend.base.v) }}</span><span>${{ formatNumber(trend.cur.v) }}</span></div>
+                    </div>
+                </div>
+                <div class="glass-panel p-8">
+                    <h3 class="text-sm font-black uppercase tracking-[0.3em] text-white mb-1"><i class="fa-solid fa-magnifying-glass-chart text-[#ff9f43] mr-2"></i>What drove the change</h3>
+                    <p class="text-gray-300 mb-6">{{ trendExplanation }}</p>
+                    <div v-if="trend.attr" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="stat-chip text-left">
+                            <div class="chip-lbl">Market movement</div>
+                            <div class="text-2xl font-black mt-1" :class="trend.attr.market>=0?'text-[#39ff14]':'text-red-400'">{{ trend.attr.market>=0?'+':'-' }}${{ formatNumber(Math.abs(trend.attr.market)) }}</div>
+                            <div class="text-[11px] text-gray-500 mt-1">Price change on items you kept</div>
+                        </div>
+                        <div class="stat-chip text-left">
+                            <div class="chip-lbl">Items added</div>
+                            <div class="text-2xl font-black mt-1 text-[#39ff14]">+${{ formatNumber(trend.attr.added) }}</div>
+                            <div class="text-[11px] text-gray-500 mt-1">Value of new items</div>
+                        </div>
+                        <div class="stat-chip text-left">
+                            <div class="chip-lbl">Items removed</div>
+                            <div class="text-2xl font-black mt-1" :class="trend.attr.removed===0?'text-gray-400':'text-red-400'">{{ trend.attr.removed===0?'':'-' }}${{ formatNumber(Math.abs(trend.attr.removed)) }}</div>
+                            <div class="text-[11px] text-gray-500 mt-1">Value of items you sold/deleted</div>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-gray-500">Detailed breakdown needs at least two days of snapshots that include per-item data. It'll appear once enough history accumulates.</p>
                 </div>
             </div>
         </div>
 
-        <!-- ===== BINDERS ===== -->
-
+        <!-- BINDERS -->
         <div v-if="currentView === 'binders'">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 <div class="glass-panel p-5"><div class="chip-lbl">Portfolio</div><div class="text-2xl font-black text-white mt-1">${{ formatNumber(totalValue) }}</div></div>
                 <div class="glass-panel p-5"><div class="chip-lbl">Invested</div><div class="text-2xl font-black text-white mt-1">${{ formatNumber(totalInvested) }}</div></div>
-                <div class="glass-panel p-5"><div class="chip-lbl">Cards</div><div class="text-2xl font-black text-white mt-1">{{ cards.length }}</div></div>
+                <div class="glass-panel p-5"><div class="chip-lbl">Items</div><div class="text-2xl font-black text-white mt-1">{{ items.length }}</div></div>
                 <div class="glass-panel p-5"><div class="chip-lbl">Binders</div><div class="text-2xl font-black text-white mt-1">{{ binders.length }}</div></div>
             </div>
             <div class="flex justify-between items-center mb-10">
                 <h2 class="text-4xl font-black text-white tracking-wide drop-shadow-lg text-glow">CARD VAULTS</h2>
-                <button @click="createBinder" class="text-sm font-bold text-[#39ff14] border-2 border-[#39ff14] px-6 py-3 rounded-xl hover:bg-[#39ff14] hover:text-black transition shadow-[0_0_20px_rgba(57,255,20,0.3)]">+ NEW BINDER</button>
+                <button @click="createBinder" class="text-sm font-bold text-[#39ff14] border-2 border-[#39ff14] px-6 py-3 rounded-xl hover:bg-[#39ff14] hover:text-black transition">+ NEW BINDER</button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 <div @click="selectBinder(null); switchView('calculator')" class="glass-panel h-64 p-10 cursor-pointer relative overflow-hidden group border-2 border-transparent hover:border-[#39ff14]/50 transition-all duration-500">
                     <div class="absolute inset-0 bg-gradient-to-br from-gray-900/80 to-black/80 z-0"></div>
-                    <i class="fa-solid fa-server text-[12rem] text-white/5 absolute -bottom-8 -right-8 group-hover:scale-110 transition duration-500 group-hover:text-[#39ff14]/10"></i>
+                    <i class="fa-solid fa-server text-[12rem] text-white/5 absolute -bottom-8 -right-8 group-hover:scale-110 transition duration-500"></i>
                     <div class="relative z-10 h-full flex flex-col justify-end">
-                        <h3 class="text-3xl font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition drop-shadow-lg">Master Archive</h3>
-                        <p class="text-lg font-bold text-gray-400 mt-2">Total: <span class="text-white">{{ cards.length }}</span> Cards</p>
+                        <h3 class="text-3xl font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition">Master Archive</h3>
+                        <p class="text-lg font-bold text-gray-400 mt-2">Total: <span class="text-white">{{ items.length }}</span> Items</p>
                     </div>
                 </div>
                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); switchView('calculator')" class="glass-panel h-64 p-10 cursor-pointer relative overflow-hidden group border-2 border-transparent hover:border-[#39ff14]/50 transition-all duration-500">
@@ -293,68 +341,63 @@
                     </div>
                     <i class="fa-solid fa-book-bookmark text-[12rem] text-[#39ff14]/5 absolute -bottom-8 -right-8 group-hover:text-[#39ff14]/20 group-hover:rotate-12 transition duration-500"></i>
                     <div class="relative z-10 h-full flex flex-col justify-end">
-                        <h3 class="text-3xl font-black text-white uppercase tracking-wider truncate pr-4 drop-shadow-lg">{{ b.name }}</h3>
-                        <p class="text-lg font-bold text-[#39ff14] mt-2 drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]">{{ getBinderCount(b.id) }} Cards &middot; ${{ formatNumber(getBinderValue(b.id)) }}</p>
+                        <h3 class="text-3xl font-black text-white uppercase tracking-wider truncate pr-4">{{ b.name }}</h3>
+                        <p class="text-lg font-bold text-[#39ff14] mt-2">{{ getBinderCount(b.id) }} Items &middot; ${{ formatNumber(getBinderValue(b.id)) }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== PROFIT CALCULATOR ===== -->
+        <!-- MANAGE -->
         <div v-if="currentView === 'calculator'">
             <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 glass-panel p-8">
                 <div>
                     <h2 class="text-3xl font-black text-white uppercase flex items-center gap-4 text-glow"><i class="fa-solid fa-folder-open text-[#ff9f43]"></i> {{ currentBinder ? currentBinder.name : 'Master List' }}</h2>
-                    <p class="text-sm font-bold text-gray-400 mt-2 tracking-wider">Profitability analysis &middot; selling fee {{ settings.sellFee }}%</p>
+                    <p class="text-sm font-bold text-gray-400 mt-2 tracking-wider">Tap a card to edit grade, condition & value</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
-                        <input v-model="tableFilter" placeholder="Filter cards..." class="bg-black/50 border border-white/20 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:border-[#39ff14] outline-none w-44">
+                        <input v-model="tableFilter" placeholder="Filter..." class="bg-black/50 border border-white/20 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:border-[#39ff14] outline-none w-40">
                     </div>
                     <button @click="refreshAllPrices" :disabled="refreshing" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> {{ refreshing ? refreshProgress + '%' : 'Refresh' }}</button>
-                    <button @click="showSettings=true" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Assumptions</button>
-                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-600 text-white text-xs font-bold px-5 py-3 rounded-xl hover:bg-red-700 transition shadow-[0_0_20px_rgba(239,68,68,0.5)] uppercase tracking-widest">DELETE {{ selectedIds.length }}</button>
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-600 text-white text-xs font-bold px-5 py-3 rounded-xl hover:bg-red-700 transition uppercase tracking-widest">DELETE {{ selectedIds.length }}</button>
                 </div>
             </div>
             <div class="glass-panel overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="data-table min-w-[1100px]">
+                    <table class="data-table min-w-[1000px]">
                         <thead>
                             <tr class="bg-black/40">
                                 <th class="w-12 text-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="accent-[#39ff14] w-5 h-5 cursor-pointer"></th>
-                                <th class="w-24 text-center">Visual</th>
-                                <th @click="manualSort('name')" class="cursor-pointer hover:text-white text-sm">Card Identity <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="w-20 text-center">Visual</th>
+                                <th @click="manualSort('name')" class="cursor-pointer hover:text-white text-sm">Item <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-sm">Condition</th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('purchase')">Paid <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('value')">Value <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
+                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('pl')">Gain / Loss <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
                                 <th class="text-sm">Binder</th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('rawCost')">Paid <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
-                                <th class="text-right text-sm">Grading $</th>
-                                <th class="text-center text-sm">Target</th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('market')">Raw Value <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
-                                <th class="text-right text-sm">Est. Graded</th>
-                                <th class="text-right cursor-pointer hover:text-white text-sm" @click="manualSort('profit')">Net Profit <i class="fa-solid fa-sort ml-2 opacity-50"></i></th>
                                 <th class="text-center text-sm">Ops</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-if="filteredList.length === 0"><td colspan="11" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No cards here yet</td></tr>
+                            <tr v-if="filteredList.length === 0"><td colspan="9" class="text-center py-20 text-gray-500 font-bold text-xl uppercase tracking-widest">No items here yet</td></tr>
                             <tr v-for="c in paginatedList" :key="c.uid" :class="{'bg-[#39ff14]/10': selectedIds.includes(c.uid)}" class="transition duration-200 hover:bg-white/5">
                                 <td class="text-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="accent-[#39ff14] w-5 h-5 cursor-pointer"></td>
-                                <td class="text-center py-3"><div class="w-12 h-16 bg-gray-900 rounded-lg overflow-hidden border-2 border-white/10 mx-auto cursor-pointer hover:scale-110 hover:border-[#39ff14] transition shadow-lg" @click="openCardDetail(c)"><img :src="c.image" loading="lazy" class="w-full h-full object-cover"></div></td>
-                                <td><div class="font-black text-white text-base cursor-pointer hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">{{ c.set }} #{{ c.number }}</div></td>
-                                <td><select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-black/50 border border-white/20 rounded-lg text-sm px-3 py-2 text-gray-300 w-full focus:border-[#39ff14] outline-none transition"><option :value="null">Master Archive</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></td>
-                                <td><input v-model.number="c.rawCost" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white transition"></td>
-                                <td><input v-model.number="c.fee" @change="saveData()" type="number" class="bg-transparent text-right w-full border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white transition"></td>
-                                <td class="text-center"><select v-model="c.targetGrade" @change="saveData()" class="bg-black/50 border-2 border-[#39ff14]/50 rounded-lg text-xs px-3 py-2 text-[#39ff14] font-black focus:border-[#39ff14] outline-none"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></td>
-                                <td class="text-right font-mono font-bold text-base" :class="c.market > 0 ? 'text-gray-300' : 'text-gray-600'">${{ formatNumber(c.market) }}</td>
-                                <td class="text-right font-mono font-bold text-gray-200 text-base">${{ formatNumber(getEstValue(c)) }}</td>
-                                <td class="text-right font-mono font-black text-base" :class="getProfit(c) >= 0 ? 'text-[#39ff14]' : 'text-red-500'">{{ getProfit(c) >= 0 ? '' : '-' }}${{ Math.round(Math.abs(getProfit(c))) }}</td>
+                                <td class="text-center py-3"><div class="w-12 h-16 bg-gray-900 rounded-lg overflow-hidden border-2 border-white/10 mx-auto cursor-pointer hover:scale-110 hover:border-[#39ff14] transition flex items-center justify-center" @click="openCardDetail(c)"><img v-if="c.image" :src="c.image" loading="lazy" class="w-full h-full object-cover"><i v-else class="fa-solid fa-box-open text-[#ff9f43]"></i></div></td>
+                                <td><div class="font-black text-white text-base cursor-pointer hover:text-[#39ff14] transition" @click="openCardDetail(c)">{{ c.name }}<span v-if="c.qty>1" class="text-gray-500"> &times;{{ c.qty }}</span></div><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">{{ c.set || c.category }} <span v-if="c.number">#{{ c.number }}</span></div></td>
+                                <td><span class="badge" :class="c.type==='sealed'?'badge-sealed':(c.condition==='graded'?'badge-graded':'badge-raw')">{{ c.type==='sealed' ? 'Sealed' : (c.condition==='graded' ? c.gradeCompany+' '+c.grade : 'Raw') }}</span></td>
+                                <td><div class="flex items-center justify-end"><span class="text-gray-500 mr-0.5">$</span><input v-model.number="c.purchase" @change="persist(c)" type="number" class="bg-transparent text-right w-16 border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white transition"></div></td>
+                                <td><div class="flex items-center justify-end"><span class="text-gray-500 mr-0.5">$</span><input v-model.number="c.valueOverride" @change="persist(c)" type="number" :placeholder="Math.round(getUnitValue(c))" class="bg-transparent text-right w-20 border-b-2 border-white/20 focus:border-[#39ff14] outline-none pb-1 text-base font-black text-white placeholder:text-gray-500 transition"></div></td>
+                                <td class="text-right font-mono font-black text-base" :class="getPL(c) >= 0 ? 'text-[#39ff14]' : 'text-red-500'">{{ getPL(c) >= 0 ? '' : '-' }}${{ Math.round(Math.abs(getPL(c))) }}</td>
+                                <td><select v-model="c.binderId" @change="persist(c)" class="bg-black/50 border border-white/20 rounded-lg text-sm px-3 py-2 text-gray-300 w-full focus:border-[#39ff14] outline-none transition"><option :value="null">Master Archive</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></td>
                                 <td class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-500 hover:text-red-500 transition text-lg hover:scale-125"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="p-6 border-t border-white/10 flex justify-between items-center bg-black/30">
-                    <span class="text-sm font-bold text-gray-400 tracking-wider">{{ filteredList.length }} items visible</span>
+                    <span class="text-sm font-bold text-gray-400 tracking-wider">{{ filteredList.length }} items</span>
                     <div class="flex gap-4 items-center">
                         <span class="text-xs font-bold text-gray-500">Page {{ currentPage }} / {{ Math.max(totalPages,1) }}</span>
                         <button @click="prevPage" :disabled="currentPage===1" class="btn-ghost disabled:opacity-30">PREV</button>
@@ -365,169 +408,230 @@
         </div>
     </main>
 
-    <!-- ===== MOBILE NAV ===== -->
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-        <button @click="switchView('collection')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Home</span></button>
-        <button @click="switchView('calculator')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Calc</span></button>
-        <button @click="switchView('binders')" class="flex flex-col items-center gap-2 w-1/3 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] drop-shadow-[0_0_10px_#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-2xl"></i><span class="text-[10px] font-black uppercase tracking-widest">Binders</span></button>
+        <button @click="switchView('collection')" class="flex flex-col items-center gap-1.5 w-1/4 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Home</span></button>
+        <button @click="switchView('trends')" class="flex flex-col items-center gap-1.5 w-1/4 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='trends'}"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Trends</span></button>
+        <button @click="switchView('calculator')" class="flex flex-col items-center gap-1.5 w-1/4 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Manage</span></button>
+        <button @click="switchView('binders')" class="flex flex-col items-center gap-1.5 w-1/4 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Binders</span></button>
     </div>
-
-    <!-- ===== SEARCH MODAL ===== -->
+    <!-- ADD MODAL -->
     <Transition name="fade">
-        <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-            <div class="glass-panel w-full max-w-6xl h-full md:h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 shadow-[0_0_100px_rgba(57,255,20,0.15)] rounded-3xl">
-                <div v-if="isSearching" class="scan-overlay">
+        <div v-if="showSearch" class="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/90 backdrop-blur-md">
+            <div class="glass-panel w-full max-w-6xl h-full md:h-[90vh] flex flex-col overflow-hidden relative border-2 border-[#39ff14]/30 rounded-3xl">
+                <div v-if="isSearching && addType==='card'" class="scan-overlay">
                     <div class="scanner-beam"></div>
-                    <p class="mt-8 text-[#39ff14] font-black text-2xl tracking-[0.3em] uppercase animate-pulse">SCANNING...</p>
-                    <p class="mt-3 text-gray-400 text-sm font-bold">The card database can be slow — hang tight</p>
+                    <p class="mt-8 text-[#39ff14] font-black text-xl tracking-[0.3em] uppercase animate-pulse">LOADING SET...</p>
+                    <p class="mt-3 text-gray-400 text-sm font-bold">Pulling the whole set — hang tight</p>
                 </div>
-                <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
-                    <h2 class="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-4 text-glow"><i class="fa-solid fa-satellite-dish text-[#39ff14] animate-pulse"></i> Find a Card</h2>
-                    <button @click="showSearch=false" class="text-gray-500 hover:text-white transition transform hover:rotate-90 hover:scale-125"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                <div class="p-5 md:p-6 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
+                    <h2 class="text-xl md:text-2xl font-black text-white uppercase tracking-widest flex items-center gap-3 text-glow"><i class="fa-solid fa-satellite-dish text-[#39ff14]"></i> Add to Vault</h2>
+                    <button @click="showSearch=false" class="text-gray-500 hover:text-white transition hover:rotate-90"><i class="fa-solid fa-xmark text-2xl"></i></button>
                 </div>
-
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8 bg-black/30 border-b border-white/10 shrink-0">
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">1. Era</label>
-                        <select v-model="selectedEra" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="setsLoading">
-                            <option value="">Select era</option>
-                            <option v-for="e in eras" :key="e" :value="e">{{ e }}</option>
-                        </select>
-                        <p v-if="setsLoading" class="text-xs text-[#39ff14] mt-2 animate-pulse font-bold">Loading database...</p>
-                        <button v-if="setsError" @click="loadSetsAPI(true)" class="text-xs text-red-400 mt-2 font-bold underline">Database failed — tap to retry</button>
+                <div class="px-5 md:px-6 pt-4 shrink-0 bg-black/30">
+                    <div class="seg max-w-sm">
+                        <button :class="{on: addType==='card'}" @click="addType='card'"><i class="fa-solid fa-clone mr-1"></i> Single Cards</button>
+                        <button :class="{on: addType==='sealed'}" @click="addType='sealed'"><i class="fa-solid fa-box mr-1"></i> Sealed Product</button>
                     </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">2. Set</label>
-                        <select v-model="selectedSet" class="glass-input text-sm h-14 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">Select set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                </div>
+                <template v-if="addType==='card'">
+                    <div class="md:hidden px-5 pt-3 shrink-0 bg-black/30">
+                        <button @click="showFilters=!showFilters" class="w-full flex items-center justify-between bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-sm font-bold text-white">
+                            <span class="truncate"><i class="fa-solid fa-filter text-[#39ff14] mr-2"></i>{{ selectedSet ? currentSetName : 'Choose era & set' }}</span>
+                            <i class="fa-solid fa-chevron-down transition-transform" :class="{'rotate-180': showFilters}"></i>
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">3. Name (optional)</label>
-                        <div class="flex gap-2">
-                            <input v-model="query" @input="debouncedSearch" @keyup.enter="fetchCards(1,true)" class="glass-input text-sm h-14 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
-                            <button @click="fetchCards(1, true)" :disabled="isSearching || !selectedSet" class="btn-neon w-16 h-14 flex items-center justify-center rounded-xl"><i class="fa-solid fa-rotate-right" :class="{'fa-spin': isSearching}"></i></button>
+                    <div :class="showFilters ? 'grid' : 'hidden md:grid'" class="px-5 md:px-6 py-4 grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 bg-black/30 border-b border-white/10 shrink-0">
+                        <div>
+                            <label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-[0.2em]">1. Era</label>
+                            <select v-model="selectedEra" class="glass-input text-sm h-12 font-bold disabled:opacity-50" :disabled="setsLoading">
+                                <option value="">Select era</option>
+                                <option v-for="e in eras" :key="e" :value="e">{{ e }}</option>
+                            </select>
+                            <p v-if="setsLoading" class="text-xs text-[#39ff14] mt-1 animate-pulse font-bold">Loading database...</p>
+                            <button v-if="setsError" @click="loadSetsAPI(true)" class="text-xs text-red-400 mt-1 font-bold underline">Retry database</button>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-[0.2em]">2. Set</label>
+                            <select v-model="selectedSet" class="glass-input text-sm h-12 font-bold disabled:opacity-50" :disabled="!selectedEra"><option value="">Select set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-[0.2em]">3. Name (optional)</label>
+                            <div class="flex gap-2">
+                                <input v-model="query" @input="debouncedSearch" @keyup.enter="fetchCards(true)" class="glass-input text-sm h-12 font-black disabled:opacity-50 placeholder:text-gray-600 uppercase w-full" placeholder="e.g. MEW" :disabled="!selectedSet">
+                                <button @click="fetchCards(true)" :disabled="isSearching || !selectedSet" class="btn-neon w-14 h-12 flex items-center justify-center rounded-xl"><i class="fa-solid fa-rotate-right" :class="{'fa-spin': isSearching}"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-[0.2em]">4. Sort</label>
+                            <select v-model="searchSort" class="glass-input text-sm h-12 font-bold text-[#39ff14]">
+                                <option value="number">Card number</option>
+                                <option value="name">Card name</option>
+                                <option value="price-asc">Price: low to high</option>
+                                <option value="price-desc">Price: high to low</option>
+                            </select>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-3 tracking-[0.2em]">4. Sort</label>
-                        <select v-model="searchSort" class="glass-input text-sm h-14 font-bold text-[#39ff14]">
-                            <option value="number">Card number</option>
-                            <option value="name">Card name</option>
-                            <option value="price-asc">Price: low to high</option>
-                            <option value="price-desc">Price: high to low</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-y-auto p-8 bg-black/40 pb-24 min-h-0">
-                    <div v-if="searchError" class="flex flex-col items-center justify-center h-full opacity-90">
-                        <i class="fa-solid fa-triangle-exclamation text-8xl mb-6 text-red-500 animate-pulse"></i>
-                        <p class="font-black uppercase tracking-[0.3em] text-xl text-red-400">The card database didn't respond</p>
-                        <p class="text-gray-400 mt-3 text-sm max-w-md text-center">This public API is often slow. Retry, or add a free API key in Settings to improve reliability.</p>
-                        <button @click="fetchCards(searchPage, true)" class="mt-6 px-8 py-3 bg-red-500/20 border border-red-500 text-red-400 font-bold rounded-xl hover:bg-red-500 hover:text-white transition uppercase tracking-widest">Retry</button>
-                    </div>
-                    <div v-else-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40">
-                        <i class="fa-solid fa-magnifying-glass text-8xl mb-6 text-[#39ff14] animate-bounce"></i>
-                        <p class="font-black uppercase tracking-[0.3em] text-xl text-glow">Pick an era & set to begin</p>
-                    </div>
-
-                    <div v-else class="space-y-2 pb-10">
-                        <div v-for="card in searchResults" :key="card.id" class="bg-black/40 rounded-xl border transition-all duration-300 overflow-hidden" :class="selectedCardToAdd === card.id ? 'border-[#39ff14] shadow-[0_0_20px_rgba(57,255,20,0.15)]' : 'border-white/10 hover:border-white/30'">
-                            <div @click="selectedCardToAdd = selectedCardToAdd === card.id ? null : card.id" class="p-4 flex justify-between items-center cursor-pointer group">
-                                <div class="flex items-center gap-4">
-                                    <span class="text-xs font-black text-gray-500 w-8 md:w-12 group-hover:text-white transition">#{{ card.number }}</span>
-                                    <span class="text-sm md:text-base font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition">{{ card.name }}</span>
+                    <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-black/40 pb-24 min-h-0">
+                        <div v-if="searchError" class="flex flex-col items-center justify-center h-full opacity-90 text-center">
+                            <i class="fa-solid fa-triangle-exclamation text-7xl mb-5 text-red-500"></i>
+                            <p class="font-black uppercase tracking-[0.2em] text-lg text-red-400">The card database didn't respond</p>
+                            <p class="text-gray-400 mt-2 text-sm max-w-md">This public API is often slow. Try again in a moment.</p>
+                            <button @click="fetchCards(true)" class="mt-5 px-7 py-3 bg-red-500/20 border border-red-500 text-red-400 font-bold rounded-xl hover:bg-red-500 hover:text-white transition uppercase tracking-widest">Retry</button>
+                        </div>
+                        <div v-else-if="!isSearching && searchResults.length === 0" class="flex flex-col items-center justify-center h-full opacity-40 text-center">
+                            <i class="fa-solid fa-magnifying-glass text-7xl mb-5 text-[#39ff14]"></i>
+                            <p class="font-black uppercase tracking-[0.2em] text-lg">Pick an era & set to begin</p>
+                        </div>
+                        <div v-else class="space-y-2 pb-10">
+                            <div v-for="card in searchResults" :key="card.id" class="bg-black/40 rounded-xl border transition-all overflow-hidden" :class="selectedCardToAdd === card.id ? 'border-[#39ff14]' : 'border-white/10 hover:border-white/30'">
+                                <div @click="selectAddCard(card)" class="p-4 flex justify-between items-center cursor-pointer group">
+                                    <div class="flex items-center gap-4 min-w-0">
+                                        <span class="text-xs font-black text-gray-500 w-8 md:w-12 group-hover:text-white transition shrink-0">#{{ card.number }}</span>
+                                        <span class="text-sm md:text-base font-black text-white uppercase tracking-wider group-hover:text-[#39ff14] transition truncate">{{ card.name }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 md:gap-6 shrink-0">
+                                        <span class="text-sm font-bold" :class="getMarketPrice(card) > 0 ? 'text-[#39ff14]' : 'text-gray-600'">${{ formatNumber(getMarketPrice(card)) }}</span>
+                                        <i class="fa-solid fa-chevron-down text-gray-600 transition-transform" :class="{'rotate-180 text-[#39ff14]': selectedCardToAdd === card.id}"></i>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-4 md:gap-8">
-                                    <span class="text-sm font-bold" :class="getMarketPrice(card) > 0 ? 'text-[#39ff14]' : 'text-gray-600'">${{ formatNumber(getMarketPrice(card)) }}</span>
-                                    <i class="fa-solid fa-chevron-down text-gray-600 transition-transform duration-300" :class="{'rotate-180 text-[#39ff14]': selectedCardToAdd === card.id}"></i>
-                                </div>
-                            </div>
-                            <div v-if="selectedCardToAdd === card.id" class="p-6 bg-black/60 border-t border-[#39ff14]/20 flex flex-col md:flex-row gap-8 items-center md:items-start">
-                                <div class="relative group w-40 shrink-0">
-                                    <div class="absolute inset-0 bg-[#39ff14] blur-xl opacity-20 group-hover:opacity-40 transition duration-300"></div>
-                                    <img :src="card.images.small" class="w-full relative z-10 rounded-xl shadow-2xl border border-white/10">
-                                </div>
-                                <div class="flex-1 text-center md:text-left flex flex-col justify-center h-full pt-4">
-                                    <h4 class="text-2xl font-black text-white uppercase tracking-widest text-glow mb-1">{{ card.name }}</h4>
-                                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-certificate text-[#ff9f43] mr-2"></i>{{ card.set.name }}</p>
-                                    <p class="text-sm font-bold text-gray-300 mb-6">Raw market: <span class="text-[#39ff14]">${{ formatNumber(getMarketPrice(card)) }}</span></p>
-                                    <div class="flex flex-col md:flex-row items-center gap-4">
-                                        <button @click="addCard(card)" class="btn-neon w-full md:w-auto flex items-center justify-center gap-3"><i class="fa-solid fa-plus"></i> Add to collection</button>
-                                        <span v-if="addedIds.includes(card.id)" class="text-[#39ff14] font-black uppercase tracking-[0.2em] animate-pulse flex items-center gap-2"><i class="fa-solid fa-check"></i> Added</span>
+                                <div v-if="selectedCardToAdd === card.id" class="p-5 bg-black/60 border-t border-[#39ff14]/20 flex flex-col md:flex-row gap-6">
+                                    <div class="relative w-32 mx-auto md:mx-0 shrink-0"><img :src="card.images.small" class="w-full rounded-xl shadow-2xl border border-white/10"></div>
+                                    <div class="flex-1">
+                                        <h4 class="text-lg font-black text-white uppercase tracking-wide mb-1">{{ card.name }}</h4>
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{{ card.set.name }} &middot; raw ${{ formatNumber(getMarketPrice(card)) }}</p>
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">What you paid</label><input v-model.number="addForm.paid" type="number" class="glass-input text-sm py-2.5"></div>
+                                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Quantity</label><input v-model.number="addForm.qty" type="number" min="1" class="glass-input text-sm py-2.5"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Condition</label>
+                                            <div class="seg">
+                                                <button :class="{on: addForm.condition==='raw'}" @click="addForm.condition='raw'">Raw</button>
+                                                <button :class="{on: addForm.condition==='graded'}" @click="addForm.condition='graded'">Graded</button>
+                                            </div>
+                                        </div>
+                                        <div v-if="addForm.condition==='graded'" class="grid grid-cols-2 gap-3 mb-4">
+                                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Company</label><select v-model="addForm.company" class="glass-input text-sm py-2.5"><option>PSA</option><option>BGS</option><option>CGC</option></select></div>
+                                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grade</label><select v-model="addForm.grade" class="glass-input text-sm py-2.5"><option v-for="g in grades" :value="g">{{ g }}</option></select></div>
+                                            <p class="col-span-2 text-[11px] text-gray-500">Est. graded value ~ <span class="text-[#39ff14] font-bold">${{ formatNumber(estimateGradedRaw(getMarketPrice(card), addForm.company, addForm.grade)) }}</span> (fine-tune after adding)</p>
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <button @click="addCard(card)" class="btn-neon flex items-center gap-2"><i class="fa-solid fa-plus"></i> Add to vault</button>
+                                            <span v-if="addedIds.includes(card.id)" class="text-[#39ff14] font-black uppercase tracking-widest animate-pulse"><i class="fa-solid fa-check"></i> Added</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
-                    <button @click="prevPage" :disabled="searchPage === 1" class="btn-ghost disabled:opacity-30">PREV</button>
-                    <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-xs md:text-sm px-4 md:px-8 py-3 text-[#39ff14] font-black rounded-xl flex items-center">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
-                    <button @click="nextPage" :disabled="searchPage >= totalSearchPages" class="btn-ghost disabled:opacity-30">NEXT</button>
-                </div>
-            </div>
-        </div>
-    </Transition>
-
-    <!-- ===== CARD DETAIL MODAL ===== -->
-    <Transition name="fade">
-        <div v-if="detailCard" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
-            <div class="glass-panel w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative shadow-[0_0_150px_rgba(57,255,20,0.25)] rounded-3xl border-2 border-[#39ff14]/20">
-                <button @click="detailCard=null" class="absolute top-6 right-6 z-20 text-gray-400 hover:text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center transition hover:bg-red-500 hover:rotate-90"><i class="fa-solid fa-xmark text-xl"></i></button>
-                <div class="w-full md:w-1/2 bg-black/40 p-12 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/10 relative group">
-                    <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(57,255,20,0.15),transparent)] opacity-50 group-hover:opacity-100 transition duration-500"></div>
-                    <img :src="detailCard.image.replace('small','large')" class="max-h-[70vh] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.9)] rounded-2xl relative z-10 border-2 border-white/10 group-hover:border-[#39ff14]/30 transition duration-500 group-hover:scale-105">
-                </div>
-                <div class="w-full md:w-1/2 p-10 flex flex-col bg-[#0f0c29]/90 justify-between overflow-y-auto">
-                    <div>
-                        <h2 class="text-4xl font-black text-white uppercase leading-none mb-4 drop-shadow-lg text-glow">{{ detailCard.name }}</h2>
-                        <div class="flex gap-3 text-sm font-bold text-gray-400 mb-8 uppercase tracking-widest flex-wrap"><span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10">{{ detailCard.set }}</span><span class="bg-white/5 px-4 py-2 rounded-lg border border-white/10">#{{ detailCard.number }}</span></div>
-                        <div class="grid grid-cols-2 gap-5 mb-6">
-                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10"><div class="text-xs font-black text-[#ff9f43] uppercase mb-1 tracking-widest">Paid</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(detailCard.rawCost) }}</div></div>
-                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10"><div class="text-xs font-black text-gray-400 uppercase mb-1 tracking-widest">Raw Value</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(detailCard.market) }}</div></div>
-                            <div class="p-5 bg-[#39ff14]/5 rounded-2xl border border-[#39ff14]/20"><div class="text-xs font-black text-[#39ff14] uppercase mb-1 tracking-widest">Est. PSA {{ detailCard.targetGrade }}</div><div class="text-2xl font-mono font-black text-[#39ff14]">${{ formatNumber(getEstValue(detailCard)) }}</div></div>
-                            <div class="p-5 rounded-2xl border" :class="getProfit(detailCard) >= 0 ? 'bg-[#39ff14]/5 border-[#39ff14]/20' : 'bg-red-500/5 border-red-500/20'"><div class="text-xs font-black uppercase mb-1 tracking-widest" :class="getProfit(detailCard) >= 0 ? 'text-[#39ff14]' : 'text-red-400'">Net Profit</div><div class="text-2xl font-mono font-black" :class="getProfit(detailCard) >= 0 ? 'text-[#39ff14]' : 'text-red-400'">{{ getProfit(detailCard) >= 0 ? '' : '-' }}${{ formatNumber(Math.abs(getProfit(detailCard))) }}</div></div>
-                        </div>
-                        <button @click="refreshOnePrice(detailCard)" :disabled="refreshing" class="btn-ghost w-full mb-2 flex items-center justify-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> Refresh this price</button>
+                    <div class="absolute bottom-0 left-0 w-full p-4 bg-black/90 backdrop-blur-xl border-t border-[#39ff14]/30 flex justify-between items-center z-20">
+                        <button @click="prevPage" :disabled="searchPage === 1" class="btn-ghost disabled:opacity-30">PREV</button>
+                        <span class="bg-[#39ff14]/10 border-2 border-[#39ff14]/50 text-xs md:text-sm px-4 md:px-8 py-3 text-[#39ff14] font-black rounded-xl">PAGE {{ searchPage }} / {{ totalSearchPages }}</span>
+                        <button @click="nextPage" :disabled="searchPage >= totalSearchPages" class="btn-ghost disabled:opacity-30">NEXT</button>
                     </div>
-                    <div class="border-t border-white/10 pt-6"><button @click="deleteCard(detailCard.uid)" class="w-full border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-[0.2em] py-4 rounded-2xl hover:bg-red-600 hover:text-white transition hover:border-red-600">Remove from collection</button></div>
+                </template>
+                <template v-else>
+                    <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-black/40">
+                        <div class="max-w-xl mx-auto">
+                            <p class="text-sm text-gray-400 mb-6 bg-[#ff9f43]/10 border border-[#ff9f43]/30 rounded-xl p-4"><i class="fa-solid fa-circle-info text-[#ff9f43] mr-2"></i>The free card database has no sealed-product prices, so you enter the value yourself. It's then tracked in your portfolio just like cards.</p>
+                            <div class="space-y-4">
+                                <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Product name</label><input v-model="sealedForm.name" class="glass-input text-sm" placeholder="e.g. Surging Sparks Booster Box"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Category</label><select v-model="sealedForm.category" class="glass-input text-sm"><option v-for="cat in sealedCategories">{{ cat }}</option></select></div>
+                                    <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Set / era (optional)</label><input v-model="sealedForm.label" class="glass-input text-sm" placeholder="e.g. Scarlet & Violet"></div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Qty</label><input v-model.number="sealedForm.qty" type="number" min="1" class="glass-input text-sm"></div>
+                                    <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Paid $</label><input v-model.number="sealedForm.paid" type="number" class="glass-input text-sm"></div>
+                                    <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Value $</label><input v-model.number="sealedForm.value" type="number" class="glass-input text-sm"></div>
+                                </div>
+                                <div><label class="block text-[11px] font-black text-[#39ff14] uppercase mb-2 tracking-widest">Image URL (optional)</label><input v-model="sealedForm.image" class="glass-input text-sm" placeholder="https://..."></div>
+                                <button @click="addSealed" :disabled="!sealedForm.name" class="btn-neon w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-50"><i class="fa-solid fa-box"></i> Add sealed product</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </Transition>
+    <!-- DETAIL / EDIT MODAL -->
+    <Transition name="fade">
+        <div v-if="detailCard" class="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/95 backdrop-blur-xl">
+            <div class="glass-panel w-full max-w-5xl max-h-[94vh] flex flex-col md:flex-row overflow-hidden relative rounded-3xl border-2 border-[#39ff14]/20">
+                <button @click="detailCard=null" class="absolute top-5 right-5 z-20 text-gray-400 hover:text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center transition hover:bg-red-500 hover:rotate-90"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="w-full md:w-1/2 bg-black/40 p-8 md:p-12 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/10 relative">
+                    <img v-if="detailCard.image" :src="(detailCard.image||'').replace('small','large')" class="max-h-[40vh] md:max-h-[70vh] object-contain rounded-2xl border-2 border-white/10">
+                    <div v-else class="w-48 aspect-[3/4] rounded-2xl border-2 border-white/10 bg-black/50 flex items-center justify-center text-7xl text-[#ff9f43]"><i class="fa-solid fa-box-open"></i></div>
+                </div>
+                <div class="w-full md:w-1/2 p-7 md:p-10 flex flex-col bg-[#0f0c29]/90 overflow-y-auto">
+                    <h2 class="text-3xl font-black text-white uppercase leading-none mb-3 text-glow">{{ detailCard.name }}</h2>
+                    <div class="flex gap-2 text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest flex-wrap">
+                        <span class="bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">{{ detailCard.set || detailCard.category }}</span>
+                        <span v-if="detailCard.number" class="bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">#{{ detailCard.number }}</span>
+                        <span class="badge self-center" :class="detailCard.type==='sealed'?'badge-sealed':(detailCard.condition==='graded'?'badge-graded':'badge-raw')">{{ detailCard.type==='sealed' ? 'Sealed' : (detailCard.condition==='graded' ? detailCard.gradeCompany+' '+detailCard.grade : 'Raw') }}</span>
+                    </div>
+                    <div v-if="detailCard.type==='card'" class="space-y-4 mb-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Condition</label>
+                            <div class="seg">
+                                <button :class="{on: detailCard.condition==='raw'}" @click="detailCard.condition='raw'; persist(detailCard)">Raw</button>
+                                <button :class="{on: detailCard.condition==='graded'}" @click="detailCard.condition='graded'; persist(detailCard)">Graded</button>
+                            </div>
+                        </div>
+                        <div v-if="detailCard.condition==='graded'" class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Company</label><select v-model="detailCard.gradeCompany" @change="persist(detailCard)" class="glass-input text-sm py-2.5"><option>PSA</option><option>BGS</option><option>CGC</option></select></div>
+                            <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grade</label><select v-model="detailCard.grade" @change="persist(detailCard)" class="glass-input text-sm py-2.5"><option v-for="g in grades" :value="g">{{ g }}</option></select></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Paid $</label><input v-model.number="detailCard.purchase" @change="persist(detailCard)" type="number" class="glass-input text-sm py-2.5"></div>
+                        <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">{{ detailCard.condition==='graded' ? 'Grade fee $' : 'Fees $' }}</label><input v-model.number="detailCard.fee" @change="persist(detailCard)" type="number" class="glass-input text-sm py-2.5"></div>
+                        <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Qty</label><input v-model.number="detailCard.qty" @change="persist(detailCard)" type="number" min="1" class="glass-input text-sm py-2.5"></div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Current value $ <span class="text-gray-600 normal-case">(per item — blank = auto)</span></label>
+                        <div class="flex gap-2">
+                            <input v-model.number="detailCard.valueOverride" @change="persist(detailCard)" type="number" :placeholder="Math.round(getUnitValue(detailCard))" class="glass-input text-sm py-2.5">
+                            <button v-if="detailCard.type==='card'" @click="useEstimate(detailCard)" class="btn-ghost shrink-0" title="Fill with estimate">Est.</button>
+                        </div>
+                        <p v-if="detailCard.type==='card' && detailCard.condition==='raw'" class="text-[11px] text-gray-500 mt-2">Raw market (auto): ${{ formatNumber(detailCard.market) }}. If graded PSA 10 ~${{ formatNumber(estimateGradedRaw(detailCard.market,'PSA','10')) }} (est).</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10"><div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Value</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(getCurrentValue(detailCard)) }}</div></div>
+                        <div class="p-4 rounded-2xl border" :class="getPL(detailCard)>=0?'bg-[#39ff14]/5 border-[#39ff14]/20':'bg-red-500/5 border-red-500/20'"><div class="text-[10px] font-black uppercase tracking-widest" :class="getPL(detailCard)>=0?'text-[#39ff14]':'text-red-400'">Gain / Loss</div><div class="text-2xl font-mono font-black" :class="getPL(detailCard)>=0?'text-[#39ff14]':'text-red-400'">{{ getPL(detailCard)>=0?'':'-' }}${{ formatNumber(Math.abs(getPL(detailCard))) }}</div></div>
+                    </div>
+                    <div class="mt-auto pt-2 flex gap-3">
+                        <button v-if="detailCard.type==='card'" @click="refreshOnePrice(detailCard)" :disabled="refreshing" class="btn-ghost flex-1 flex items-center justify-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin': refreshing}"></i> Refresh raw price</button>
+                        <button @click="deleteCard(detailCard.uid)" class="border-2 border-red-500/40 text-red-400 font-black text-sm uppercase tracking-widest py-3 px-5 rounded-xl hover:bg-red-600 hover:text-white transition flex-1">Remove</button>
+                    </div>
                 </div>
             </div>
         </div>
     </Transition>
 
-    <!-- ===== SETTINGS MODAL ===== -->
+    <!-- SETTINGS -->
     <Transition name="fade">
         <div v-if="showSettings" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-            <div class="glass-panel w-full max-w-lg p-8 relative border-2 border-[#39ff14]/30">
+            <div class="glass-panel w-full max-w-lg p-8 relative border-2 border-[#39ff14]/30 max-h-[92vh] overflow-y-auto">
                 <button @click="showSettings=false" class="absolute top-5 right-5 text-gray-500 hover:text-white transition hover:rotate-90"><i class="fa-solid fa-xmark text-2xl"></i></button>
                 <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-1 text-glow"><i class="fa-solid fa-gear text-[#39ff14] mr-2"></i> Settings</h2>
                 <p class="text-xs text-gray-400 mb-6">Saved on this device.</p>
-
-                <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Pokémon TCG API key <span class="text-gray-500 normal-case font-bold">(optional, recommended)</span></label>
+                <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Pokémon TCG API key <span class="text-gray-500 normal-case font-bold">(optional)</span></label>
                 <input v-model="apiKey" @change="saveApiKey" placeholder="Paste key from dev.pokemontcg.io" class="glass-input text-sm mb-1">
-                <p class="text-[11px] text-gray-500 mb-6">Free key = far higher rate limits & fewer timeouts. Get one at <span class="text-[#39ff14]">dev.pokemontcg.io</span>.</p>
-
-                <div class="grid grid-cols-2 gap-5 mb-6">
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">Selling fee %</label>
-                        <input v-model.number="settings.sellFee" @change="saveSettings" type="number" class="glass-input text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">PSA 10 multiplier</label>
-                        <input v-model.number="settings.m10" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">PSA 9 multiplier</label>
-                        <input v-model.number="settings.m9" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-[#39ff14] uppercase mb-2 tracking-widest">PSA 8 multiplier</label>
-                        <input v-model.number="settings.m8" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm">
-                    </div>
+                <p class="text-[11px] text-gray-500 mb-6">Free key = higher rate limits & fewer timeouts. Get one at <span class="text-[#39ff14]">dev.pokemontcg.io</span>.</p>
+                <h3 class="text-xs font-black text-[#39ff14] uppercase tracking-widest mb-3"><i class="fa-solid fa-medal mr-1"></i> Graded value estimates</h3>
+                <p class="text-[11px] text-gray-500 mb-4">No free API gives real PSA/BGS/CGC prices, so graded values are estimated as raw price &times; these multipliers. Override any card's value manually for accuracy.</p>
+                <div class="grid grid-cols-4 gap-3 mb-4">
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Grade 10</label><input v-model.number="settings.base['10']" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm py-2"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">9.5</label><input v-model.number="settings.base['9.5']" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm py-2"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Grade 9</label><input v-model.number="settings.base['9']" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm py-2"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Grade 8</label><input v-model.number="settings.base['8']" @change="saveSettings" type="number" step="0.1" class="glass-input text-sm py-2"></div>
                 </div>
-                <p class="text-[11px] text-gray-500 leading-relaxed">Graded values are rough estimates: raw market price &times; the multiplier above, then minus selling fee and grading cost. The free API has no real graded-sale data, so treat these as ballpark figures, not appraisals.</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">PSA factor</label><input v-model.number="settings.comp.PSA" @change="saveSettings" type="number" step="0.05" class="glass-input text-sm py-2"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">BGS factor</label><input v-model.number="settings.comp.BGS" @change="saveSettings" type="number" step="0.05" class="glass-input text-sm py-2"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1">CGC factor</label><input v-model.number="settings.comp.CGC" @change="saveSettings" type="number" step="0.05" class="glass-input text-sm py-2"></div>
+                </div>
             </div>
         </div>
     </Transition>
@@ -536,21 +640,12 @@
         <div v-if="toast" class="toast"><i class="fa-solid fa-circle-check text-[#39ff14]"></i> {{ toast }}</div>
     </Transition>
 </div>
-
 <script>
-    // ============================================================
-    //  DATA SOURCE: api.pokemontcg.io (v2)
-    //  Robust fetch wrapper (timeout + retries + caching) so the app
-    //  survives this often-slow public API. A key raises reliability.
-    //  Set browsing now fetches the WHOLE set, then sorts/paginates
-    //  client-side so "price high to low" is correct across all cards.
-    // ============================================================
+    // DATA SOURCE: api.pokemontcg.io v2 (free, often slow). Robust fetch + whole-set
+    // load so price sort works across the whole set. Graded/sealed/history are tracked
+    // locally/manually (no free API provides them).
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
-    // Baked-in key from dev.pokemontcg.io (raises rate limits / reliability).
-    // Note: visible to anyone who can read this file. Regenerate at dev.pokemontcg.io if needed.
-    // A key entered in Settings will override this default.
-    const DEFAULT_API_KEY = "ed49e116-8d23-4f57-9c6e-d8900436cc21";
-
+    const DEFAULT_API_KEY = "ed49e116-8d23-4f57-9c6e-d8900436cc21"; // override in Settings
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -559,18 +654,26 @@
       messagingSenderId: "1075800361912",
       appId: "1:1075800361912:web:e7285e3e74bce49b03dd4d"
     };
-
-    let auth, db, provider, firebaseOk = false;
-    try {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-        provider = new firebase.auth.GoogleAuthProvider();
-        firebaseOk = true;
-    } catch(e) { console.log("Guest mode active (Firebase unavailable)"); }
+    let auth, db, provider;
+    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); provider = new firebase.auth.GoogleAuthProvider(); }
+    catch (e) { console.log("Guest mode"); }
 
     const { createApp } = Vue;
     let searchController = null;
+    const GRADE_BASE_FALLBACK = { '10':5, '9.5':3.2, '9':2, '8.5':1.6, '8':1.3, '7':1, '6':0.85, '5':0.75, '4':0.65, '3':0.55, '2':0.45, '1':0.35 };
+
+    function migrate(c) {
+        if (!c.type) c.type = 'card';
+        if (c.purchase === undefined) c.purchase = (c.rawCost !== undefined ? c.rawCost : 0);
+        if (c.qty === undefined || c.qty < 1) c.qty = 1;
+        if (!c.condition) c.condition = 'raw';
+        if (!c.gradeCompany) c.gradeCompany = 'PSA';
+        if (c.grade === undefined || c.grade === null) c.grade = '10';
+        c.grade = String(c.grade);
+        if (c.valueOverride === undefined) c.valueOverride = null;
+        if (c.fee === undefined) c.fee = 0;
+        return c;
+    }
 
     createApp({
         data() {
@@ -578,63 +681,68 @@
                 user: null, authReady: false, currentView: 'collection', currentBinder: null,
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, showSettings: false,
+                addType: 'card', showFilters: true,
                 setsLoading: false, setsError: false, isSearching: false, searchError: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master',
                 rawResults: [], cacheKey: 'cactus_sets_clean_v2', totalSetData: {},
-                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 60,
+                sortBy: 'pl', sortDesc: true, currentPage: 1, itemsPerPage: 60,
                 searchPage: 1, searchPageSize: 24, addedIds: [], selectedIds: [], searchSort: 'price-desc',
                 searchCache: {}, searchTimeout: null,
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null,
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
-                apiKey: "",
-                settings: { sellFee: 13, m10: 3.2, m9: 1.4, m8: 0.9 },
+                apiKey: "", selectedTf: '1m',
+                grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
+                sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
+                addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
+                sealedForm: { name: '', category: 'Booster Box', label: '', qty: 1, paid: null, value: null, image: '' },
+                settings: { base: { '10':5, '9.5':3.2, '9':2, '8':1.3 }, comp: { PSA:1, BGS:1.1, CGC:0.85 } },
+                timeframes: [{k:'24h',label:'24H',days:1},{k:'1w',label:'1W',days:7},{k:'1m',label:'1M',days:30},{k:'6m',label:'6M',days:182},{k:'1y',label:'1Y',days:365},{k:'all',label:'All',days:99999}],
                 rankTiers: [
-                    { min: 0,     name: 'Wandering Trainer', icon: 'fa-shoe-prints' },
-                    { min: 50,    name: 'Rookie Collector',  icon: 'fa-seedling' },
-                    { min: 250,   name: 'Ace Trainer',       icon: 'fa-star' },
-                    { min: 1000,  name: 'Gym Leader',        icon: 'fa-medal' },
-                    { min: 5000,  name: 'Elite Four',        icon: 'fa-crown' },
-                    { min: 15000, name: 'Champion',          icon: 'fa-trophy' },
-                    { min: 50000, name: 'Master Collector',  icon: 'fa-dragon' }
+                    { min: 0, name: 'Wandering Trainer', icon: 'fa-shoe-prints' },
+                    { min: 50, name: 'Rookie Collector', icon: 'fa-seedling' },
+                    { min: 250, name: 'Ace Trainer', icon: 'fa-star' },
+                    { min: 1000, name: 'Gym Leader', icon: 'fa-medal' },
+                    { min: 5000, name: 'Elite Four', icon: 'fa-crown' },
+                    { min: 15000, name: 'Champion', icon: 'fa-trophy' },
+                    { min: 50000, name: 'Master Collector', icon: 'fa-dragon' }
                 ]
             }
         },
         watch: {
             selectedEra(n, o) { if (n !== o) { this.selectedSet = ""; this.resetSearch(); } },
             selectedSet(n, o) { if (n !== o) { this.resetSearch(); if (this.selectedSet) this.fetchCards(); } },
-            searchSort() { this.searchPage = 1; }, // sorting is client-side now
-            cards: { handler() { this.refreshDisplayList(); }, deep: true },
+            searchSort() { this.searchPage = 1; },
+            items: { handler() { this.refreshDisplayList(); }, deep: true },
             currentBinder() { this.currentPage = 1; this.refreshDisplayList(); },
             tableFilter() { this.currentPage = 1; },
-            totalValue(n) { this.animateValue(n); }
+            totalValue(n) { this.animateValue(n); },
+            showSearch(v) { if (v) { this.showFilters = true; this.addType = 'card'; } }
         },
         mounted() {
             this.loadSettings();
             this.loadLocalData();
             this.loadHistory();
             this.loadSetsAPI();
-            this.$nextTick(() => this.animateValue(this.totalValue));
-            if (auth) {
-                auth.onAuthStateChanged(u => {
-                    this.authReady = true;
-                    if (u) { this.user = u; this.initCloudData(); } else { this.user = null; }
-                });
-            } else { this.authReady = true; }
+            this.$nextTick(() => { this.animateValue(this.totalValue); this.recordSnapshot(); });
+            if (auth) auth.onAuthStateChanged(u => { this.authReady = true; if (u) { this.user = u; this.initCloudData(); } else { this.user = null; } });
+            else this.authReady = true;
         },
         computed: {
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
-            cards() { return this.user ? this.cloudCards : this.localCards; },
-            totalValue() { return this.cards.reduce((s, c) => s + (c.market || 0), 0); },
-            totalInvested() { return this.cards.reduce((s, c) => s + (c.rawCost || 0) + (c.fee || 0), 0); },
-            totalProfit() { return this.cards.reduce((s, c) => s + this.getProfit(c), 0); },
-            distinctSets() { return new Set(this.cards.map(c => c.set)).size; },
-            mostValuable() { if (!this.cards.length) return null; return this.cards.reduce((a, b) => (b.market || 0) > (a.market || 0) ? b : a); },
-            topCards() {
+            items() { return this.user ? this.cloudCards : this.localCards; },
+            currentSetName() { const s = this.allSets.find(x => x.id === this.selectedSet); return s ? s.name : ''; },
+            currentTfLabel() { const t = this.timeframes.find(x => x.k === this.selectedTf); return t ? t.label : ''; },
+            totalValue() { return this.items.reduce((s, c) => s + this.getCurrentValue(c), 0); },
+            totalInvested() { return this.items.reduce((s, c) => s + this.getInvested(c), 0); },
+            totalPL() { return this.totalValue - this.totalInvested; },
+            distinctSets() { return new Set(this.items.filter(c => c.type === 'card').map(c => c.set)).size; },
+            mostValuable() { if (!this.items.length) return null; return this.items.reduce((a, b) => this.getUnitValue(b) > this.getUnitValue(a) ? b : a); },
+            topItems() {
                 const seen = new Set();
-                return [...this.cards].sort((a, b) => (b.market || 0) - (a.market || 0))
-                    .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; }).slice(0, 8);
+                return [...this.items].sort((a, b) => this.getUnitValue(b) - this.getUnitValue(a))
+                    .filter(c => { const k = c.id || c.uid; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
             },
             rank() {
                 const v = this.totalValue, tiers = this.rankTiers;
@@ -650,29 +758,22 @@
             filteredList() {
                 const f = this.tableFilter.trim().toLowerCase();
                 if (!f) return this.displayList;
-                return this.displayList.filter(c =>
-                    (c.name || '').toLowerCase().includes(f) ||
-                    (c.set || '').toLowerCase().includes(f) ||
-                    String(c.number || '').toLowerCase().includes(f));
+                return this.displayList.filter(c => (c.name || '').toLowerCase().includes(f) || (c.set || c.category || '').toLowerCase().includes(f) || String(c.number || '').toLowerCase().includes(f));
             },
-            paginatedList() {
-                const start = (this.currentPage - 1) * this.itemsPerPage;
-                return this.filteredList.slice(start, start + this.itemsPerPage);
-            },
+            paginatedList() { const start = (this.currentPage - 1) * this.itemsPerPage; return this.filteredList.slice(start, start + this.itemsPerPage); },
             cardsBySet() {
                 const grouped = {};
-                this.cards.forEach(c => {
-                    if (!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
+                this.items.filter(c => c.type === 'card').forEach(c => {
+                    if (!grouped[c.set]) grouped[c.set] = { cards: [], cardCounts: {}, uniqueCount: 0 };
                     grouped[c.set].cards.push(c);
-                    grouped[c.set].uniqueCardIds.add(c.id);
                     grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
                 });
                 for (const setName in grouped) {
-                    grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
-                    grouped[setName].cards.sort((a, b) => String(a.number).localeCompare(String(b.number), undefined, { numeric: true }));
                     const uniqueCards = []; const seen = new Set();
+                    grouped[setName].cards.sort((a, b) => String(a.number).localeCompare(String(b.number), undefined, { numeric: true }));
                     grouped[setName].cards.forEach(card => { if (!seen.has(card.id)) { uniqueCards.push(card); seen.add(card.id); } });
                     grouped[setName].cards = uniqueCards;
+                    grouped[setName].uniqueCount = seen.size;
                 }
                 return grouped;
             },
@@ -682,13 +783,17 @@
                 const out = {};
                 for (const setName in this.cardsBySet) {
                     const g = this.cardsBySet[setName];
-                    const matchSet = setName.toLowerCase().includes(f);
-                    const cards = matchSet ? g.cards : g.cards.filter(c => (c.name || '').toLowerCase().includes(f));
+                    const cards = setName.toLowerCase().includes(f) ? g.cards : g.cards.filter(c => (c.name || '').toLowerCase().includes(f));
                     if (cards.length) out[setName] = { ...g, cards };
                 }
                 return out;
             },
-            // ----- Search results: sort whole set, then paginate locally -----
+            sealedItems() { return this.items.filter(c => c.type === 'sealed'); },
+            filteredSealed() {
+                const f = this.collectionFilter.trim().toLowerCase();
+                if (!f) return this.sealedItems;
+                return this.sealedItems.filter(s => (s.name || '').toLowerCase().includes(f) || (s.category || '').toLowerCase().includes(f));
+            },
             sortedResults() {
                 const arr = [...this.rawResults];
                 if (this.searchSort === 'price-desc') arr.sort((a, b) => this.getMarketPrice(b) - this.getMarketPrice(a));
@@ -698,22 +803,60 @@
                 return arr;
             },
             totalSearchPages() { return Math.max(1, Math.ceil(this.sortedResults.length / this.searchPageSize)); },
-            searchResults() {
-                const start = (this.searchPage - 1) * this.searchPageSize;
-                return this.sortedResults.slice(start, start + this.searchPageSize);
-            },
+            searchResults() { const start = (this.searchPage - 1) * this.searchPageSize; return this.sortedResults.slice(start, start + this.searchPageSize); },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             sparkPoints() {
                 if (this.history.length < 2) return null;
-                const vals = this.history.map(h => h.v);
-                const min = Math.min(...vals), max = Math.max(...vals), range = (max - min) || 1;
+                const vals = this.history.map(h => h.v), min = Math.min(...vals), max = Math.max(...vals), range = (max - min) || 1;
                 const step = 300 / (this.history.length - 1);
                 return this.history.map((h, i) => `${(i * step).toFixed(1)},${(55 - ((h.v - min) / range) * 50).toFixed(1)}`).join(' ');
             },
-            sparkArea() { const p = this.sparkPoints; return p ? `0,60 ${p} 300,60` : null; }
+            sparkArea() { const p = this.sparkPoints; return p ? `0,60 ${p} 300,60` : null; },
+            trend() {
+                const snaps = [...this.history].sort((a, b) => a.t - b.t);
+                if (snaps.length < 2) return { enough: false };
+                const cur = snaps[snaps.length - 1];
+                const tf = this.timeframes.find(x => x.k === this.selectedTf);
+                const cutoff = Date.now() - tf.days * 86400000;
+                let base = snaps[0];
+                for (const s of snaps) { if (s.t <= cutoff) base = s; }
+                const series = snaps.filter(s => s.t >= base.t);
+                const change = cur.v - base.v;
+                const pct = base.v ? change / base.v * 100 : 0;
+                let attr = null;
+                if (base.items && cur.items) {
+                    let market = 0, added = 0, removed = 0;
+                    const oi = base.items, ci = cur.items;
+                    for (const uid in ci) { if (uid in oi) market += ci[uid] - oi[uid]; else added += ci[uid]; }
+                    for (const uid in oi) { if (!(uid in ci)) removed -= oi[uid]; }
+                    attr = { market, added, removed, total: change };
+                }
+                return { enough: true, base, cur, change, pct, series, attr };
+            },
+            chartLine() {
+                if (!this.trend || !this.trend.enough) return '';
+                const s = this.trend.series; if (s.length < 2) return '0,75 600,75';
+                const vals = s.map(p => p.v), min = Math.min(...vals), max = Math.max(...vals), range = (max - min) || 1;
+                const step = 600 / (s.length - 1);
+                return s.map((p, i) => `${(i * step).toFixed(1)},${(140 - ((p.v - min) / range) * 125).toFixed(1)}`).join(' ');
+            },
+            chartArea() { const l = this.chartLine; return l ? `0,150 ${l} 600,150` : ''; },
+            trendExplanation() {
+                if (!this.trend || !this.trend.enough) return '';
+                const t = this.trend, dir = t.change >= 0 ? 'up' : 'down', amt = '$' + Math.abs(Math.round(t.change));
+                let msg = `Your vault is ${dir} ${amt} over the ${this.currentTfLabel.toLowerCase()}.`;
+                if (!t.attr) return msg;
+                const a = t.attr, parts = [];
+                if (Math.abs(a.market) >= 1) parts.push(`${a.market >= 0 ? 'prices rose' : 'the market softened'} by $${Math.abs(Math.round(a.market))}`);
+                if (a.added >= 1) parts.push(`you added $${Math.round(a.added)} of new items`);
+                if (a.removed <= -1) parts.push(`you removed $${Math.abs(Math.round(a.removed))} worth`);
+                if (parts.length) msg += ' Of that, ' + parts.join(', ') + '.';
+                if (t.change < 0 && a.removed <= -1 && Math.abs(a.removed) > Math.abs(a.market)) msg += ' Most of the drop is from items leaving your collection — if that was an accident, you can re-add them.';
+                else if (t.change < 0 && Math.abs(a.market) > Math.abs(a.removed)) msg += ' The drop is mostly the market, not items leaving.';
+                return msg;
+            }
         },
         methods: {
-            // ---------- Robust API fetch ----------
             async apiFetch(url, { timeout = 15000, retries = 3, signal = null } = {}) {
                 let attempt = 0, lastErr = null;
                 while (attempt <= retries) {
@@ -737,8 +880,6 @@
                 throw lastErr || new Error('Request failed');
             },
             sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
-
-            // ---------- Prices ----------
             getMarketPrice(card) {
                 const tp = card && card.tcgplayer && card.tcgplayer.prices;
                 if (tp) {
@@ -746,47 +887,36 @@
                     let v = null;
                     for (const k of order) { if (tp[k]) { v = tp[k]; break; } }
                     if (!v) { const keys = Object.keys(tp); if (keys.length) v = tp[keys[0]]; }
-                    if (v) {
-                        const price = v.market || v.mid || ((v.low && v.high) ? (v.low + v.high) / 2 : 0) || v.low || v.high || 0;
-                        if (price > 0) return price;
-                    }
+                    if (v) { const price = v.market || v.mid || ((v.low && v.high) ? (v.low + v.high) / 2 : 0) || v.low || v.high || 0; if (price > 0) return price; }
                 }
                 const cm = card && card.cardmarket && card.cardmarket.prices;
-                if (cm) {
-                    const price = cm.averageSellPrice || cm.trendPrice || cm.avg30 || cm.avg7 || cm.avg1 || 0;
-                    if (price > 0) return price;
-                }
+                if (cm) { const price = cm.averageSellPrice || cm.trendPrice || cm.avg30 || cm.avg7 || cm.avg1 || 0; if (price > 0) return price; }
                 return 0;
             },
-
-            // ---------- Profit model ----------
-            gradeMultiplier(c) {
-                const g = String(c.targetGrade || 10);
-                if (g === '10') return this.settings.m10 || 1;
-                if (g === '9') return this.settings.m9 || 1;
-                if (g === '8') return this.settings.m8 || 1;
-                return 1;
+            estimateGradedRaw(raw, company, grade) {
+                const base = (this.settings.base[grade] !== undefined ? this.settings.base[grade] : GRADE_BASE_FALLBACK[grade]) || 1;
+                const comp = this.settings.comp[company] || 1;
+                return (raw || 0) * base * comp;
             },
-            getEstValue(c) { return (c.market || 0) * this.gradeMultiplier(c); },
-            getNetSale(c) { return this.getEstValue(c) * (1 - (this.settings.sellFee || 0) / 100); },
-            getInvested(c) { return (c.rawCost || 0) + (c.fee || 0); },
-            getProfit(c) { return this.getNetSale(c) - this.getInvested(c); },
-
-            // ---------- Count-up animation ----------
+            estimateGraded(c) { return this.estimateGradedRaw(c.market, c.gradeCompany, String(c.grade)); },
+            getUnitValue(c) {
+                const ov = c.valueOverride;
+                if (ov !== null && ov !== '' && ov !== undefined && !isNaN(ov)) return Number(ov);
+                if (c.type === 'sealed') return 0;
+                if (c.condition === 'graded') return this.estimateGraded(c);
+                return c.market || 0;
+            },
+            getCurrentValue(c) { return this.getUnitValue(c) * (c.qty || 1); },
+            getInvested(c) { return ((c.purchase || 0) + (c.fee || 0)) * (c.qty || 1); },
+            getPL(c) { return this.getCurrentValue(c) - this.getInvested(c); },
+            useEstimate(c) { c.valueOverride = Math.round((c.condition === 'graded' ? this.estimateGraded(c) : (c.market || 0)) * 100) / 100; this.persist(c); },
             animateValue(target) {
                 target = Math.round(target);
                 if (target === Math.round(this.displayValue)) { this.displayValue = target; return; }
                 const start = this.displayValue, dur = 900, t0 = performance.now();
-                const tick = now => {
-                    const p = Math.min(1, (now - t0) / dur);
-                    const eased = 1 - Math.pow(1 - p, 3);
-                    this.displayValue = start + (target - start) * eased;
-                    if (p < 1) requestAnimationFrame(tick); else this.displayValue = target;
-                };
+                const tick = now => { const p = Math.min(1, (now - t0) / dur); const eased = 1 - Math.pow(1 - p, 3); this.displayValue = start + (target - start) * eased; if (p < 1) requestAnimationFrame(tick); else this.displayValue = target; };
                 requestAnimationFrame(tick);
             },
-
-            // ---------- Navigation ----------
             switchView(view) { this.currentView = view; this.currentBinder = null; this.tableFilter = ""; window.scrollTo(0, 0); },
             loginWithGoogle() { if (auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if (auth) auth.signOut(); },
@@ -794,230 +924,187 @@
             setProgress(setName, unique) { const t = this.totalSetData[setName]; const total = t && (t.total || t.printedTotal); if (!total) return 0; return Math.min(100, Math.round(unique / total * 100)); },
             resetSearch() { this.rawResults = []; this.searchPage = 1; this.searchError = false; this.selectedCardToAdd = null; this.query = ""; },
             showToast(msg) { this.toast = msg; if (this.toastTimer) clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => this.toast = "", 2600); },
-
+            fmtDate(t) { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } },
             toggleSelectAll() { this.selectedIds = this.isAllSelected ? [] : this.filteredList.map(c => c.uid); },
             deleteSelected() {
-                if (!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
-                this.selectedIds.forEach(uid => {
-                    if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
-                    else this.localCards = this.localCards.filter(c => c.uid !== uid);
-                });
-                this.selectedIds = []; this.saveData();
+                if (!confirm(`Delete ${this.selectedIds.length} items?`)) return;
+                this.selectedIds.forEach(uid => { if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); else this.localCards = this.localCards.filter(c => c.uid !== uid); });
+                this.selectedIds = []; this.saveData(); this.$nextTick(() => this.recordSnapshot());
             },
-
             refreshDisplayList() {
-                let list = this.cards;
-                if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id);
+                let list = this.items;
+                if (this.currentBinder) list = this.items.filter(c => c.binderId === this.currentBinder.id);
                 let newList = [...list];
                 if (this.displayList.length === 0) this.performSort(newList);
-                else {
-                    const indexMap = new Map();
-                    this.displayList.forEach((c, i) => indexMap.set(c.uid, i));
-                    newList.sort((a, b) => (indexMap.has(a.uid) ? indexMap.get(a.uid) : 1e9) - (indexMap.has(b.uid) ? indexMap.get(b.uid) : 1e9));
-                }
+                else { const m = new Map(); this.displayList.forEach((c, i) => m.set(c.uid, i)); newList.sort((a, b) => (m.has(a.uid) ? m.get(a.uid) : 1e9) - (m.has(b.uid) ? m.get(b.uid) : 1e9)); }
                 this.displayList = newList;
             },
-            manualSort(key) {
-                if (this.sortBy === key) this.sortDesc = !this.sortDesc;
-                else { this.sortBy = key; this.sortDesc = true; }
-                this.currentPage = 1;
-                this.performSort(this.displayList);
-            },
+            manualSort(key) { if (this.sortBy === key) this.sortDesc = !this.sortDesc; else { this.sortBy = key; this.sortDesc = true; } this.currentPage = 1; this.performSort(this.displayList); },
             performSort(list) {
                 list.sort((a, b) => {
                     let A, B;
                     if (this.sortBy === 'name') { A = (a.name || '').toLowerCase(); B = (b.name || '').toLowerCase(); }
-                    else if (this.sortBy === 'rawCost') { A = a.rawCost || 0; B = b.rawCost || 0; }
-                    else if (this.sortBy === 'market') { A = a.market || 0; B = b.market || 0; }
-                    else if (this.sortBy === 'profit') { A = this.getProfit(a); B = this.getProfit(b); }
+                    else if (this.sortBy === 'purchase') { A = a.purchase || 0; B = b.purchase || 0; }
+                    else if (this.sortBy === 'value') { A = this.getCurrentValue(a); B = this.getCurrentValue(b); }
+                    else if (this.sortBy === 'pl') { A = this.getPL(a); B = this.getPL(b); }
                     else { A = a.id; B = b.id; }
                     if (A < B) return this.sortDesc ? 1 : -1;
                     if (A > B) return this.sortDesc ? -1 : 1;
                     return 0;
                 });
             },
-            nextPage() {
-                if (this.currentView === 'calculator') { if (this.currentPage < this.totalPages) this.currentPage++; }
-                else { if (this.searchPage < this.totalSearchPages) this.searchPage++; }
-            },
-            prevPage() {
-                if (this.currentView === 'calculator') { if (this.currentPage > 1) this.currentPage--; }
-                else { if (this.searchPage > 1) this.searchPage--; }
-            },
-
-            // ---------- Local storage ----------
+            nextPage() { if (this.currentView === 'calculator') { if (this.currentPage < this.totalPages) this.currentPage++; } else { if (this.searchPage < this.totalSearchPages) this.searchPage++; } },
+            prevPage() { if (this.currentView === 'calculator') { if (this.currentPage > 1) this.currentPage--; } else { if (this.searchPage > 1) this.searchPage--; } },
             loadLocalData() {
                 try {
                     const b = localStorage.getItem('cactus_binders'); if (b) this.localBinders = JSON.parse(b);
-                    const c = localStorage.getItem('cactus_cards'); if (c) this.localCards = JSON.parse(c);
+                    const c = localStorage.getItem('cactus_cards'); if (c) this.localCards = JSON.parse(c).map(migrate);
                 } catch (e) { console.warn("Storage blocked"); }
             },
-            saveData() {
-                if (!this.user) {
-                    try {
-                        localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders));
-                        localStorage.setItem('cactus_cards', JSON.stringify(this.localCards));
-                    } catch (e) { console.warn("Storage blocked"); }
-                }
-            },
+            saveData() { if (!this.user) { try { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } catch (e) {} } },
             loadSettings() {
                 try {
-                    const s = localStorage.getItem('cactus_settings'); if (s) this.settings = { ...this.settings, ...JSON.parse(s) };
+                    const s = localStorage.getItem('cactus_settings'); if (s) { const p = JSON.parse(s); this.settings.base = { ...this.settings.base, ...(p.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(p.comp || {}) }; }
                     const k = localStorage.getItem('cactus_apikey'); if (k) this.apiKey = k;
                 } catch (e) {}
-                if (!this.apiKey) this.apiKey = DEFAULT_API_KEY; // use baked-in key unless overridden in Settings
+                if (!this.apiKey) this.apiKey = DEFAULT_API_KEY;
             },
             saveSettings() { try { localStorage.setItem('cactus_settings', JSON.stringify(this.settings)); } catch (e) {} },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
-
             loadHistory() { try { const h = localStorage.getItem('cactus_history'); this.history = h ? JSON.parse(h) : []; } catch (e) { this.history = []; } },
             recordSnapshot() {
                 try {
                     const today = new Date().toISOString().slice(0, 10);
-                    const val = Math.round(this.totalValue);
-                    const prev = this.history.length ? this.history[this.history.length - 1] : null;
-                    if (prev && prev.d !== today) this.dayChange = val - prev.v;
+                    const v = Math.round(this.totalValue * 100) / 100;
+                    const items = {};
+                    this.items.forEach(c => { items[c.uid] = Math.round(this.getCurrentValue(c) * 100) / 100; });
+                    const prevDay = this.history.filter(h => h.d !== today).slice(-1)[0];
+                    if (prevDay) this.dayChange = v - prevDay.v;
                     let hist = this.history.filter(h => h.d !== today);
-                    hist.push({ d: today, v: val });
-                    hist = hist.slice(-60);
+                    hist.push({ d: today, t: Date.now(), v, n: this.items.length, items });
+                    hist = hist.slice(-180);
+                    if (hist.length > 120) for (let i = 0; i < hist.length - 120; i++) delete hist[i].items;
                     this.history = hist;
                     localStorage.setItem('cactus_history', JSON.stringify(hist));
                 } catch (e) {}
             },
-
-            // ---------- Cloud ----------
             initCloudData() {
                 db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({ id: d.id, ...d.data() })));
-                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => {
-                    this.cloudCards = s.docs.map(d => ({ uid: d.id, ...d.data() }));
-                    this.$nextTick(() => this.recordSnapshot());
-                });
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => { this.cloudCards = s.docs.map(d => migrate({ uid: d.id, ...d.data() })); this.$nextTick(() => this.recordSnapshot()); });
             },
-            createBinder() {
-                const name = prompt("Name your new binder:");
-                if (!name) return;
-                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
-                else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
-            },
-            renameBinder(b) {
-                const newName = prompt("Rename binder:", b.name);
-                if (!newName || newName === b.name) return;
-                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: newName });
-                else { const l = this.localBinders.find(x => x.id === b.id); if (l) { l.name = newName; this.saveData(); } }
-            },
-            deleteBinder(id) {
-                if (!confirm("Delete this binder? Cards stay in the master archive.")) return;
-                if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
-                else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
+            createBinder() { const name = prompt("Name your new binder:"); if (!name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
+            renameBinder(b) { const n = prompt("Rename binder:", b.name); if (!n || n === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: n }); else { const l = this.localBinders.find(x => x.id === b.id); if (l) { l.name = n; this.saveData(); } } },
+            deleteBinder(id) { if (!confirm("Delete this binder? Items stay in the master archive.")) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete(); else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); } },
+            selectAddCard(card) {
+                if (this.selectedCardToAdd === card.id) { this.selectedCardToAdd = null; return; }
+                this.selectedCardToAdd = card.id;
+                this.addForm = { paid: Math.round(this.getMarketPrice(card) * 100) / 100, condition: 'raw', company: 'PSA', grade: '10', qty: 1 };
             },
             addCard(c) {
+                const setName = (c.set && c.set.name) ? c.set.name : (this.currentSetName || 'Set');
                 const market = this.getMarketPrice(c);
-                const setName = (c.set && c.set.name) ? c.set.name : ((this.allSets.find(s => s.id === this.selectedSet) || {}).name || 'Set');
-                const cardData = {
-                    id: c.id, name: c.name, set: setName, image: c.images.small, number: c.number,
-                    market: market, rawCost: Math.round(market * 100) / 100, fee: 15, targetGrade: "10",
+                const item = {
+                    type: 'card', id: c.id, name: c.name, set: setName, image: c.images.small, number: c.number,
+                    market: market, purchase: this.addForm.paid != null ? this.addForm.paid : market, fee: 0,
+                    qty: Math.max(1, this.addForm.qty || 1), condition: this.addForm.condition,
+                    gradeCompany: this.addForm.company, grade: String(this.addForm.grade), valueOverride: null,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
                 };
-                if (this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
-                else { cardData.uid = Date.now().toString() + Math.random().toString(36).slice(2, 6); this.localCards.push(cardData); this.saveData(); }
+                this.commitItem(item);
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
+            addSealed() {
+                if (!this.sealedForm.name) return;
+                const item = {
+                    type: 'sealed', id: 'sealed-' + Date.now(), name: this.sealedForm.name, set: '', category: this.sealedForm.category,
+                    label: this.sealedForm.label, image: this.sealedForm.image || '', number: '',
+                    market: 0, purchase: this.sealedForm.paid || 0, fee: 0, qty: Math.max(1, this.sealedForm.qty || 1),
+                    condition: 'raw', gradeCompany: 'PSA', grade: '10',
+                    valueOverride: (this.sealedForm.value != null ? this.sealedForm.value : 0),
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
+                };
+                this.commitItem(item);
+                this.showToast('Sealed product added');
+                this.sealedForm = { name: '', category: 'Booster Box', label: '', qty: 1, paid: null, value: null, image: '' };
+            },
+            commitItem(item) {
+                if (this.user) db.collection('users').doc(this.user.uid).collection('cards').add(item);
+                else { item.uid = Date.now().toString() + Math.random().toString(36).slice(2, 6); this.localCards.push(item); this.saveData(); }
+                this.$nextTick(() => this.recordSnapshot());
+            },
             deleteCard(uid) {
-                if (!confirm("Remove card?")) return;
+                if (!confirm("Remove this item?")) return;
                 if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
-                this.detailCard = null;
+                this.detailCard = null; this.$nextTick(() => this.recordSnapshot());
             },
-            updateCardBinder(card) {
-                const upd = { binderId: card.binderId === undefined ? null : card.binderId };
-                if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(upd);
+            persist(c) {
+                const fields = { name: c.name, set: c.set || '', category: c.category || '', number: c.number || '', image: c.image || '', type: c.type || 'card',
+                    market: c.market || 0, purchase: c.purchase || 0, fee: c.fee || 0, qty: Math.max(1, c.qty || 1),
+                    condition: c.condition || 'raw', gradeCompany: c.gradeCompany || 'PSA', grade: String(c.grade || '10'),
+                    valueOverride: (c.valueOverride === '' || c.valueOverride === undefined) ? null : c.valueOverride,
+                    binderId: c.binderId === undefined ? null : c.binderId };
+                if (this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update(fields);
                 else this.saveData();
+                this.$nextTick(() => this.recordSnapshot());
             },
             selectBinder(b) { this.currentBinder = b; this.currentPage = 1; },
-            getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            getBinderValue(id) { return this.cards.filter(c => c.binderId === id).reduce((s, c) => s + (c.market || 0), 0); },
-            openSearch() { this.showSearch = true; this.resetSearch(); this.targetBinder = (this.currentView === 'calculator' && this.currentBinder) ? this.currentBinder.id : 'master'; },
+            getBinderCount(id) { return this.items.filter(c => c.binderId === id).length; },
+            getBinderValue(id) { return this.items.filter(c => c.binderId === id).reduce((s, c) => s + this.getCurrentValue(c), 0); },
+            openSearch() { this.showSearch = true; this.resetSearch(); this.addType = 'card'; this.showFilters = true; this.targetBinder = (this.currentView === 'calculator' && this.currentBinder) ? this.currentBinder.id : 'master'; },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-
-            // ---------- Refresh prices ----------
             async refreshOnePrice(card) {
+                if (card.type === 'sealed') { this.showToast('Sealed prices are manual'); return; }
                 this.refreshing = true;
                 try {
-                    const url = `${API_BASE_URL}/cards/${encodeURIComponent(card.id)}?select=id,tcgplayer,cardmarket`;
-                    const data = await this.apiFetch(url, { retries: 2 });
-                    this.applyPrice(card.id, this.getMarketPrice(data.data));
-                    this.showToast('Price updated');
+                    const data = await this.apiFetch(`${API_BASE_URL}/cards/${encodeURIComponent(card.id)}?select=id,tcgplayer,cardmarket`, { retries: 2 });
+                    const price = this.getMarketPrice(data.data);
+                    if (this.user) this.cloudCards.filter(c => c.id === card.id).forEach(c => db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update({ market: price }));
+                    else { this.localCards.filter(c => c.id === card.id).forEach(c => c.market = price); this.saveData(); }
+                    this.showToast('Raw price updated');
+                    this.$nextTick(() => this.recordSnapshot());
                 } catch (e) { this.showToast('Could not reach the price database'); }
                 finally { this.refreshing = false; }
             },
             async refreshAllPrices() {
-                if (!this.cards.length || this.refreshing) return;
+                const cards = this.items.filter(c => c.type === 'card');
+                if (!cards.length || this.refreshing) return;
                 this.refreshing = true; this.refreshProgress = 0;
-                const ids = [...new Set(this.cards.map(c => c.id))];
-                const chunks = [];
-                for (let i = 0; i < ids.length; i += 12) chunks.push(ids.slice(i, i + 12));
+                const ids = [...new Set(cards.map(c => c.id))];
+                const chunks = []; for (let i = 0; i < ids.length; i += 12) chunks.push(ids.slice(i, i + 12));
                 const priceMap = {}; let done = 0, failed = 0;
                 for (const chunk of chunks) {
                     const q = chunk.map(id => `id:"${id}"`).join(' OR ');
-                    try {
-                        const url = `${API_BASE_URL}/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,tcgplayer,cardmarket`;
-                        const data = await this.apiFetch(url, { retries: 2 });
-                        (data.data || []).forEach(cd => { priceMap[cd.id] = this.getMarketPrice(cd); });
-                    } catch (e) { failed++; }
-                    done += chunk.length;
-                    this.refreshProgress = Math.round(done / ids.length * 100);
-                    await this.sleep(350);
+                    try { const data = await this.apiFetch(`${API_BASE_URL}/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,tcgplayer,cardmarket`, { retries: 2 }); (data.data || []).forEach(cd => { priceMap[cd.id] = this.getMarketPrice(cd); }); }
+                    catch (e) { failed++; }
+                    done += chunk.length; this.refreshProgress = Math.round(done / ids.length * 100); await this.sleep(350);
                 }
-                if (this.user) {
-                    const batch = db.batch();
-                    this.cloudCards.forEach(c => { if (priceMap[c.id] !== undefined) batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] }); });
-                    try { await batch.commit(); } catch (e) {}
-                } else {
-                    this.localCards.forEach(c => { if (priceMap[c.id] !== undefined) c.market = priceMap[c.id]; });
-                    this.saveData();
-                }
-                this.refreshing = false;
-                this.recordSnapshot();
-                this.showToast(failed ? `Updated, but ${failed} batch(es) failed — try again` : 'Prices refreshed');
+                if (this.user) { const batch = db.batch(); this.cloudCards.forEach(c => { if (priceMap[c.id] !== undefined) batch.update(db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid), { market: priceMap[c.id] }); }); try { await batch.commit(); } catch (e) {} }
+                else { this.localCards.forEach(c => { if (priceMap[c.id] !== undefined) c.market = priceMap[c.id]; }); this.saveData(); }
+                this.refreshing = false; this.$nextTick(() => this.recordSnapshot());
+                this.showToast(failed ? `Updated, ${failed} batch(es) failed` : 'Raw prices refreshed');
             },
-            applyPrice(cardId, price) {
-                if (this.user) this.cloudCards.filter(c => c.id === cardId).forEach(c => db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update({ market: price }));
-                else { this.localCards.filter(c => c.id === cardId).forEach(c => c.market = price); this.saveData(); }
-            },
-
-            // ---------- CSV export ----------
             exportCSV() {
-                if (!this.cards.length) return;
-                const head = ['Name', 'Set', 'Number', 'Paid', 'GradingFee', 'TargetGrade', 'RawValue', 'EstGraded', 'NetProfit', 'Binder'];
+                if (!this.items.length) return;
+                const head = ['Type', 'Name', 'Set/Category', 'Number', 'Condition', 'Qty', 'Paid', 'Fee', 'Value', 'GainLoss', 'Binder'];
                 const binderName = id => (this.binders.find(b => b.id === id) || {}).name || 'Master Archive';
                 const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-                const rows = this.cards.map(c => [c.name, c.set, c.number, c.rawCost || 0, c.fee || 0, 'PSA ' + c.targetGrade, (c.market || 0).toFixed(2), this.getEstValue(c).toFixed(2), this.getProfit(c).toFixed(2), binderName(c.binderId)].map(esc).join(','));
+                const rows = this.items.map(c => [c.type, c.name, c.set || c.category, c.number || '', c.type === 'sealed' ? 'Sealed' : (c.condition === 'graded' ? c.gradeCompany + ' ' + c.grade : 'Raw'), c.qty || 1, c.purchase || 0, c.fee || 0, this.getCurrentValue(c).toFixed(2), this.getPL(c).toFixed(2), binderName(c.binderId)].map(esc).join(','));
                 const csv = head.join(',') + '\n' + rows.join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
                 a.download = `crazy-cactus-${new Date().toISOString().slice(0, 10)}.csv`;
-                a.click();
-                URL.revokeObjectURL(a.href);
+                a.click(); URL.revokeObjectURL(a.href);
                 this.showToast('Collection exported');
             },
-
-            // ---------- Sets ----------
             async loadSetsAPI(force = false) {
                 this.setsLoading = true; this.setsError = false;
-                if (!force) {
-                    try {
-                        const c = localStorage.getItem(this.cacheKey);
-                        if (c) { const d = JSON.parse(c); if (d.sets && d.sets.length) { this.allSets = d.sets; this.eras = d.eras; this.totalSetData = d.totalSetData; this.setsLoading = false; return; } }
-                    } catch (e) {}
-                }
+                if (!force) { try { const c = localStorage.getItem(this.cacheKey); if (c) { const d = JSON.parse(c); if (d.sets && d.sets.length) { this.allSets = d.sets; this.eras = d.eras; this.totalSetData = d.totalSetData; this.setsLoading = false; return; } } } catch (e) {} }
                 try {
-                    const url = `${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250&select=id,name,series,total,printedTotal,releaseDate`;
-                    const data = await this.apiFetch(url, { retries: 3, timeout: 18000 });
-                    const sizeMap = {};
-                    data.data.forEach(s => { sizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
+                    const data = await this.apiFetch(`${API_BASE_URL}/sets?orderBy=-releaseDate&pageSize=250&select=id,name,series,total,printedTotal,releaseDate`, { retries: 3, timeout: 18000 });
+                    const sizeMap = {}; data.data.forEach(s => { sizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
                     this.allSets = data.data;
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = sizeMap;
@@ -1025,34 +1112,22 @@
                 } catch (e) { console.error("Set sync failed", e); this.setsError = true; }
                 finally { this.setsLoading = false; }
             },
-
-            // ---------- Card search (whole set, sorted/paginated client-side) ----------
-            debouncedSearch() {
-                if (this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => { if (this.selectedSet) this.fetchCards(); }, 350);
-            },
+            debouncedSearch() { if (this.searchTimeout) clearTimeout(this.searchTimeout); this.searchTimeout = setTimeout(() => { if (this.selectedSet) this.fetchCards(); }, 350); },
             async fetchCards(force = false) {
                 if (!this.selectedSet && !this.query) return;
                 const qName = this.query ? this.query.trim().toLowerCase() : '';
                 const cacheKey = `set_${this.selectedSet}_${qName}`;
-
-                if (!force && this.searchCache[cacheKey]) {
-                    this.rawResults = this.searchCache[cacheKey];
-                    this.searchPage = 1; this.isSearching = false; this.searchError = false; this.selectedCardToAdd = null;
-                    return;
-                }
+                if (!force && this.searchCache[cacheKey]) { this.rawResults = this.searchCache[cacheKey]; this.searchPage = 1; this.isSearching = false; this.searchError = false; this.selectedCardToAdd = null; if (window.innerWidth < 768) this.showFilters = false; return; }
                 if (searchController) searchController.abort();
                 searchController = new AbortController();
                 const sig = searchController.signal;
                 this.currentRequestId++; const requestId = this.currentRequestId;
                 this.isSearching = true; this.searchError = false; this.searchPage = 1; this.selectedCardToAdd = null;
-
                 const q = [];
                 if (this.selectedSet) q.push(`set.id:"${this.selectedSet}"`);
                 if (qName) q.push(`name:"${qName}*"`);
                 const qStr = encodeURIComponent(q.join(' '));
                 const pageSize = 250, maxPages = 6;
-
                 try {
                     let all = [], page = 1, total = Infinity;
                     while (all.length < total && page <= maxPages) {
@@ -1070,6 +1145,7 @@
                     if (requestId !== this.currentRequestId) return;
                     this.rawResults = all;
                     if (all.length) this.searchCache[cacheKey] = all;
+                    if (window.innerWidth < 768) this.showFilters = false;
                 } catch (e) {
                     if (e.name !== 'AbortError' && requestId === this.currentRequestId) { this.rawResults = []; this.searchError = true; }
                 } finally {
@@ -1078,7 +1154,6 @@
             }
         }
     }).mount('#app');
-
-    </script>
+</script>
 </body>
 </html>
