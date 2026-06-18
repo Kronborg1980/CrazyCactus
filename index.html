@@ -599,7 +599,8 @@
                             <input v-model.number="detailCard.valueOverride" @change="persist(detailCard)" type="number" :placeholder="Math.round(getUnitValue(detailCard))" class="glass-input text-sm py-2.5">
                             <button v-if="detailCard.type==='card'" @click="useEstimate(detailCard)" class="btn-ghost shrink-0" title="Fill with estimate">Est.</button>
                         </div>
-                        <p v-if="detailCard.type==='card' && detailCard.condition==='raw'" class="text-[11px] text-gray-500 mt-2">Raw market (auto): ${{ formatNumber(detailCard.market) }}. If graded PSA 10 ~${{ formatNumber(estimateGradedRaw(detailCard.market,'PSA','10')) }} (est).</p>
+                        <p v-if="detailCard.type==='card' && detailCard.condition==='graded'" class="text-[11px] text-gray-500 mt-2">Graded value is a rough estimate (raw &times; multiplier) and is usually off for pricey cards. For the real number, <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">look it up on PriceCharting &#8599;</a> and type it above.</p>
+                        <p v-else-if="detailCard.type==='card'" class="text-[11px] text-gray-500 mt-2">Raw market (auto): ${{ formatNumber(detailCard.market) }}. <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">Check on PriceCharting &#8599;</a></p>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="p-4 bg-white/5 rounded-2xl border border-white/10"><div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Value</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(getCurrentValue(detailCard)) }}</div></div>
@@ -665,7 +666,7 @@
 
     const { createApp } = Vue;
     let searchController = null;
-    const GRADE_BASE_FALLBACK = { '10':5, '9.5':3.2, '9':2, '8.5':1.6, '8':1.3, '7':1, '6':0.85, '5':0.75, '4':0.65, '3':0.55, '2':0.45, '1':0.35 };
+    const GRADE_BASE_FALLBACK = { '10':2.6, '9.5':1.9, '9':1.45, '8.5':1.25, '8':1.1, '7':0.95, '6':0.85, '5':0.78, '4':0.72, '3':0.66, '2':0.6, '1':0.55 };
 
     function migrate(c) {
         if (!c.type) c.type = 'card';
@@ -702,7 +703,7 @@
                 sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
                 addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
                 sealedForm: { name: '', category: 'Booster Box', label: '', qty: 1, paid: null, value: null, image: '' },
-                settings: { base: { '10':5, '9.5':3.2, '9':2, '8':1.3 }, comp: { PSA:1, BGS:1.1, CGC:0.85 } },
+                settings: { base: { '10':2.6, '9.5':1.9, '9':1.45, '8':1.1 }, comp: { PSA:1, BGS:1.1, CGC:0.9 } },
                 timeframes: [{k:'24h',label:'24H',days:1},{k:'1w',label:'1W',days:7},{k:'1m',label:'1M',days:30},{k:'6m',label:'6M',days:182},{k:'1y',label:'1Y',days:365},{k:'all',label:'All',days:99999}],
                 rankTiers: [
                     { min: 0, name: 'Wandering Trainer', icon: 'fa-shoe-prints' },
@@ -916,6 +917,7 @@
             getInvested(c) { return ((c.purchase || 0) + (c.fee || 0)) * (c.qty || 1); },
             getPL(c) { return this.getCurrentValue(c) - this.getInvested(c); },
             useEstimate(c) { c.valueOverride = Math.round((c.condition === 'graded' ? this.estimateGraded(c) : (c.market || 0)) * 100) / 100; this.persist(c); },
+            pcUrl(c) { const q = encodeURIComponent([c.name, c.set || c.category].filter(Boolean).join(' ')); return `https://www.pricecharting.com/search-products?type=prices&q=${q}`; },
             animateValue(target) {
                 target = Math.round(target);
                 if (target === Math.round(this.displayValue)) { this.displayValue = target; return; }
@@ -970,12 +972,12 @@
             saveData() { if (!this.user) { try { localStorage.setItem('cactus_binders', JSON.stringify(this.localBinders)); localStorage.setItem('cactus_cards', JSON.stringify(this.localCards)); } catch (e) {} } },
             loadSettings() {
                 try {
-                    const s = localStorage.getItem('cactus_settings'); if (s) { const p = JSON.parse(s); this.settings.base = { ...this.settings.base, ...(p.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(p.comp || {}) }; }
+                    const s = localStorage.getItem('cactus_settings_v2'); if (s) { const p = JSON.parse(s); this.settings.base = { ...this.settings.base, ...(p.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(p.comp || {}) }; }
                     const k = localStorage.getItem('cactus_apikey'); if (k) this.apiKey = k;
                 } catch (e) {}
                 if (!this.apiKey) this.apiKey = DEFAULT_API_KEY;
             },
-            saveSettings() { try { localStorage.setItem('cactus_settings', JSON.stringify(this.settings)); } catch (e) {} },
+            saveSettings() { try { localStorage.setItem('cactus_settings_v2', JSON.stringify(this.settings)); } catch (e) {} },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
             loadHistory() { try { const h = localStorage.getItem('cactus_history'); this.history = h ? JSON.parse(h) : []; } catch (e) { this.history = []; } },
             recordSnapshot() {
@@ -1174,6 +1176,12 @@
             }
         }
     }).mount('#app');
+</script>
+<script>
+    // Registers the image/asset cache (sw.js must sit next to this file on an https host).
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+    }
 </script>
 </body>
 </html>
