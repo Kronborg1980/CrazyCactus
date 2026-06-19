@@ -630,7 +630,7 @@
                 <p class="text-[11px] text-gray-500 mb-6">Free key = higher rate limits & fewer timeouts. Get one at <span class="text-[#39ff14]">dev.pokemontcg.io</span>.</p>
                 <h3 class="text-xs font-black text-[#39ff14] uppercase tracking-widest mb-3"><i class="fa-solid fa-bolt mr-1"></i> Live price relay <span class="text-gray-500 normal-case font-bold">(real graded & sealed prices)</span></h3>
                 <input v-model="relayUrl" @change="saveRelay" placeholder="https://your-relay-url/..." class="glass-input text-sm mb-1">
-                <p class="text-[11px] text-gray-500 mb-6">Paste the URL of your deployed relay (Cloudflare Worker or Firebase Function). Your PokemonPriceTracker token lives in the relay, never here. Once set, cards and sealed items get a <span class="text-[#39ff14]">Fetch live price</span> button. Each lookup uses a few API credits.</p>
+                <p class="text-[11px] text-gray-500 mb-6">Paste the URL of your deployed relay (Cloudflare Worker or Firebase Function). Your PokemonPriceTracker token lives in the relay, never here. Once set, cards and sealed items get a <span class="text-[#39ff14]">Fetch live price</span> button. Raw cards are free; graded &amp; sealed cost a few credits each and are cached for 7 days. <span class="text-[#39ff14] font-bold">{{ pptUsedToday() }}/100 credits used today.</span></p>
                 <h3 class="text-xs font-black text-[#39ff14] uppercase tracking-widest mb-3"><i class="fa-solid fa-medal mr-1"></i> Graded value estimates</h3>
                 <p class="text-[11px] text-gray-500 mb-4">No free API gives real PSA/BGS/CGC prices, so graded values are estimated as raw price &times; these multipliers. Override any card's value manually for accuracy.</p>
                 <div class="grid grid-cols-4 gap-3 mb-4">
@@ -704,7 +704,7 @@
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
-                apiKey: "", relayUrl: "", selectedTf: '1m',
+                apiKey: "", relayUrl: "", pptCache: {}, pptUsage: { d: '', used: 0 }, selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
                 sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
                 addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
@@ -981,6 +981,8 @@
                     const s = localStorage.getItem('cactus_settings_v2'); if (s) { const p = JSON.parse(s); this.settings.base = { ...this.settings.base, ...(p.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(p.comp || {}) }; }
                     const k = localStorage.getItem('cactus_apikey'); if (k) this.apiKey = k;
                     const r = localStorage.getItem('cactus_relay'); if (r) this.relayUrl = r;
+                    const pc = localStorage.getItem('cactus_ppt_cache'); if (pc) this.pptCache = JSON.parse(pc);
+                    const pu = localStorage.getItem('cactus_ppt_usage'); if (pu) this.pptUsage = JSON.parse(pu);
                 } catch (e) {}
                 if (!this.apiKey) this.apiKey = DEFAULT_API_KEY;
             },
@@ -990,14 +992,25 @@
 
             // ----- Live prices via PokemonPriceTracker (through the relay) -----
             async relayGet(path, params = {}) {
-                if (!this.relayUrl) throw new Error('no-relay');
+                if (!this.relayUrl) { const e = new Error('Add your relay URL in Settings'); e.isApi = true; throw e; }
                 const u = new URL(this.relayUrl);
                 u.searchParams.set('path', path);
                 Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
                 const res = await fetch(u.toString());
+                let data = null;
+                try { data = await res.json(); } catch (e) { throw new Error('Bad response from relay'); }
+                if (data && data.error) { const e = new Error(data.error); e.isApi = true; throw e; }
                 if (!res.ok) throw new Error('relay ' + res.status);
-                return res.json();
+                return data;
             },
+            // Daily credit budget (PokemonPriceTracker free tier = 100/day, billed per card returned)
+            pptToday() { return new Date().toISOString().slice(0, 10); },
+            pptUsedToday() { if (this.pptUsage.d !== this.pptToday()) this.pptUsage = { d: this.pptToday(), used: 0 }; return this.pptUsage.used; },
+            pptRemaining() { return Math.max(0, 100 - this.pptUsedToday()); },
+            pptAddUsage(n) { this.pptUsedToday(); this.pptUsage.used += n; try { localStorage.setItem('cactus_ppt_usage', JSON.stringify(this.pptUsage)); } catch (e) {} },
+            // 7-day price cache so re-clicking the same card costs 0 credits
+            pptCacheGet(key) { const e = this.pptCache[key]; return (e && (Date.now() - e.t) < 6048e5) ? e.v : null; },
+            pptCacheSet(key, v) { this.pptCache[key] = { v, t: Date.now() }; try { localStorage.setItem('cactus_ppt_cache', JSON.stringify(this.pptCache)); } catch (e) {} },
             pptNum(v) { const n = typeof v === 'number' ? v : parseFloat(v); return (isFinite(n) && n > 0) ? n : 0; },
             normNum(n) { return String(n == null ? '' : n).toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^0+/, ''); },
             pptResults(data) { return (data && (data.data || data.cards || data.products || data.results)) || []; },
@@ -1041,44 +1054,58 @@
                 }
                 return 0;
             },
-            async fetchRealPrice(card) {
+            async fetchRealPrice(card, force = false) {
+                if (card.type === 'sealed') return this.fetchSealedPrice(card, force);
+                // Raw cards use the FREE source — never spend PPT credits.
+                if (card.condition !== 'graded') return this.refreshOnePrice(card);
+                // Graded: serve from the 7-day cache first (0 credits).
+                const key = `${card.id}|${card.gradeCompany}|${card.grade}`;
+                if (!force) { const c = this.pptCacheGet(key); if (c) { card.valueOverride = c; this.persist(card); this.showToast('Live price applied (cached, 0 credits)'); return; } }
                 if (!this.relayUrl) { this.showSettings = true; this.showToast('Add your relay URL in Settings first'); return; }
-                if (card.type === 'sealed') return this.fetchSealedPrice(card);
+                if (this.pptRemaining() < 10) { this.showToast(`Only ${this.pptRemaining()} API credits left today — resets tomorrow`); return; }
                 this.refreshing = true;
                 try {
-                    const data = await this.relayGet('cards', { search: card.name, includeEbay: 'true', limit: 12 });
-                    const results = this.pptResults(data);
+                    let results = this.pptResults(await this.relayGet('cards', { search: card.name, set: card.set, includeEbay: 'true', limit: 5 }));
+                    if (!results.length) results = this.pptResults(await this.relayGet('cards', { search: card.name, includeEbay: 'true', limit: 5 }));
+                    this.pptAddUsage(Math.max(1, results.length) * 2);
                     if (!results.length) { this.showToast('No live match found — enter value manually'); return; }
                     const { match, score } = this.pptPickCard(results, card);
                     if (!match) { this.showToast('No live match found'); return; }
-                    let val = 0;
-                    if (card.condition === 'graded') { val = this.pptGraded(match, card.gradeCompany, card.grade); }
-                    if (!val) val = this.pptRaw(match);
-                    if (!val) { console.log('PPT matched card (no price field recognised):', match); this.showToast('Got the card but no price in response (see console)'); return; }
+                    const val = this.pptGraded(match, card.gradeCompany, card.grade);
+                    if (!val) { console.log('PPT matched card (no graded price field found):', match); this.showToast('Got the card but no graded price — press F12 and send me the console object'); return; }
                     card.valueOverride = Math.round(val * 100) / 100;
                     if (!card.market) { const raw = this.pptRaw(match); if (raw) card.market = raw; }
+                    this.pptCacheSet(key, card.valueOverride);
                     this.persist(card);
-                    this.showToast(score >= 5 ? 'Live price applied' : 'Applied best-guess match — verify it');
-                } catch (e) { console.log(e); this.showToast(e.message === 'no-relay' ? 'Set a relay URL in Settings' : 'Live lookup failed — check the relay'); }
-                finally { this.refreshing = false; }
+                    this.showToast(score >= 5 ? `Live ${card.gradeCompany} ${card.grade} applied — ${this.pptRemaining()} credits left` : `Best-guess match applied (verify) — ${this.pptRemaining()} left`);
+                } catch (e) {
+                    console.log(e);
+                    this.showToast(e.isApi ? (/rate limit/i.test(e.message) ? 'Daily API limit reached — resets tomorrow' : e.message) : 'Live lookup failed — check the relay');
+                } finally { this.refreshing = false; }
             },
-            async fetchSealedPrice(item) {
+            async fetchSealedPrice(item, force = false) {
+                const key = `sealed|${(item.name || '').toLowerCase()}`;
+                if (!force) { const c = this.pptCacheGet(key); if (c) { item.valueOverride = c; this.persist(item); this.showToast('Live sealed price applied (cached, 0 credits)'); return; } }
                 if (!this.relayUrl) { this.showSettings = true; this.showToast('Add your relay URL in Settings first'); return; }
+                if (this.pptRemaining() < 6) { this.showToast(`Only ${this.pptRemaining()} API credits left today — resets tomorrow`); return; }
                 this.refreshing = true;
                 try {
-                    const data = await this.relayGet('sealed-products', { search: item.name, limit: 10 });
-                    const results = this.pptResults(data);
+                    const results = this.pptResults(await this.relayGet('sealed-products', { search: item.name, limit: 5 }));
+                    this.pptAddUsage(Math.max(1, results.length));
                     if (!results.length) { this.showToast('No sealed match found'); return; }
                     const want = (item.name || '').toLowerCase().split(/\s+/).filter(Boolean);
                     let best = null, bs = -1;
                     for (const r of results) { const nm = (r.name || '').toLowerCase(); let sc = 0; want.forEach(w => { if (nm.includes(w)) sc++; }); if (sc > bs) { bs = sc; best = r; } }
                     const val = this.pptRaw(best);
-                    if (!val) { console.log('Sealed match (no price field recognised):', best); this.showToast('Found product but no price in response (see console)'); return; }
+                    if (!val) { console.log('Sealed match (no price field found):', best); this.showToast('Found product but no price — press F12 and send me the console object'); return; }
                     item.valueOverride = Math.round(val * 100) / 100;
+                    this.pptCacheSet(key, item.valueOverride);
                     this.persist(item);
-                    this.showToast('Live sealed price applied');
-                } catch (e) { console.log(e); this.showToast(e.message === 'no-relay' ? 'Set a relay URL in Settings' : 'Live lookup failed — check the relay'); }
-                finally { this.refreshing = false; }
+                    this.showToast(`Live sealed price applied — ${this.pptRemaining()} credits left today`);
+                } catch (e) {
+                    console.log(e);
+                    this.showToast(e.isApi ? (/rate limit/i.test(e.message) ? 'Daily API limit reached — resets tomorrow' : e.message) : 'Live lookup failed — check the relay');
+                } finally { this.refreshing = false; }
             },
             loadHistory() { try { const h = localStorage.getItem('cactus_history'); this.history = h ? JSON.parse(h) : []; } catch (e) { this.history = []; } },
             recordSnapshot() {
