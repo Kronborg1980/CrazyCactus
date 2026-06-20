@@ -415,7 +415,7 @@
                     <h2 class="text-3xl font-black text-white">What's <span class="text-[#39ff14]">Buzzing</span></h2>
                     <p class="text-sm text-gray-500">Biggest bubble = freshest story &middot; live Pok&eacute;mon TCG headlines.</p>
                 </div>
-                <button @click="fetchBuzz" :disabled="buzzLoading" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin':buzzLoading}"></i> Refresh</button>
+                <button @click="refreshBuzz" :disabled="buzzLoading" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin':buzzLoading}"></i> Refresh</button>
             </div>
             <div v-if="buzzItems.length" class="glass-panel p-6 flex flex-wrap gap-3 justify-center items-center min-h-[300px]">
                 <div v-for="b in buzzItems" :key="b.id" @click="openBuzz(b.url)" class="rounded-full flex items-center justify-center text-center cursor-pointer transition-transform hover:scale-105 p-3 overflow-hidden" :style="{ width: buzzSize(b)+'px', height: buzzSize(b)+'px', background: buzzColor(b.tag)+'22', border: '2px solid '+buzzColor(b.tag)+'66', boxShadow:'0 0 20px '+buzzColor(b.tag)+'33' }">
@@ -432,17 +432,24 @@
                 <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare (it adds the news feed).' : 'Tap Refresh in a moment. The upcoming releases below always work.' }}</p>
             </div>
             <div>
-                <h3 class="text-xl font-black text-white mb-1"><i class="fa-solid fa-calendar-day text-[#39ff14] mr-2"></i>Upcoming sets &amp; drops</h3>
-                <p class="text-xs text-gray-500 mb-4">Confirmed releases on the horizon.</p>
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-xl font-black text-white"><i class="fa-solid fa-calendar-day text-[#39ff14] mr-2"></i>Upcoming sets &amp; drops</h3>
+                    <button @click="loadUpcoming" class="btn-ghost text-xs flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">Curated &amp; verified as of June 2026 &middot; past releases drop off automatically. <span class="text-[#39ff14]">Confirmed</span> = official date; <span class="text-[#ff9f43]">Expected</span> = English date not yet announced.</p>
                 <div class="space-y-2">
-                    <div v-for="u in upcomingSets()" :key="u.title+u.date" class="glass-panel p-4 flex items-center gap-4">
+                    <div v-for="u in upcoming" :key="u.title+u.date" class="glass-panel p-4 flex items-center gap-4">
                         <div class="text-center shrink-0 w-16">
                             <div class="text-[#39ff14] font-black text-lg leading-none">{{ new Date(u.date).toLocaleDateString('en-US',{day:'numeric'}) }}</div>
                             <div class="text-[10px] font-bold text-gray-400 uppercase">{{ new Date(u.date).toLocaleDateString('en-US',{month:'short'}) }}</div>
                             <div class="text-[10px] text-gray-600">{{ new Date(u.date).getFullYear() }}</div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap"><span class="font-black text-white">{{ u.title }}</span><span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full" :style="{ background: buzzColor(u.tag)+'22', color: buzzColor(u.tag) }">{{ u.tag }}</span></div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-black text-white">{{ u.title }}</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full" :style="{ background: buzzColor(u.tag)+'22', color: buzzColor(u.tag) }">{{ u.tag }}</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full" :style="{ background: (u.status==='confirmed'?'#39ff14':'#ff9f43')+'22', color: (u.status==='confirmed'?'#39ff14':'#ff9f43') }">{{ u.status }}</span>
+                            </div>
                             <div class="text-xs text-gray-400">{{ u.note }}</div>
                         </div>
                         <div class="text-xs font-bold text-gray-500 shrink-0">{{ Math.max(0, Math.ceil((new Date(u.date) - new Date())/86400000)) }}d</div>
@@ -781,7 +788,7 @@
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
-                apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', settingsUnlocked: false, selectedTf: '1m',
+                apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', settingsUnlocked: false, upcoming: [], selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
                 sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
                 addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
@@ -813,6 +820,7 @@
             this.loadSettings();
             this.loadLocalData();
             this.loadHistory();
+            this.loadUpcoming();
             this.loadSetsAPI();
             this.$nextTick(() => { this.animateValue(this.totalValue); this.recordSnapshot(); });
             if (auth) auth.onAuthStateChanged(u => { this.authReady = true; if (u) { this.user = u; this.initCloudData(); } else { this.user = null; } });
@@ -1023,16 +1031,19 @@
                 const tick = now => { const p = Math.min(1, (now - t0) / dur); const eased = 1 - Math.pow(1 - p, 3); this.displayValue = start + (target - start) * eased; if (p < 1) requestAnimationFrame(tick); else this.displayValue = target; };
                 requestAnimationFrame(tick);
             },
-            switchView(view) { this.currentView = view; this.currentBinder = null; this.tableFilter = ""; window.scrollTo(0, 0); if (view === 'buzz' && !this.buzzItems.length) this.fetchBuzz(); },
-            upcomingSets() {
-                return [
-                    { date: '2026-07-17', title: 'Pitch Black (ME05)', note: 'Mega Darkrai ex headlines the next main expansion.', tag: 'set' },
-                    { date: '2026-08-07', title: 'First Partner Collection S2', note: 'Hoenn / Kalos / Paldea starter illustration promos.', tag: 'drop' },
-                    { date: '2026-09-16', title: '30th Celebration', note: 'First-ever worldwide same-day launch \u2014 all-foil 6-card packs, new rarity tier, classic reprints.', tag: 'set' },
-                    { date: '2026-09-16', title: 'Premium Deck Set: Espeon & Umbreon', note: 'Anniversary premium deck \u2014 drops alongside 30th Celebration.', tag: 'drop' },
-                    { date: '2026-09-30', title: 'Storm Emerald (ME06)', note: 'Mega Rayquaza ex \u2014 English window expected late Q3.', tag: 'set' }
-                ].filter(s => s.date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.date.localeCompare(b.date));
+            switchView(view) { this.currentView = view; this.currentBinder = null; this.tableFilter = ""; window.scrollTo(0, 0); if (view === 'buzz') { this.loadUpcoming(); if (!this.buzzItems.length) this.fetchBuzz(); } },
+            loadUpcoming() {
+                const all = [
+                    { date: '2026-07-17', title: 'Pitch Black (ME05)', note: 'Mega Darkrai ex headlines the 5th Mega Evolution set (115+ cards, Dark-type theme).', tag: 'set', status: 'confirmed' },
+                    { date: '2026-09-18', title: '30th Celebration', note: 'First-ever worldwide same-day launch \u2014 all-foil 6-card packs, new "Futuristic Rare" tier, Base Set Charizard reprint.', tag: 'set', status: 'confirmed' },
+                    { date: '2026-09-18', title: 'Premium Deck Set: Espeon & Umbreon', note: 'Anniversary premium deck \u2014 launches the same day as the 30th Celebration set.', tag: 'drop', status: 'confirmed' },
+                    { date: '2026-09-26', title: 'Storm Emerald (ME06)', note: 'Mega Rayquaza ex. English date NOT yet official \u2014 community projects ~September (JP set is July 31).', tag: 'set', status: 'expected' },
+                    { date: '2026-10-16', title: '30th Celebration First Partner Sets', note: 'Nine mini-sets covering all 27 first-partner Pok\u00e9mon.', tag: 'drop', status: 'expected' }
+                ];
+                const today = new Date().toISOString().slice(0, 10);
+                this.upcoming = all.filter(s => s.date >= today).sort((a, b) => a.date.localeCompare(b.date));
             },
+            refreshBuzz() { this.fetchBuzz(); this.loadUpcoming(); },
             openSettings() {
                 if (this.settingsUnlocked) { this.showSettings = true; return; }
                 const pw = prompt('Enter the settings password:');
@@ -1073,6 +1084,19 @@
                     out.sort((a, b) => b.ts - a.ts);
                     out.forEach((it, i) => { it.weight = Math.max(4, 64 - i * 3); });
                     this.buzzItems = out.slice(0, 21);
+                    if (!this.buzzItems.length) {
+                        // Fallback: a dedicated TCG feed if Google News came back empty.
+                        try {
+                            const xml = await this.relayText('news', { feed: 'pokeguardian' });
+                            const doc = new DOMParser().parseFromString(xml, 'text/xml');
+                            Array.from(doc.getElementsByTagName('item')).forEach((it, i) => {
+                                const g = (t) => { const el = it.getElementsByTagName(t)[0]; return el ? el.textContent : ''; };
+                                const title = (g('title') || '').trim();
+                                if (title) out.push({ id: g('link') || title, title, url: g('link'), src: 'PokeGuardian', tag: 'news', weight: Math.max(4, 60 - i * 3) });
+                            });
+                            this.buzzItems = out.slice(0, 21);
+                        } catch (e) { lastErr = lastErr || (e && e.message) || 'error'; }
+                    }
                     if (!this.buzzItems.length) { this.buzzError = true; this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : 'news'; }
                 } catch (e) { this.buzzError = true; this.buzzReason = 'relay'; }
                 finally { this.buzzLoading = false; }
