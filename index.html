@@ -428,8 +428,8 @@
             <div v-else-if="buzzLoading" class="glass-panel p-16 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-[#39ff14]"></i><p class="mt-3 font-bold">Loading the buzz&hellip;</p></div>
             <div v-else class="glass-panel p-10 text-center">
                 <i class="fa-solid fa-fire text-4xl text-gray-600"></i>
-                <p class="mt-3 font-bold text-gray-300">{{ buzzReason==='worker' ? 'Your relay needs the updated worker.' : 'Couldn\'t load live buzz right now.' }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare — it adds the Reddit support the feed needs.' : 'Reddit may be rate-limiting the relay. Tap Refresh in a moment. The upcoming releases below always work.' }}</p>
+                <p class="mt-3 font-bold text-gray-300">{{ buzzReason==='worker' ? 'Your relay needs the updated worker.' : (buzzReason==='setup' ? 'Buzz feed needs a free Reddit key.' : 'Couldn\'t load live buzz right now.') }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare.' : (buzzReason==='setup' ? 'Add REDDIT_ID and REDDIT_SECRET secrets to your worker (one-time, free \u2014 reddit.com/prefs/apps \u2192 create a \u201cscript\u201d app).' : 'Reddit may be busy. Tap Refresh in a moment. The upcoming releases below always work.') }}</p>
             </div>
             <div>
                 <h3 class="text-xl font-black text-white mb-1"><i class="fa-solid fa-calendar-day text-[#39ff14] mr-2"></i>Upcoming sets &amp; drops</h3>
@@ -1052,7 +1052,7 @@
                     this.buzzItems = out.slice(0, 21);
                     if (!this.buzzItems.length) {
                         this.buzzError = true;
-                        this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : (lastErr ? 'reddit' : 'empty');
+                        this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : (/not configured/i.test(lastErr) ? 'setup' : (lastErr ? 'reddit' : 'empty'));
                     }
                 } catch (e) { this.buzzError = true; this.buzzReason = 'relay'; }
                 finally { this.buzzLoading = false; }
