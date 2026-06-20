@@ -428,8 +428,8 @@
             <div v-else-if="buzzLoading" class="glass-panel p-16 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-[#39ff14]"></i><p class="mt-3 font-bold">Loading the buzz&hellip;</p></div>
             <div v-else class="glass-panel p-10 text-center">
                 <i class="fa-solid fa-fire text-4xl text-gray-600"></i>
-                <p class="mt-3 font-bold text-gray-300">{{ buzzReason==='worker' ? 'Your relay needs the updated worker.' : 'Couldn\'t load the news right now.' }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare (it adds the news feed).' : 'Tap Refresh in a moment. The upcoming releases below always work.' }}</p>
+                <p class="mt-3 font-bold text-gray-300">Couldn't load the news right now.</p>
+                <p class="text-sm text-gray-500 mt-1">The news services may be briefly busy &mdash; tap Refresh in a moment. The upcoming releases below always work.</p>
             </div>
             <div>
                 <div class="flex items-center justify-between mb-1">
@@ -1060,45 +1060,55 @@
                 if (!res.ok) { let m = 'relay ' + res.status; try { const o = JSON.parse(txt); if (o && o.error) m = o.error; } catch (e) {} throw new Error(m); }
                 return txt;
             },
+            parseFeedInto(xml, out, seen) {
+                let doc;
+                try { doc = new DOMParser().parseFromString(xml, 'text/xml'); } catch (e) { return; }
+                let nodes = Array.from(doc.getElementsByTagName('item'));
+                if (!nodes.length) nodes = Array.from(doc.getElementsByTagName('entry'));
+                for (const it of nodes) {
+                    const get = (t) => { const el = it.getElementsByTagName(t)[0]; return el ? (el.textContent || '').trim() : ''; };
+                    let link = get('link');
+                    if (!link) { const l = it.getElementsByTagName('link')[0]; if (l) link = l.getAttribute('href') || ''; }
+                    const raw = get('title');
+                    const title = (raw.replace(/\s+-\s+[^-]+$/, '').trim()) || raw;
+                    if (!title || seen.has(title.toLowerCase())) continue;
+                    seen.add(title.toLowerCase());
+                    const date = get('pubDate') || get('updated') || get('published');
+                    out.push({ id: link || title, title, url: link, src: get('source') || 'News', tag: 'news', ts: date ? (Date.parse(date) || 0) : 0 });
+                }
+            },
+            async fetchRss(feedUrl) {
+                // Try the worker first (own infra), then public CORS proxies. Return XML text or ''.
+                const tryers = [
+                    async () => this.relayText('news', { q: 'pokemon tcg' }),
+                    async () => { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(feedUrl)); return r.ok ? r.text() : ''; },
+                    async () => { const r = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(feedUrl)); return r.ok ? r.text() : ''; },
+                    async () => { const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(feedUrl)); if (!r.ok) return ''; const d = await r.json(); return (d && d.contents) || ''; }
+                ];
+                for (const fn of tryers) {
+                    try { const t = await fn(); if (t && (t.indexOf('<item') !== -1 || t.indexOf('<entry') !== -1)) return t; } catch (e) {}
+                }
+                return '';
+            },
             async fetchBuzz() {
                 this.buzzLoading = true; this.buzzError = false; this.buzzReason = '';
-                const sources = [{ q: 'pokemon tcg', tag: 'news' }, { q: 'pokemon cards release restock', tag: 'drop' }];
-                const out = []; let lastErr = ''; const seen = new Set();
+                const out = []; const seen = new Set();
+                const feeds = [
+                    'https://news.google.com/rss/search?q=' + encodeURIComponent('pokemon tcg') + '&hl=en-US&gl=US&ceid=US:en',
+                    'https://www.pocketmonsters.net/rss',
+                    'https://www.dexerto.com/pokemon/feed/'
+                ];
                 try {
-                    for (const src of sources) {
-                        try {
-                            const xml = await this.relayText('news', { q: src.q });
-                            const doc = new DOMParser().parseFromString(xml, 'text/xml');
-                            const items = Array.from(doc.getElementsByTagName('item'));
-                            for (const it of items) {
-                                const g = (tag) => { const el = it.getElementsByTagName(tag)[0]; return el ? el.textContent : ''; };
-                                const raw = (g('title') || '').trim();
-                                const title = raw.replace(/\s+-\s+[^-]+$/, '').trim() || raw;
-                                if (!title || seen.has(title.toLowerCase())) continue;
-                                seen.add(title.toLowerCase());
-                                const date = g('pubDate');
-                                out.push({ id: g('link') || title, title, url: g('link'), src: g('source') || 'News', tag: src.tag, ts: date ? (Date.parse(date) || 0) : 0 });
-                            }
-                        } catch (e) { lastErr = (e && e.message) || 'error'; }
+                    for (const feed of feeds) {
+                        if (out.length >= 12) break;
+                        const xml = await this.fetchRss(feed);
+                        if (xml) this.parseFeedInto(xml, out, seen);
                     }
                     out.sort((a, b) => b.ts - a.ts);
                     out.forEach((it, i) => { it.weight = Math.max(4, 64 - i * 3); });
                     this.buzzItems = out.slice(0, 21);
-                    if (!this.buzzItems.length) {
-                        // Fallback: a dedicated TCG feed if Google News came back empty.
-                        try {
-                            const xml = await this.relayText('news', { feed: 'pokeguardian' });
-                            const doc = new DOMParser().parseFromString(xml, 'text/xml');
-                            Array.from(doc.getElementsByTagName('item')).forEach((it, i) => {
-                                const g = (t) => { const el = it.getElementsByTagName(t)[0]; return el ? el.textContent : ''; };
-                                const title = (g('title') || '').trim();
-                                if (title) out.push({ id: g('link') || title, title, url: g('link'), src: 'PokeGuardian', tag: 'news', weight: Math.max(4, 60 - i * 3) });
-                            });
-                            this.buzzItems = out.slice(0, 21);
-                        } catch (e) { lastErr = lastErr || (e && e.message) || 'error'; }
-                    }
-                    if (!this.buzzItems.length) { this.buzzError = true; this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : 'news'; }
-                } catch (e) { this.buzzError = true; this.buzzReason = 'relay'; }
+                    if (!this.buzzItems.length) { this.buzzError = true; this.buzzReason = 'news'; }
+                } catch (e) { this.buzzError = true; this.buzzReason = 'news'; }
                 finally { this.buzzLoading = false; }
             },
             buzzMaxWeight() { return this.buzzItems.reduce((m, b) => Math.max(m, b.weight || 1), 1); },
