@@ -413,23 +413,23 @@
             <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h2 class="text-3xl font-black text-white">What's <span class="text-[#39ff14]">Buzzing</span></h2>
-                    <p class="text-sm text-gray-500">Biggest bubble = most upvoted right now &middot; live from the Pok&eacute;mon community.</p>
+                    <p class="text-sm text-gray-500">Biggest bubble = freshest story &middot; live Pok&eacute;mon TCG headlines.</p>
                 </div>
                 <button @click="fetchBuzz" :disabled="buzzLoading" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin':buzzLoading}"></i> Refresh</button>
             </div>
             <div v-if="buzzItems.length" class="glass-panel p-6 flex flex-wrap gap-3 justify-center items-center min-h-[300px]">
-                <div v-for="b in buzzItems" :key="b.id" @click="openBuzz(b.url)" class="rounded-full flex items-center justify-center text-center cursor-pointer transition-transform hover:scale-105 p-3 overflow-hidden" :style="{ width: buzzSize(b.score)+'px', height: buzzSize(b.score)+'px', background: buzzColor(b.tag)+'22', border: '2px solid '+buzzColor(b.tag)+'66', boxShadow:'0 0 20px '+buzzColor(b.tag)+'33' }">
+                <div v-for="b in buzzItems" :key="b.id" @click="openBuzz(b.url)" class="rounded-full flex items-center justify-center text-center cursor-pointer transition-transform hover:scale-105 p-3 overflow-hidden" :style="{ width: buzzSize(b)+'px', height: buzzSize(b)+'px', background: buzzColor(b.tag)+'22', border: '2px solid '+buzzColor(b.tag)+'66', boxShadow:'0 0 20px '+buzzColor(b.tag)+'33' }">
                     <div>
-                        <div class="font-bold leading-tight text-white" :style="{ fontSize: Math.max(9, Math.min(13, buzzSize(b.score)/12))+'px' }">{{ b.title.length > 70 ? b.title.slice(0,67)+'\u2026' : b.title }}</div>
-                        <div class="mt-1 font-black" :style="{ color: buzzColor(b.tag), fontSize:'10px' }"><i class="fa-solid fa-arrow-up"></i> {{ formatNumber(b.score) }}</div>
+                        <div class="font-bold leading-tight text-white" :style="{ fontSize: Math.max(9, Math.min(13, buzzSize(b)/12))+'px' }">{{ b.title.length > 70 ? b.title.slice(0,67)+'\u2026' : b.title }}</div>
+                        <div class="mt-1 font-black truncate" :style="{ color: buzzColor(b.tag), fontSize:'9px' }">{{ b.src }}</div>
                     </div>
                 </div>
             </div>
             <div v-else-if="buzzLoading" class="glass-panel p-16 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-[#39ff14]"></i><p class="mt-3 font-bold">Loading the buzz&hellip;</p></div>
             <div v-else class="glass-panel p-10 text-center">
                 <i class="fa-solid fa-fire text-4xl text-gray-600"></i>
-                <p class="mt-3 font-bold text-gray-300">{{ buzzReason==='worker' ? 'Your relay needs the updated worker.' : (buzzReason==='setup' ? 'Buzz feed needs a free Reddit key.' : 'Couldn\'t load live buzz right now.') }}</p>
-                <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare.' : (buzzReason==='setup' ? 'Add REDDIT_ID and REDDIT_SECRET secrets to your worker (one-time, free \u2014 reddit.com/prefs/apps \u2192 create a \u201cscript\u201d app).' : 'Reddit may be busy. Tap Refresh in a moment. The upcoming releases below always work.') }}</p>
+                <p class="mt-3 font-bold text-gray-300">{{ buzzReason==='worker' ? 'Your relay needs the updated worker.' : 'Couldn\'t load the news right now.' }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ buzzReason==='worker' ? 'Redeploy the latest worker.js to Cloudflare (it adds the news feed).' : 'Tap Refresh in a moment. The upcoming releases below always work.' }}</p>
             </div>
             <div>
                 <h3 class="text-xl font-black text-white mb-1"><i class="fa-solid fa-calendar-day text-[#39ff14] mr-2"></i>Upcoming sets &amp; drops</h3>
@@ -1032,33 +1032,44 @@
                     { date: '2026-09-30', title: 'Storm Emerald (ME06)', note: 'Mega Rayquaza ex \u2014 English window expected late Q3.', tag: 'set' }
                 ].filter(s => s.date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.date.localeCompare(b.date));
             },
+            async relayText(path, params = {}) {
+                const u = new URL(this.relayUrl);
+                u.searchParams.set('path', path);
+                Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+                const res = await fetch(u.toString());
+                if (!res.ok) throw new Error('relay ' + res.status);
+                return res.text();
+            },
             async fetchBuzz() {
                 this.buzzLoading = true; this.buzzError = false; this.buzzReason = '';
-                const subs = [{ s: 'PokeInvesting', tag: 'news' }, { s: 'PokemonTCG', tag: 'news' }, { s: 'PokemonTCGDeals', tag: 'drop' }];
-                const out = []; let lastErr = '';
+                const sources = [{ q: 'pokemon tcg', tag: 'news' }, { q: 'pokemon cards release restock', tag: 'drop' }];
+                const out = []; let lastErr = ''; const seen = new Set();
                 try {
-                    for (const sub of subs) {
+                    for (const src of sources) {
                         try {
-                            const data = await this.relayGet('reddit', { sub: sub.s, sort: 'hot', limit: 8 });
-                            const posts = (data && data.data && data.data.children) || [];
-                            for (const p of posts) {
-                                const d = p.data || {};
-                                if (d.stickied || !d.title) continue;
-                                out.push({ id: d.id, title: d.title, score: d.score || 0, sub: sub.s, tag: sub.tag, url: 'https://www.reddit.com' + (d.permalink || ''), comments: d.num_comments || 0 });
+                            const xml = await this.relayText('news', { q: src.q });
+                            const doc = new DOMParser().parseFromString(xml, 'text/xml');
+                            const items = Array.from(doc.getElementsByTagName('item'));
+                            for (const it of items) {
+                                const g = (tag) => { const el = it.getElementsByTagName(tag)[0]; return el ? el.textContent : ''; };
+                                const raw = (g('title') || '').trim();
+                                const title = raw.replace(/\s+-\s+[^-]+$/, '').trim() || raw;
+                                if (!title || seen.has(title.toLowerCase())) continue;
+                                seen.add(title.toLowerCase());
+                                const date = g('pubDate');
+                                out.push({ id: g('link') || title, title, url: g('link'), src: g('source') || 'News', tag: src.tag, ts: date ? (Date.parse(date) || 0) : 0 });
                             }
                         } catch (e) { lastErr = (e && e.message) || 'error'; }
                     }
-                    out.sort((a, b) => b.score - a.score);
+                    out.sort((a, b) => b.ts - a.ts);
+                    out.forEach((it, i) => { it.weight = Math.max(4, 64 - i * 3); });
                     this.buzzItems = out.slice(0, 21);
-                    if (!this.buzzItems.length) {
-                        this.buzzError = true;
-                        this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : (/not configured/i.test(lastErr) ? 'setup' : (lastErr ? 'reddit' : 'empty'));
-                    }
+                    if (!this.buzzItems.length) { this.buzzError = true; this.buzzReason = /path not allowed/i.test(lastErr) ? 'worker' : 'news'; }
                 } catch (e) { this.buzzError = true; this.buzzReason = 'relay'; }
                 finally { this.buzzLoading = false; }
             },
-            buzzMaxScore() { return this.buzzItems.reduce((m, b) => Math.max(m, b.score), 1); },
-            buzzSize(score) { const max = this.buzzMaxScore(); const r = Math.sqrt(Math.max(1, score) / max); return Math.round(78 + r * 104); },
+            buzzMaxWeight() { return this.buzzItems.reduce((m, b) => Math.max(m, b.weight || 1), 1); },
+            buzzSize(b) { const max = this.buzzMaxWeight(); const r = Math.sqrt(Math.max(1, b.weight || 1) / max); return Math.round(78 + r * 104); },
             buzzColor(tag) { return tag === 'drop' ? '#a855f7' : (tag === 'set' ? '#39ff14' : '#38bdf8'); },
             openBuzz(url) { if (url) window.open(url, '_blank', 'noopener'); },
             loginWithGoogle() { if (auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
