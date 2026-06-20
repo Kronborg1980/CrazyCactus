@@ -109,7 +109,7 @@
                 <div @click="switchView('buzz')" class="nav-item" :class="{active: currentView==='buzz'}"><i class="fa-solid fa-fire"></i> Buzz</div>
             </div>
             <div class="flex items-center gap-3">
-                <button @click="showSettings=true" class="hidden md:flex w-11 h-11 rounded-xl bg-black/40 border border-white/15 items-center justify-center text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14]/50 transition" title="Settings"><i class="fa-solid fa-gear"></i></button>
+                <button @click="openSettings" class="hidden md:flex w-11 h-11 rounded-xl bg-black/40 border border-white/15 items-center justify-center text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14]/50 transition" title="Settings"><i class="fa-solid fa-gear"></i></button>
                 <div v-if="user" class="hidden md:flex flex-col items-end mr-1">
                     <span class="text-xs font-bold text-white drop-shadow-md">{{ user.displayName }}</span>
                     <button @click="logout" class="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Log Out</button>
@@ -734,6 +734,7 @@
     const API_BASE_URL = "https://api.pokemontcg.io/v2";
     const DEFAULT_API_KEY = "ed49e116-8d23-4f57-9c6e-d8900436cc21"; // override in Settings
     const DEFAULT_RELAY = "https://crazy-cactus-relay.kronborgnielsen.workers.dev"; // baked-in price/buzz relay
+    const SETTINGS_PASSWORD = "cactus2026"; // change this to your own; gate for the Settings panel
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -780,7 +781,7 @@
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "",
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
-                apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', selectedTf: '1m',
+                apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', settingsUnlocked: false, selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
                 sealedCategories: ['Booster Box','Elite Trainer Box','Booster Bundle','Booster Pack','Tin','Collection / Premium Box','Blister','Other'],
                 addForm: { paid: null, condition: 'raw', company: 'PSA', grade: '10', qty: 1 },
@@ -1032,13 +1033,21 @@
                     { date: '2026-09-30', title: 'Storm Emerald (ME06)', note: 'Mega Rayquaza ex \u2014 English window expected late Q3.', tag: 'set' }
                 ].filter(s => s.date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.date.localeCompare(b.date));
             },
+            openSettings() {
+                if (this.settingsUnlocked) { this.showSettings = true; return; }
+                const pw = prompt('Enter the settings password:');
+                if (pw === null) return;
+                if (pw === SETTINGS_PASSWORD) { this.settingsUnlocked = true; this.showSettings = true; }
+                else this.showToast('Wrong password');
+            },
             async relayText(path, params = {}) {
                 const u = new URL(this.relayUrl);
                 u.searchParams.set('path', path);
                 Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
                 const res = await fetch(u.toString());
-                if (!res.ok) throw new Error('relay ' + res.status);
-                return res.text();
+                const txt = await res.text();
+                if (!res.ok) { let m = 'relay ' + res.status; try { const o = JSON.parse(txt); if (o && o.error) m = o.error; } catch (e) {} throw new Error(m); }
+                return txt;
             },
             async fetchBuzz() {
                 this.buzzLoading = true; this.buzzError = false; this.buzzReason = '';
