@@ -413,17 +413,19 @@
             <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h2 class="text-3xl font-black text-white">What's <span class="text-[#39ff14]">Buzzing</span></h2>
-                    <p class="text-sm text-gray-500">Biggest bubble = freshest story &middot; live Pok&eacute;mon TCG headlines.</p>
+                    <p class="text-sm text-gray-500">Live Pok&eacute;mon TCG headlines &middot; freshest first.</p>
                 </div>
                 <button @click="refreshBuzz" :disabled="buzzLoading" class="btn-ghost flex items-center gap-2"><i class="fa-solid fa-rotate" :class="{'fa-spin':buzzLoading}"></i> Refresh</button>
             </div>
-            <div v-if="buzzItems.length" class="glass-panel p-6 flex flex-wrap gap-3 justify-center items-center min-h-[300px]">
-                <div v-for="b in buzzItems" :key="b.id" @click="openBuzz(b.url)" class="rounded-full flex items-center justify-center text-center cursor-pointer transition-transform hover:scale-105 p-3 overflow-hidden" :style="{ width: buzzSize(b)+'px', height: buzzSize(b)+'px', background: buzzColor(b.tag)+'22', border: '2px solid '+buzzColor(b.tag)+'66', boxShadow:'0 0 20px '+buzzColor(b.tag)+'33' }">
-                    <div>
-                        <div class="font-bold leading-tight text-white" :style="{ fontSize: Math.max(9, Math.min(13, buzzSize(b)/12))+'px' }">{{ b.title.length > 70 ? b.title.slice(0,67)+'\u2026' : b.title }}</div>
-                        <div class="mt-1 font-black truncate" :style="{ color: buzzColor(b.tag), fontSize:'9px' }">{{ b.src }}</div>
+            <div v-if="buzzItems.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <a v-for="b in buzzItems" :key="b.id" :href="b.url" target="_blank" rel="noopener" class="group glass-panel p-4 flex flex-col gap-2 hover:border-[#39ff14]/40 transition cursor-pointer border border-white/5">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full truncate max-w-[60%]" :style="{ background: buzzColor(b.tag)+'1f', color: buzzColor(b.tag) }">{{ b.src }}</span>
+                        <span class="text-[10px] font-bold text-gray-500 shrink-0">{{ timeAgo(b.ts) }}</span>
                     </div>
-                </div>
+                    <p class="text-sm font-bold text-white leading-snug group-hover:text-[#39ff14] transition line-clamp-3">{{ b.title }}</p>
+                    <span class="mt-auto text-[11px] font-bold text-gray-500 group-hover:text-[#39ff14] transition">Read <i class="fa-solid fa-arrow-up-right-from-square ml-0.5 text-[9px]"></i></span>
+                </a>
             </div>
             <div v-else-if="buzzLoading" class="glass-panel p-16 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-[#39ff14]"></i><p class="mt-3 font-bold">Loading the buzz&hellip;</p></div>
             <div v-else class="glass-panel p-10 text-center">
@@ -645,13 +647,15 @@
                         <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Qty</label><input v-model.number="detailCard.qty" @change="persist(detailCard)" type="number" min="1" class="glass-input text-sm py-2.5"></div>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Current value $ <span class="text-gray-600 normal-case">(per item — blank = auto)</span></label>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Value $ each <span class="text-gray-600 normal-case">&mdash; this is the price used everywhere</span></label>
                         <div class="flex gap-2">
-                            <input v-model.number="detailCard.valueOverride" @change="persist(detailCard)" type="number" :placeholder="Math.round(getUnitValue(detailCard))" class="glass-input text-sm py-2.5">
-                            <button v-if="detailCard.type==='card'" @click="useEstimate(detailCard)" class="btn-ghost shrink-0" title="Fill with estimate">Est.</button>
+                            <input v-model.number="detailCard.valueOverride" @change="persist(detailCard)" type="number" step="0.01" :placeholder="Math.round(getUnitValue(detailCard))" class="glass-input text-sm py-2.5">
+                            <button v-if="detailCard.type==='card'" @click="useEstimate(detailCard)" class="btn-ghost shrink-0" title="Fill with the auto estimate">Est.</button>
+                            <button @click="clearOverride(detailCard)" class="btn-ghost shrink-0" title="Clear and go back to auto">Reset</button>
                         </div>
-                        <p v-if="detailCard.type==='card' && detailCard.condition==='graded'" class="text-[11px] text-gray-500 mt-2">Graded value is a rough estimate (raw &times; multiplier) and is usually off for pricey cards. For the real number, <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">look it up on PriceCharting &#8599;</a> and type it above.</p>
-                        <p v-else-if="detailCard.type==='card'" class="text-[11px] text-gray-500 mt-2">Raw market (auto): ${{ formatNumber(detailCard.market) }}. <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">Check on PriceCharting &#8599;</a></p>
+                        <p v-if="detailCard.type==='card' && detailCard.condition==='graded'" class="text-[11px] text-gray-500 mt-2">Type the real {{ detailCard.gradeCompany }} {{ detailCard.grade }} price here &mdash; this is your master value for this card. Auto estimates are rough for pricey cards; grab the true number from <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">PriceCharting &#8599;</a>. Leave blank to auto-estimate.</p>
+                        <p v-else-if="detailCard.type==='card'" class="text-[11px] text-gray-500 mt-2">Raw market (auto): ${{ formatNumber(detailCard.market) }}. Type a value to override it, or <a :href="pcUrl(detailCard)" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline font-bold">check PriceCharting &#8599;</a>. Leave blank to auto.</p>
+                        <p v-else class="text-[11px] text-gray-500 mt-2">Type the current market value for this sealed product. Leave blank to use what you entered.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="p-4 bg-white/5 rounded-2xl border border-white/10"><div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Value</div><div class="text-2xl font-mono font-black text-white">${{ formatNumber(getCurrentValue(detailCard)) }}</div></div>
@@ -1023,6 +1027,7 @@
             getInvested(c) { return ((c.purchase || 0) + (c.fee || 0)) * (c.qty || 1); },
             getPL(c) { return this.getCurrentValue(c) - this.getInvested(c); },
             useEstimate(c) { c.valueOverride = Math.round((c.condition === 'graded' ? this.estimateGraded(c) : (c.market || 0)) * 100) / 100; this.persist(c); },
+            clearOverride(c) { c.valueOverride = null; this.persist(c); this.showToast('Reset to auto'); },
             pcUrl(c) { const q = encodeURIComponent([c.name, c.set || c.category].filter(Boolean).join(' ')); return `https://www.pricecharting.com/search-products?type=prices&q=${q}`; },
             animateValue(target) {
                 target = Math.round(target);
@@ -1111,8 +1116,14 @@
                 } catch (e) { this.buzzError = true; this.buzzReason = 'news'; }
                 finally { this.buzzLoading = false; }
             },
-            buzzMaxWeight() { return this.buzzItems.reduce((m, b) => Math.max(m, b.weight || 1), 1); },
-            buzzSize(b) { const max = this.buzzMaxWeight(); const r = Math.sqrt(Math.max(1, b.weight || 1) / max); return Math.round(78 + r * 104); },
+            timeAgo(ts) {
+                if (!ts) return '';
+                const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+                if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm ago';
+                if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+                const d = Math.floor(s / 86400);
+                return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
+            },
             buzzColor(tag) { return tag === 'drop' ? '#a855f7' : (tag === 'set' ? '#39ff14' : '#38bdf8'); },
             openBuzz(url) { if (url) window.open(url, '_blank', 'noopener'); },
             loginWithGoogle() { if (auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
