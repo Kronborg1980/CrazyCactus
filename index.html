@@ -487,12 +487,19 @@
                     <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Think it grades</label><select v-model="gradeCalc.grade" class="glass-input text-sm"><option v-for="g in grades" :key="g" :value="g">{{ g }}</option></select></div>
                     <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grading $</label><input v-model.number="gradeCalc.fee" @focus="$event.target.select()" type="number" class="glass-input text-sm"></div>
                 </div>
-                <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Graded value at that grade $ <span class="text-gray-600 normal-case">(blank = estimate)</span></label><input v-model.number="gradeCalc.gradedVal" @focus="$event.target.select()" type="number" :placeholder="Math.round(gcGraded())" class="glass-input text-sm"></div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Graded value at that grade $ <span class="text-gray-600 normal-case">(blank = estimate)</span></label>
+                    <div class="flex gap-2">
+                        <input v-model.number="gradeCalc.gradedVal" @focus="$event.target.select()" type="number" :placeholder="Math.round(gcGraded())" class="glass-input text-sm">
+                        <a :href="gcPcUrl()" target="_blank" rel="noopener" class="btn-ghost shrink-0 flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Check price</a>
+                    </div>
+                    <p class="text-[11px] text-gray-600 mt-1">Type the real graded value here, or hit Check price to look it up on PriceCharting and copy the number.</p>
+                </div>
             </div>
             <div class="glass-panel p-6">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Raw now</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(pptNum(gradeCalc.raw)) }}</div></div>
-                    <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Cost to grade</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(pptNum(gradeCalc.raw)+pptNum(gradeCalc.fee)) }}</div></div>
+                    <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Grading cost</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(pptNum(gradeCalc.fee)) }}</div></div>
                     <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Graded value</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(gcGraded()) }}</div></div>
                     <div class="p-3 rounded-xl" :class="gcNet()>=0?'bg-[#39ff14]/10':'bg-red-500/10'"><div class="text-[9px] uppercase font-black" :class="gcNet()>=0?'text-[#39ff14]':'text-red-400'">Net P/L</div><div class="font-mono font-black text-lg" :class="gcNet()>=0?'text-[#39ff14]':'text-red-400'">{{ gcNet()>=0?'+':'-' }}${{ formatNumber(Math.abs(gcNet())) }}</div></div>
                 </div>
@@ -846,7 +853,7 @@
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null,
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "", pricedFilter: 'all',
-                gradeCalc: { name: '', raw: 0, company: 'PSA', grade: '10', fee: 25, gradedVal: 0 },
+                gradeCalc: { name: '', set: '', raw: 0, company: 'PSA', grade: '10', fee: 25, gradedVal: null },
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
                 apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', settingsUnlocked: false, upcoming: [], selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
@@ -1095,9 +1102,14 @@
                 const c = this.items.find(i => i.uid === uid);
                 if (!c) return;
                 this.gradeCalc.name = c.name;
+                this.gradeCalc.set = c.set || '';
                 this.gradeCalc.raw = Math.round(this.prospectRaw(c) * 100) / 100;
                 if (c.condition === 'graded') { this.gradeCalc.company = c.gradeCompany || 'PSA'; this.gradeCalc.grade = String(c.grade || '10'); }
-                this.gradeCalc.gradedVal = 0;
+                this.gradeCalc.gradedVal = null;
+            },
+            gcPcUrl() {
+                const q = [this.gradeCalc.name, this.gradeCalc.set].filter(Boolean).join(' ').trim();
+                return q ? `https://www.pricecharting.com/search-products?type=prices&q=${encodeURIComponent(q)}` : 'https://www.pricecharting.com';
             },
             pcUrl(c) { const q = encodeURIComponent([c.name, c.set || c.category].filter(Boolean).join(' ')); return `https://www.pricecharting.com/search-products?type=prices&q=${q}`; },
             animateValue(target) {
