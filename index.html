@@ -106,6 +106,7 @@
                 <div @click="switchView('trends')" class="nav-item" :class="{active: currentView==='trends'}"><i class="fa-solid fa-chart-line"></i> Trends</div>
                 <div @click="switchView('calculator')" class="nav-item" :class="{active: currentView==='calculator'}"><i class="fa-solid fa-calculator"></i> Manage</div>
                 <div @click="switchView('binders')" class="nav-item" :class="{active: currentView==='binders'}"><i class="fa-solid fa-book-journal-whills"></i> Binders</div>
+                <div @click="switchView('grade')" class="nav-item" :class="{active: currentView==='grade'}"><i class="fa-solid fa-gem"></i> Grade?</div>
                 <div @click="switchView('buzz')" class="nav-item" :class="{active: currentView==='buzz'}"><i class="fa-solid fa-fire"></i> Buzz</div>
             </div>
             <div class="flex items-center gap-3">
@@ -466,14 +467,61 @@
                 </div>
             </div>
         </div>
+        <!-- GRADE? -->
+        <div v-if="currentView === 'grade'" class="max-w-3xl mx-auto space-y-6">
+            <div>
+                <h2 class="text-3xl font-black text-white">Should I <span class="text-[#39ff14]">Grade</span> It?</h2>
+                <p class="text-sm text-gray-500">Punch in the numbers (or load a card) to see if grading turns a profit after fees.</p>
+            </div>
+            <div class="glass-panel p-6 space-y-5">
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Load from your collection <span class="text-gray-600 normal-case">(optional)</span></label>
+                    <select @change="loadGradeFrom($event.target.value)" class="glass-input text-sm">
+                        <option value="">&mdash; pick a card &mdash;</option>
+                        <option v-for="c in items.filter(i=>i.type==='card')" :key="c.uid" :value="c.uid">{{ c.name }} {{ c.number ? '#'+c.number : '' }} &middot; {{ c.set }}</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Raw value $</label><input v-model.number="gradeCalc.raw" @focus="$event.target.select()" type="number" class="glass-input text-sm"></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Company</label><select v-model="gradeCalc.company" class="glass-input text-sm"><option>PSA</option><option>BGS</option><option>CGC</option></select></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Think it grades</label><select v-model="gradeCalc.grade" class="glass-input text-sm"><option v-for="g in grades" :key="g" :value="g">{{ g }}</option></select></div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grading $</label><input v-model.number="gradeCalc.fee" @focus="$event.target.select()" type="number" class="glass-input text-sm"></div>
+                </div>
+                <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Graded value at that grade $ <span class="text-gray-600 normal-case">(blank = estimate)</span></label><input v-model.number="gradeCalc.gradedVal" @focus="$event.target.select()" type="number" :placeholder="Math.round(gcGraded())" class="glass-input text-sm"></div>
+            </div>
+            <div class="glass-panel p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Raw now</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(pptNum(gradeCalc.raw)) }}</div></div>
+                    <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Cost to grade</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(pptNum(gradeCalc.raw)+pptNum(gradeCalc.fee)) }}</div></div>
+                    <div class="p-3 rounded-xl bg-white/5"><div class="text-[9px] text-gray-500 uppercase font-black">Graded value</div><div class="font-mono font-black text-lg text-white">${{ formatNumber(gcGraded()) }}</div></div>
+                    <div class="p-3 rounded-xl" :class="gcNet()>=0?'bg-[#39ff14]/10':'bg-red-500/10'"><div class="text-[9px] uppercase font-black" :class="gcNet()>=0?'text-[#39ff14]':'text-red-400'">Net P/L</div><div class="font-mono font-black text-lg" :class="gcNet()>=0?'text-[#39ff14]':'text-red-400'">{{ gcNet()>=0?'+':'-' }}${{ formatNumber(Math.abs(gcNet())) }}</div></div>
+                </div>
+                <div class="text-center mt-4">
+                    <div class="text-2xl font-black" :class="gcNet()>=0?'text-[#39ff14]':'text-red-400'">{{ gcNet()>=0 ? '\u2713 Worth grading' : '\u2717 Not worth it' }}</div>
+                    <div class="text-sm text-gray-400 mt-1">{{ gcNet()>=0 ? ('+' + Math.round(gcRoi()) + '% return after fees') : ('You\'d lose money at ' + gradeCalc.company + ' ' + gradeCalc.grade) }} &middot; break-even resale ${{ formatNumber(pptNum(gradeCalc.raw)+pptNum(gradeCalc.fee)) }}</div>
+                </div>
+            </div>
+            <div class="glass-panel p-6">
+                <div class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Profit if it comes back&hellip;</div>
+                <div class="space-y-2">
+                    <div v-for="g in ['10','9.5','9','8']" :key="g" class="flex items-center justify-between text-sm border-b border-white/5 pb-2">
+                        <span class="font-bold text-gray-300 w-20">{{ gradeCalc.company }} {{ g }}</span>
+                        <span class="font-mono text-gray-400 flex-1 text-center">est. ${{ formatNumber(gcScenario(g).graded) }}</span>
+                        <span class="font-mono font-black w-28 text-right" :class="gcScenario(g).net>=0?'text-[#39ff14]':'text-red-400'">{{ gcScenario(g).net>=0?'+':'-' }}${{ formatNumber(Math.abs(gcScenario(g).net)) }}</span>
+                    </div>
+                </div>
+                <p class="text-[11px] text-gray-600 mt-3">Estimates use raw &times; your grade multipliers (Settings). For a true number, type the graded value above or check <a href="https://www.pricecharting.com" target="_blank" rel="noopener" class="text-[#39ff14] hover:underline">PriceCharting</a>.</p>
+            </div>
+        </div>
     </main>
 
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-24 z-50 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-        <button @click="switchView('collection')" class="flex flex-col items-center gap-1.5 w-1/5 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Home</span></button>
-        <button @click="switchView('trends')" class="flex flex-col items-center gap-1.5 w-1/5 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='trends'}"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Trends</span></button>
-        <button @click="switchView('calculator')" class="flex flex-col items-center gap-1.5 w-1/5 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Manage</span></button>
-        <button @click="switchView('binders')" class="flex flex-col items-center gap-1.5 w-1/5 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Binders</span></button>
-        <button @click="switchView('buzz')" class="flex flex-col items-center gap-1.5 w-1/5 text-gray-500 transition p-2 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='buzz'}"><i class="fa-solid fa-fire text-xl"></i><span class="text-[9px] font-black uppercase tracking-widest">Buzz</span></button>
+        <button @click="switchView('collection')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='collection'}"><i class="fa-solid fa-table-cells-large text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Home</span></button>
+        <button @click="switchView('trends')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='trends'}"><i class="fa-solid fa-chart-line text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Trends</span></button>
+        <button @click="switchView('calculator')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='calculator'}"><i class="fa-solid fa-calculator text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Manage</span></button>
+        <button @click="switchView('grade')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='grade'}"><i class="fa-solid fa-gem text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Grade?</span></button>
+        <button @click="switchView('binders')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='binders'}"><i class="fa-solid fa-book-journal-whills text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Binders</span></button>
+        <button @click="switchView('buzz')" class="flex flex-col items-center gap-1 w-1/6 text-gray-500 transition p-1.5 rounded-xl" :class="{'text-[#39ff14] bg-white/5': currentView==='buzz'}"><i class="fa-solid fa-fire text-lg"></i><span class="text-[8px] font-black uppercase tracking-wider">Buzz</span></button>
     </div>
     <!-- ADD MODAL -->
     <Transition name="fade">
@@ -798,6 +846,7 @@
                 currentRequestId: 0, displayList: [], selectedCardToAdd: null,
                 refreshing: false, refreshProgress: 0,
                 collectionFilter: "", tableFilter: "", pricedFilter: 'all',
+                gradeCalc: { name: '', raw: 0, company: 'PSA', grade: '10', fee: 25, gradedVal: 0 },
                 history: [], dayChange: 0, displayValue: 0, toast: "", toastTimer: null,
                 apiKey: "", relayUrl: DEFAULT_RELAY, pptCache: {}, pptUsage: { d: '', used: 0 }, showProspect: false, buzzItems: [], buzzLoading: false, buzzError: false, buzzReason: '', settingsUnlocked: false, upcoming: [], selectedTf: '1m',
                 grades: ['10','9.5','9','8.5','8','7','6','5','4','3','2','1'],
@@ -1038,6 +1087,18 @@
             getPL(c) { return this.getCurrentValue(c) - this.getInvested(c); },
             useEstimate(c) { c.valueOverride = Math.round((c.condition === 'graded' ? this.estimateGraded(c) : (c.market || 0)) * 100) / 100; this.persist(c); },
             clearOverride(c) { c.valueOverride = null; this.persist(c); this.showToast('Reset to auto'); },
+            gcGraded() { if (this.pptNum(this.gradeCalc.gradedVal)) return this.pptNum(this.gradeCalc.gradedVal); return this.estimateGradedRaw(this.pptNum(this.gradeCalc.raw), this.gradeCalc.company, String(this.gradeCalc.grade)); },
+            gcNet() { return this.gcGraded() - this.pptNum(this.gradeCalc.raw) - this.pptNum(this.gradeCalc.fee); },
+            gcRoi() { const cost = this.pptNum(this.gradeCalc.raw) + this.pptNum(this.gradeCalc.fee); return cost ? (this.gcNet() / cost * 100) : 0; },
+            gcScenario(g) { const graded = this.estimateGradedRaw(this.pptNum(this.gradeCalc.raw), this.gradeCalc.company, String(g)); return { graded, net: graded - this.pptNum(this.gradeCalc.raw) - this.pptNum(this.gradeCalc.fee) }; },
+            loadGradeFrom(uid) {
+                const c = this.items.find(i => i.uid === uid);
+                if (!c) return;
+                this.gradeCalc.name = c.name;
+                this.gradeCalc.raw = Math.round(this.prospectRaw(c) * 100) / 100;
+                if (c.condition === 'graded') { this.gradeCalc.company = c.gradeCompany || 'PSA'; this.gradeCalc.grade = String(c.grade || '10'); }
+                this.gradeCalc.gradedVal = 0;
+            },
             pcUrl(c) { const q = encodeURIComponent([c.name, c.set || c.category].filter(Boolean).join(' ')); return `https://www.pricecharting.com/search-products?type=prices&q=${q}`; },
             animateValue(target) {
                 target = Math.round(target);
