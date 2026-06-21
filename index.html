@@ -808,6 +808,7 @@
     const DEFAULT_API_KEY = "ed49e116-8d23-4f57-9c6e-d8900436cc21"; // override in Settings
     const DEFAULT_RELAY = "https://crazy-cactus-relay.kronborgnielsen.workers.dev"; // baked-in price/buzz relay
     const SETTINGS_PASSWORD = "cactus2026"; // change this to your own; gate for the Settings panel
+    let lastHistSync = 0; // throttle for cloud history writes
     const firebaseConfig = {
       apiKey: "AIzaSyAhV2qCJE2tl1SUN4EyY3oKFSB2u-dUChM",
       authDomain: "crazycactus-6cad9.firebaseapp.com",
@@ -1264,7 +1265,7 @@
                 } catch (e) {}
                 if (!this.apiKey) this.apiKey = DEFAULT_API_KEY;
             },
-            saveSettings() { try { localStorage.setItem('cactus_settings_v2', JSON.stringify(this.settings)); } catch (e) {} },
+            saveSettings() { try { localStorage.setItem('cactus_settings_v2', JSON.stringify(this.settings)); } catch (e) {} if (this.user) { try { db.collection('users').doc(this.user.uid).collection('meta').doc('prefs').set({ settings: this.settings }, { merge: true }); } catch (e) {} } },
             saveApiKey() { try { localStorage.setItem('cactus_apikey', this.apiKey || ''); } catch (e) {} this.showToast('API key saved'); },
             saveRelay() { try { localStorage.setItem('cactus_relay', (this.relayUrl || '').trim()); } catch (e) {} this.relayUrl = (this.relayUrl || '').trim(); this.showToast('Relay saved'); },
 
@@ -1400,11 +1401,51 @@
                     if (hist.length > 120) for (let i = 0; i < hist.length - 120; i++) delete hist[i].items;
                     this.history = hist;
                     localStorage.setItem('cactus_history', JSON.stringify(hist));
+                    if (this.user && Date.now() - lastHistSync > 60000) { lastHistSync = Date.now(); try { db.collection('users').doc(this.user.uid).collection('meta').doc('history').set({ h: hist.map(({ items, ...r }) => r) }, { merge: false }); } catch (e) {} }
                 } catch (e) {}
             },
-            initCloudData() {
-                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({ id: d.id, ...d.data() })));
-                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => { this.cloudCards = s.docs.map(d => migrate({ uid: d.id, ...d.data() })); this.$nextTick(() => this.recordSnapshot()); });
+            async initCloudData() {
+                const base = db.collection('users').doc(this.user.uid);
+                const cardsRef = base.collection('cards');
+                const bindersRef = base.collection('binders');
+                // First login with local data: offer to import it so nothing is lost.
+                try {
+                    const snap = await cardsRef.limit(1).get();
+                    if (snap.empty && this.localCards.length) {
+                        if (confirm(`Import your ${this.localCards.length} locally-saved card(s) into this account so they sync across your devices?`)) {
+                            await this.migrateLocalToCloud(cardsRef, bindersRef);
+                        }
+                    }
+                } catch (e) {}
+                bindersRef.onSnapshot(s => this.cloudBinders = s.docs.map(d => ({ id: d.id, ...d.data() })));
+                cardsRef.onSnapshot(s => { this.cloudCards = s.docs.map(d => migrate({ uid: d.id, ...d.data() })); this.$nextTick(() => this.recordSnapshot()); });
+                this.loadCloudMeta();
+            },
+            async migrateLocalToCloud(cardsRef, bindersRef) {
+                try {
+                    const idMap = {};
+                    for (const b of this.localBinders) { const ref = await bindersRef.add({ name: b.name, createdAt: new Date() }); idMap[b.id] = ref.id; }
+                    let batch = db.batch(), n = 0;
+                    for (const c of this.localCards) {
+                        const data = { ...c }; delete data.uid;
+                        data.binderId = (data.binderId && idMap[data.binderId]) ? idMap[data.binderId] : null;
+                        batch.set(cardsRef.doc(), data); n++;
+                        if (n % 450 === 0) { await batch.commit(); batch = db.batch(); }
+                    }
+                    await batch.commit();
+                    this.localCards = []; this.localBinders = [];
+                    try { localStorage.removeItem('cactus_cards'); localStorage.removeItem('cactus_binders'); } catch (e) {}
+                    this.showToast('Collection imported to your account');
+                } catch (e) { this.showToast('Import failed — your local data is safe'); }
+            },
+            async loadCloudMeta() {
+                try {
+                    const meta = db.collection('users').doc(this.user.uid).collection('meta');
+                    const p = await meta.doc('prefs').get();
+                    if (p.exists) { const s = (p.data() || {}).settings || {}; this.settings.base = { ...this.settings.base, ...(s.base || {}) }; this.settings.comp = { ...this.settings.comp, ...(s.comp || {}) }; if (s.fee != null) this.settings.fee = s.fee; }
+                    const h = await meta.doc('history').get();
+                    if (h.exists) { const arr = (h.data() || {}).h; if (Array.isArray(arr) && arr.length >= this.history.length) this.history = arr; }
+                } catch (e) {}
             },
             createBinder() { const name = prompt("Name your new binder:"); if (!name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() }); else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); } },
             renameBinder(b) { const n = prompt("Rename binder:", b.name); if (!n || n === b.name) return; if (this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(b.id).update({ name: n }); else { const l = this.localBinders.find(x => x.id === b.id); if (l) { l.name = n; this.saveData(); } } },
